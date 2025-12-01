@@ -216,13 +216,21 @@ export default function FileUploadZone({ onFileSelected }) {
         }
     }, [stopCamera]);
 
-    const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback((e) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        
+        console.log('🎯 handleConfirm called, file:', file?.name);
+        
         if (file) {
             track('upload.file.confirmed', AREA.UPLOAD, {
                 fileName: file.name,
                 fileSize: file.size
             });
+            console.log('🚀 Calling onFileSelected with file:', file);
             onFileSelected(file);
+        } else {
+            console.error('❌ No file selected!');
         }
     }, [file, onFileSelected]);
 
@@ -259,6 +267,7 @@ export default function FileUploadZone({ onFileSelected }) {
                         Abbrechen
                     </Button>
                     <Button 
+                        type="button"
                         onClick={handleConfirm}
                         className="bg-green-600 hover:bg-green-700 text-white"
                     >

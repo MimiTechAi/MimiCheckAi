@@ -1,14 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Mail, Phone, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Impressum() {
+    const { t } = useTranslation();
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">Impressum</h1>
+                <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">{t('impressumPage.title')}</h1>
                 <p className="text-lg text-slate-600 dark:text-slate-300">
-                    Rechtliche Informationen gemäß § 5 TMG
+                    {t('impressumPage.subtitle')}
                 </p>
             </div>
 
@@ -16,49 +19,47 @@ export default function Impressum() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                         <Building2 className="w-6 h-6 text-blue-600" />
-                        Anbieterinformationen
+                        {t('impressumPage.provider')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2">Unternehmen</h3>
+                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('impressumPage.company')}</h3>
                             <p className="text-slate-600 dark:text-slate-300">
-                                MiMiCheck GmbH (in Gründung)<br/>
-                                Vertreten durch: [Geschäftsführername]<br/>
-                                HRB: [Registernummer]<br/>
-                                Amtsgericht: [Ort]
+                                MiMi Tech Ai UG (haftungsbeschränkt)<br />
+                                Vertreten durch: Michael Bemler (Geschäftsführer)<br />
+                                Lindenplatz 2<br />
+                                75378 Bad Liebenzell<br />
+                                Deutschland
                             </p>
                         </div>
                         <div>
                             <h3 className="font-semibold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
                                 <MapPin className="w-4 h-4" />
-                                Adresse
+                                {t('impressumPage.contact')}
                             </h3>
                             <p className="text-slate-600 dark:text-slate-300">
-                                [Straße und Hausnummer]<br/>
-                                [PLZ] [Stadt]<br/>
-                                Deutschland
+                                E-Mail: info@mimitechai.com<br />
+                                Telefon: +49 1575 8805737<br />
+                                Website: www.mimitechai.com
                             </p>
                         </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6 pt-6 border-t border-slate-200/60">
                         <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2 flex items-center gap-2">
-                                <Mail className="w-4 h-4" />
-                                Kontakt
-                            </h3>
+                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('impressumPage.responsible')}</h3>
                             <p className="text-slate-600 dark:text-slate-300">
-                                E-Mail: info@staatshilfen.ai<br/>
-                                Support: support@staatshilfen.ai
+                                Michael Bemler<br />
+                                Lindenplatz 2<br />
+                                75378 Bad Liebenzell
                             </p>
                         </div>
                         <div>
-                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2">Steuerliche Angaben</h3>
-                            <p className="text-slate-600 dark:text-slate-300">
-                                Umsatzsteuer-ID: [DE123456789]<br/>
-                                Steuernummer: [123/456/78910]
+                            <h3 className="font-semibold text-slate-800 dark:text-white mb-2">{t('impressumPage.register')}</h3>
+                            <p className="text-slate-600 dark:text-slate-300 whitespace-pre-line">
+                                {t('impressumPage.registerText')}
                             </p>
                         </div>
                     </div>
@@ -67,22 +68,19 @@ export default function Impressum() {
 
             <Card className="border-none shadow-xl">
                 <CardHeader>
-                    <CardTitle>Haftungsausschluss</CardTitle>
+                    <CardTitle>{t('impressumPage.disclaimer.title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm text-slate-600 dark:text-slate-300">
                     <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">Haftung für Inhalte</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">{t('impressumPage.disclaimer.contentTitle')}</h4>
                         <p>
-                            Die Inhalte unserer Seiten wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, 
-                            Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. 
-                            Die Nutzung der KI-Empfehlungen erfolgt auf eigene Verantwortung.
+                            {t('impressumPage.disclaimer.content')}
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">Rechtliche Beratung</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">{t('impressumPage.disclaimer.legalTitle')}</h4>
                         <p>
-                            MiMiCheck stellt keine Rechtsberatung dar. Bei rechtlichen Fragen wenden Sie sich 
-                            bitte an einen qualifizierten Rechtsanwalt oder Steuerberater.
+                            {t('impressumPage.disclaimer.legal')}
                         </p>
                     </div>
                 </CardContent>

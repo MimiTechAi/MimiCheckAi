@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { User } from '@/api/entities';
+import { supabase } from '@/api/supabaseClient';
+import supabaseEntities from '@/api/supabaseEntities';
 
 const UserProfileContext = createContext({
     user: null,
     isLoading: true,
-    refreshUser: async () => {},
-    updateUserProfile: async (data) => {},
+    refreshUser: async () => { },
+    updateUserProfile: async (data) => { },
     profileVersion: 0
 });
 
@@ -17,9 +18,16 @@ export function UserProfileProvider({ children }) {
     const loadUser = useCallback(async () => {
         try {
             setIsLoading(true);
-            const currentUser = await User.me();
-            setUser(currentUser);
-            setProfileVersion(prev => prev + 1);
+
+            // Get current user profile from Supabase
+            const userProfile = await supabaseEntities.UserProfile.getCurrent();
+
+            if (userProfile) {
+                setUser(userProfile);
+                setProfileVersion(prev => prev + 1);
+            } else {
+                setUser(null);
+            }
         } catch (error) {
             console.error('Failed to load user:', error);
             setUser(null);
@@ -30,7 +38,24 @@ export function UserProfileProvider({ children }) {
 
     useEffect(() => {
         loadUser();
-    }, []);
+
+        // Listen to auth state changes
+        let subscription = null;
+        try {
+            const result = supabase.auth.onAuthStateChange(async (event) => {
+                if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+                    await loadUser();
+                } else if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                }
+            });
+            subscription = result?.data?.subscription;
+        } catch (error) {
+            console.warn('Auth state change listener not available:', error);
+        }
+
+        return () => subscription?.unsubscribe();
+    }, [loadUser]);
 
     const refreshUser = useCallback(async () => {
         await loadUser();
@@ -38,11 +63,10 @@ export function UserProfileProvider({ children }) {
 
     const updateUserProfile = useCallback(async (data) => {
         try {
-            await User.updateProfile(data);
-            const updatedUser = await User.me();
-            setUser(updatedUser);
+            const updated = await supabaseEntities.UserProfile.update(data);
+            setUser(updated);
             setProfileVersion(prev => prev + 1);
-            return { success: true, user: updatedUser };
+            return { success: true, user: updated };
         } catch (error) {
             console.error('Failed to update user profile:', error);
             return { success: false, error };

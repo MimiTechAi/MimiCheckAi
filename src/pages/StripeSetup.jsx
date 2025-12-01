@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User } from '@/api/entities';
-import { 
-    CheckCircle, 
+import {
+    CheckCircle,
     Copy,
     ExternalLink,
     AlertTriangle,
@@ -35,21 +35,39 @@ export default function StripeSetup() {
 
     // Die 4 Backend Functions
     const functions = {
-        validateStripeSetup: `import { createClientFromRequest } from 'npm:@mimitech/sdk@0.7.1';
+        validateStripeSetup: `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
 
-Deno.serve(async (req) => {
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
     try {
-        const mimitech = createClientFromRequest(req);
-        const user = await mimitech.auth.me();
-        
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+        )
+
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+        if (userError || !user) {
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
-        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-        const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-        const STRIPE_PREMIUM_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_PRICE_ID');
-        const STRIPE_PRO_PRICE_ID = Deno.env.get('STRIPE_PRO_PRICE_ID');
+        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
+        const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+        const STRIPE_PREMIUM_PRICE_ID = Deno.env.get('STRIPE_PREMIUM_PRICE_ID')
+        const STRIPE_PRO_PRICE_ID = Deno.env.get('STRIPE_PRO_PRICE_ID')
 
         const validationResult = {
             success: true,
@@ -60,219 +78,363 @@ Deno.serve(async (req) => {
                 pro_price_id: !!STRIPE_PRO_PRICE_ID
             },
             message: ''
-        };
+        }
 
         if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !STRIPE_PREMIUM_PRICE_ID || !STRIPE_PRO_PRICE_ID) {
-            validationResult.success = false;
-            validationResult.message = 'Einige Stripe Secrets fehlen.';
+            validationResult.success = false
+            validationResult.message = 'Einige Stripe Secrets fehlen.'
         } else {
             try {
                 const testResponse = await fetch('https://api.stripe.com/v1/customers?limit=1', {
                     headers: { 'Authorization': \`Bearer \${STRIPE_SECRET_KEY}\` }
-                });
+                })
 
                 if (!testResponse.ok) {
-                    validationResult.success = false;
-                    validationResult.message = 'Stripe API Key ungültig.';
+                    validationResult.success = false
+                    validationResult.message = 'Stripe API Key ungültig.'
                 } else {
-                    validationResult.message = '✅ Stripe vollständig konfiguriert!';
+                    validationResult.message = '✅ Stripe vollständig konfiguriert!'
                 }
             } catch (error) {
-                validationResult.success = false;
-                validationResult.message = \`Fehler: \${error.message}\`;
+                validationResult.success = false
+                validationResult.message = \`Fehler: \${error.message}\`
             }
         }
 
-        return Response.json(validationResult);
+        return new Response(
+            JSON.stringify(validationResult),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+
     } catch (error) {
-        return Response.json({ success: false, error: error.message }, { status: 500 });
+        return new Response(
+            JSON.stringify({ success: false, error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
-});`,
+})`,
 
-        createStripeCheckoutSession: `import { createClientFromRequest } from 'npm:@mimitech/sdk@0.7.1';
+        createStripeCheckoutSession: `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
+import Stripe from "https://esm.sh/stripe@14.14.0"
 
-Deno.serve(async (req) => {
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
     try {
-        const mimitech = createClientFromRequest(req);
-        const user = await mimitech.auth.me();
-        
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+        )
+
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+        if (userError || !user) {
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
-        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-        const { planId, successUrl, cancelUrl } = await req.json();
+        const { planId, successUrl, cancelUrl } = await req.json()
 
         if (!planId || !['premium', 'pro'].includes(planId)) {
-            return Response.json({ error: 'Invalid planId' }, { status: 400 });
+            return new Response(
+                JSON.stringify({ error: 'Invalid planId' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
+
+        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
+        if (!STRIPE_SECRET_KEY) {
+            throw new Error('STRIPE_SECRET_KEY not set')
+        }
+
+        const stripe = new Stripe(STRIPE_SECRET_KEY, {
+            apiVersion: '2023-10-16',
+            httpClient: Stripe.createFetchHttpClient(),
+        })
 
         const PRICE_IDS = {
             premium: Deno.env.get('STRIPE_PREMIUM_PRICE_ID'),
             pro: Deno.env.get('STRIPE_PRO_PRICE_ID')
-        };
+        }
 
-        let customerId = user.stripe_customer_id;
+        if (!PRICE_IDS[planId]) {
+            throw new Error(\`Price ID for \${planId} not configured\`)
+        }
+
+        // Get or create customer
+        let customerId = user.user_metadata?.stripe_customer_id
 
         if (!customerId) {
-            const customerResponse = await fetch('https://api.stripe.com/v1/customers', {
-                method: 'POST',
-                headers: {
-                    'Authorization': \`Bearer \${STRIPE_SECRET_KEY}\`,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
+            // Check if customer exists in Stripe by email
+            const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+
+            if (customers.data.length > 0) {
+                customerId = customers.data[0].id;
+            } else {
+                // Create new customer
+                const customer = await stripe.customers.create({
                     email: user.email,
-                    name: user.full_name || user.email,
-                    'metadata[user_id]': user.id
-                })
-            });
+                    name: user.user_metadata?.full_name || user.email,
+                    metadata: {
+                        user_id: user.id
+                    }
+                });
+                customerId = customer.id;
+            }
 
-            const customer = await customerResponse.json();
-            customerId = customer.id;
-
-            await mimitech.asServiceRole.entities.User.update(user.id, {
-                stripe_customer_id: customerId
+            // Update user metadata with stripe_customer_id
+            await supabaseClient.auth.updateUser({
+                data: { stripe_customer_id: customerId }
             });
         }
 
-        const sessionResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
-            method: 'POST',
-            headers: {
-                'Authorization': \`Bearer \${STRIPE_SECRET_KEY}\`,
-                'Content-Type': 'application/x-www-form-urlencoded'
+        const session = await stripe.checkout.sessions.create({
+            customer: customerId,
+            mode: 'subscription',
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price: PRICE_IDS[planId],
+                    quantity: 1,
+                },
+            ],
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+            metadata: {
+                user_id: user.id,
+                plan_id: planId
             },
-            body: new URLSearchParams({
-                customer: customerId,
-                mode: 'subscription',
-                'payment_method_types[]': 'card',
-                'line_items[0][price]': PRICE_IDS[planId],
-                'line_items[0][quantity]': '1',
-                success_url: successUrl,
-                cancel_url: cancelUrl,
-                'metadata[user_id]': user.id,
-                'metadata[plan_id]': planId,
-                'subscription_data[metadata][user_id]': user.id,
-                'subscription_data[metadata][plan_id]': planId
-            })
-        });
+            subscription_data: {
+                metadata: {
+                    user_id: user.id,
+                    plan_id: planId
+                }
+            }
+        })
 
-        const session = await sessionResponse.json();
-        return Response.json({ checkoutUrl: session.url, sessionId: session.id });
+        return new Response(
+            JSON.stringify({ checkoutUrl: session.url, sessionId: session.id }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        console.error('Stripe Checkout Error:', error)
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
-});`,
+})`,
 
-        createCustomerPortalSession: `import { createClientFromRequest } from 'npm:@mimitech/sdk@0.7.1';
+        createCustomerPortalSession: `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
+import Stripe from "https://esm.sh/stripe@14.14.0"
 
-Deno.serve(async (req) => {
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
     try {
-        const mimitech = createClientFromRequest(req);
-        const user = await mimitech.auth.me();
-        
-        if (!user) {
-            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+        )
+
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+        if (userError || !user) {
+            return new Response(
+                JSON.stringify({ error: 'Unauthorized' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
-        if (!user.stripe_customer_id) {
-            return Response.json({ error: 'No subscription' }, { status: 400 });
+        const customerId = user.user_metadata?.stripe_customer_id
+
+        if (!customerId) {
+            return new Response(
+                JSON.stringify({ error: 'No subscription found (missing stripe_customer_id)' }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
         }
 
-        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-        const { returnUrl } = await req.json();
+        const { returnUrl } = await req.json()
 
-        const portalResponse = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
-            method: 'POST',
-            headers: {
-                'Authorization': \`Bearer \${STRIPE_SECRET_KEY}\`,
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams({
-                customer: user.stripe_customer_id,
-                return_url: returnUrl
-            })
-        });
+        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
+        if (!STRIPE_SECRET_KEY) {
+            throw new Error('STRIPE_SECRET_KEY not set')
+        }
 
-        const portalSession = await portalResponse.json();
-        return Response.json({ portalUrl: portalSession.url });
+        const stripe = new Stripe(STRIPE_SECRET_KEY, {
+            apiVersion: '2023-10-16',
+            httpClient: Stripe.createFetchHttpClient(),
+        })
+
+        const session = await stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: returnUrl,
+        })
+
+        return new Response(
+            JSON.stringify({ portalUrl: session.url }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
 
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        console.error('Portal Session Error:', error)
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
-});`,
+})`,
 
-        stripeWebhookHandler: `import { createClientFromRequest } from 'npm:@mimitech/sdk@0.7.1';
-import Stripe from 'npm:stripe@14.11.0';
+        stripeWebhookHandler: `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
+import Stripe from "https://esm.sh/stripe@14.14.0"
 
-Deno.serve(async (req) => {
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+    if (req.method === 'OPTIONS') {
+        return new Response('ok', { headers: corsHeaders })
+    }
+
     try {
-        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
-        const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+        const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')
+        const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+        const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-        const stripe = new Stripe(STRIPE_SECRET_KEY);
-        const signature = req.headers.get('stripe-signature');
-        const body = await req.text();
+        if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+            throw new Error('Missing environment variables')
+        }
 
-        let event;
+        const stripe = new Stripe(STRIPE_SECRET_KEY, {
+            apiVersion: '2023-10-16',
+            httpClient: Stripe.createFetchHttpClient(),
+        })
+
+        const signature = req.headers.get('stripe-signature')
+        if (!signature) {
+            return new Response('No signature', { status: 400 })
+        }
+
+        const body = await req.text()
+        let event
+
         try {
-            event = await stripe.webhooks.constructEventAsync(body, signature, STRIPE_WEBHOOK_SECRET);
+            event = await stripe.webhooks.constructEventAsync(body, signature, STRIPE_WEBHOOK_SECRET)
         } catch (err) {
-            return Response.json({ error: 'Invalid signature' }, { status: 400 });
+            console.error(\`Webhook signature verification failed: \${err.message}\`)
+            return new Response(\`Webhook Error: \${err.message}\`, { status: 400 })
         }
 
-        const mimitech = createClientFromRequest(req);
+        const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
         switch (event.type) {
             case 'checkout.session.completed': {
-                const session = event.data.object;
-                const userId = session.metadata.user_id;
-                const planId = session.metadata.plan_id;
+                const session = event.data.object
+                const userId = session.metadata?.user_id
+                const planId = session.metadata?.plan_id
 
                 if (userId && planId) {
-                    await mimitech.asServiceRole.entities.User.update(userId, {
-                        subscription_tier: planId,
-                        subscription_status: 'active',
-                        stripe_subscription_id: session.subscription
-                    });
+                    console.log(\`Processing checkout for user \${userId}, plan \${planId}\`)
+                    
+                    // Update user_profiles
+                    const { error: profileError } = await supabaseAdmin
+                        .from('users')
+                        .update({
+                            subscription_tier: planId,
+                            subscription_status: 'active',
+                            stripe_subscription_id: session.subscription
+                        })
+                        .eq('auth_id', userId)
+
+                    if (profileError) console.error('Error updating profile:', profileError)
+
+                    // Update auth metadata
+                    await supabaseAdmin.auth.updateUserById(userId, {
+                        user_metadata: { subscription_tier: planId }
+                    })
                 }
-                break;
+                break
             }
 
             case 'invoice.payment_succeeded': {
-                const invoice = event.data.object;
-                const subData = await stripe.subscriptions.retrieve(invoice.subscription);
-                const userId = subData.metadata.user_id;
+                const invoice = event.data.object
+                const subscriptionId = invoice.subscription
+                const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+                const userId = subscription.metadata?.user_id
 
                 if (userId) {
-                    await mimitech.asServiceRole.entities.User.update(userId, {
-                        subscription_status: 'active'
-                    });
+                    console.log(\`Payment succeeded for user \${userId}\`)
+                    
+                    await supabaseAdmin
+                        .from('users')
+                        .update({ subscription_status: 'active' })
+                        .eq('auth_id', userId)
                 }
-                break;
+                break
             }
 
             case 'customer.subscription.deleted': {
-                const subscription = event.data.object;
-                const userId = subscription.metadata.user_id;
+                const subscription = event.data.object
+                const userId = subscription.metadata?.user_id
 
                 if (userId) {
-                    await mimitech.asServiceRole.entities.User.update(userId, {
-                        subscription_tier: 'free',
-                        subscription_status: 'cancelled',
-                        stripe_subscription_id: null
-                    });
+                    console.log(\`Subscription deleted for user \${userId}\`)
+                    
+                    await supabaseAdmin
+                        .from('users')
+                        .update({
+                            subscription_tier: 'free',
+                            subscription_status: 'cancelled',
+                            stripe_subscription_id: null
+                        })
+                        .eq('auth_id', userId)
+
+                    await supabaseAdmin.auth.updateUserById(userId, {
+                        user_metadata: { subscription_tier: 'free' }
+                    })
                 }
-                break;
+                break
             }
         }
 
-        return Response.json({ received: true });
+        return new Response(JSON.stringify({ received: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+
     } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+        console.error('Webhook handler error:', error)
+        return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
-});`
+})`
     };
 
     return (
@@ -292,7 +454,7 @@ Deno.serve(async (req) => {
                 <Alert variant="destructive">
                     <Shield className="h-4 w-4" />
                     <AlertDescription>
-                        <strong>⚠️ PROBLEM GEFUNDEN:</strong> Sie sind kein Admin! 
+                        <strong>⚠️ PROBLEM GEFUNDEN:</strong> Sie sind kein Admin!
                         Backend Functions können nur von Admins erstellt werden.
                         Kontaktieren Sie bitte den App-Besitzer, um Admin-Rechte zu erhalten.
                     </AlertDescription>
@@ -314,7 +476,7 @@ Deno.serve(async (req) => {
                             <strong>WO?</strong> In einem neuen Browser-Tab
                         </AlertDescription>
                     </Alert>
-                    
+
                     <div className="space-y-2">
                         <p className="text-slate-700 dark:text-slate-300">
                             1. Öffnen Sie in einem <strong>NEUEN TAB</strong>: <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">https://mimitech.com/dashboard</code>
@@ -324,7 +486,7 @@ Deno.serve(async (req) => {
                         </p>
                     </div>
 
-                    <Button 
+                    <Button
                         className="w-full bg-blue-600 hover:bg-blue-700"
                         onClick={() => window.open('https://mimitech.com/dashboard', '_blank')}
                     >
@@ -358,7 +520,7 @@ Deno.serve(async (req) => {
                     <Alert>
                         <Code className="h-4 w-4" />
                         <AlertDescription>
-                            Sie sollten jetzt eine Seite sehen mit der Überschrift "Backend Functions" 
+                            Sie sollten jetzt eine Seite sehen mit der Überschrift "Backend Functions"
                             und einem Button <strong>"+ New Function"</strong>
                         </AlertDescription>
                     </Alert>
@@ -377,7 +539,7 @@ Deno.serve(async (req) => {
                     <Alert className="bg-amber-50 dark:bg-amber-900/20 border-amber-200">
                         <AlertTriangle className="h-4 w-4 text-amber-600" />
                         <AlertDescription>
-                            <strong>WICHTIG:</strong> Erstellen Sie ALLE 4 Functions nacheinander. 
+                            <strong>WICHTIG:</strong> Erstellen Sie ALLE 4 Functions nacheinander.
                             Für jede Function: Code kopieren → New Function → Einfügen → Save
                         </AlertDescription>
                     </Alert>
@@ -473,7 +635,7 @@ Deno.serve(async (req) => {
                                 Geschafft! 🎉
                             </h2>
                             <p className="text-slate-700 dark:text-slate-300 mt-2">
-                                Sobald alle 4 Functions erstellt sind, ist Stripe vollständig integriert 
+                                Sobald alle 4 Functions erstellt sind, ist Stripe vollständig integriert
                                 und die Pricing-Seite funktioniert automatisch!
                             </p>
                         </div>

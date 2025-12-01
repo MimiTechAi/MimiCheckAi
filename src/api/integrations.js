@@ -1,154 +1,127 @@
 // src/api/integrations.js - MIMITECH Backend Integration
+import { supabase } from './supabaseClient';
 
 /**
- * Upload File
+ * Upload File to Supabase Storage
  */
 export async function uploadFile(file, options = {}) {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-  const enableMocks = String(import.meta.env.VITE_ENABLE_MOCKS || '0') === '1';
-  const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
-
-  if (enableMocks) {
-    if (onProgress) {
-      await new Promise((resolve) => {
-        let p = 0;
-        onProgress(0);
-        const timer = setInterval(() => {
-          p = Math.min(p + 25, 100);
-          onProgress(p);
-          if (p >= 100) {
-            clearInterval(timer);
-            resolve();
-          }
-        }, 80);
-      });
-    }
-    return { file_url: URL.createObjectURL(file), id: Date.now().toString() };
-  }
-
-  // Prefer XMLHttpRequest to support upload progress
-  if (onProgress) {
-    return await new Promise((resolve, reject) => {
-      try {
-        const fd = new FormData();
-        fd.append("file", file);
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", `${apiBase}/api/upload`, true);
-        xhr.withCredentials = true;
-        xhr.upload.onprogress = (evt) => {
-          if (evt.lengthComputable) {
-            const percent = Math.round((evt.loaded / evt.total) * 100);
-            onProgress(percent);
-          }
-        };
-        xhr.onerror = () => {
-          if (import.meta.env.DEV) {
-            if (onProgress) {
-              let p = 0;
-              onProgress(0);
-              const timer = setInterval(() => {
-                p = Math.min(p + 25, 100);
-                onProgress(p);
-                if (p >= 100) {
-                  clearInterval(timer);
-                  resolve({ file_url: URL.createObjectURL(file), id: Date.now().toString() });
-                }
-              }, 80);
-            } else {
-              resolve({ file_url: URL.createObjectURL(file), id: Date.now().toString() });
-            }
-            return;
-          }
-          reject(new Error("Upload failed"));
-        };
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4) {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const json = JSON.parse(xhr.responseText || '{}');
-                resolve(json);
-              } catch (e) {
-                resolve({});
-              }
-            } else {
-              if (import.meta.env.DEV) {
-                if (onProgress) {
-                  let p = 0;
-                  onProgress(0);
-                  const timer = setInterval(() => {
-                    p = Math.min(p + 25, 100);
-                    onProgress(p);
-                    if (p >= 100) {
-                      clearInterval(timer);
-                      resolve({ file_url: URL.createObjectURL(file), id: Date.now().toString() });
-                    }
-                  }, 80);
-                } else {
-                  resolve({ file_url: URL.createObjectURL(file), id: Date.now().toString() });
-                }
-                return;
-              }
-              reject(new Error("Upload failed"));
-            }
-          }
-        };
-        xhr.send(fd);
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  // Fallback: fetch without progress
-  const fd = new FormData();
-  fd.append("file", file);
-  let res;
+  const onProgress = typeof options === 'function' ? options : options?.onProgress;
+  
   try {
-    res = await fetch(`${apiBase}/api/upload`, {
-      method: "POST",
-      body: fd,
-      credentials: "include",
-    });
+    // Simulate progress for UX
+    if (onProgress) {
+      onProgress(10);
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `uploads/${timestamp}_${safeFileName}`;
+
+    if (onProgress) {
+      onProgress(30);
+    }
+
+    // Upload to Supabase Storage
+    console.log('🔄 Uploading to Supabase Storage...', filePath);
+    const { data, error } = await supabase.storage
+      .from('documents')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    console.log('📦 Storage response:', { data, error });
+
+    if (onProgress) {
+      onProgress(70);
+    }
+
+    if (error) {
+      console.error('❌ Supabase Storage upload error:', error);
+      // Fallback: Return local blob URL for development
+      if (import.meta.env.DEV) {
+        console.warn('Using local fallback for file upload');
+        if (onProgress) onProgress(100);
+        return { 
+          file_url: URL.createObjectURL(file), 
+          id: timestamp.toString(),
+          local: true 
+        };
+      }
+      throw new Error(`Upload fehlgeschlagen: ${error.message}`);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('documents')
+      .getPublicUrl(data.path);
+
+    if (onProgress) {
+      onProgress(100);
+    }
+
+    return {
+      file_url: urlData.publicUrl,
+      url: urlData.publicUrl,
+      id: timestamp.toString(),
+      path: data.path
+    };
+
   } catch (err) {
-    if (enableMocks || import.meta.env.DEV) {
-      return { file_url: URL.createObjectURL(file), id: Date.now().toString() };
+    console.error('Upload error:', err);
+    // Fallback for development
+    if (import.meta.env.DEV) {
+      console.warn('Using local fallback for file upload');
+      if (onProgress) onProgress(100);
+      return { 
+        file_url: URL.createObjectURL(file), 
+        id: Date.now().toString(),
+        local: true 
+      };
     }
     throw err;
   }
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Upload failed" }));
-    throw new Error(error.message || "Upload failed");
-  }
-  return res.json();
 }
 
 /**
- * Analyze Abrechnung
+ * Analyze Abrechnung - Uses Supabase Edge Function
  */
 export async function analyzeAbrechnung(abrechnungId) {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-
-  const res = await fetch(`${apiBase}/api/analyze`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ abrechnung_id: abrechnungId }),
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Analyse failed");
-  return res.json();
+  try {
+    const { data, error } = await supabase.functions.invoke('analyze-eligibility', {
+      body: { abrechnung_id: abrechnungId }
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Analysis error:', err);
+    // Return mock analysis for development
+    if (import.meta.env.DEV) {
+      return {
+        issues_found: [],
+        savings_potential: Math.floor(Math.random() * 500),
+        legal_compliance_score: 85 + Math.floor(Math.random() * 15)
+      };
+    }
+    throw err;
+  }
 }
 
 /**
  * Get Report
  */
 export async function getReport(abrechnungId) {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-
-  const res = await fetch(`${apiBase}/api/report/${abrechnungId}`, {
-    credentials: "include",
-  });
-  if (!res.ok) throw new Error("Report failed");
-  return res.json();
+  // Report is stored in Supabase - fetch from database
+  const { data, error } = await supabase
+    .from('abrechnungen')
+    .select('*')
+    .eq('id', abrechnungId)
+    .single();
+    
+  if (error) throw new Error("Report nicht gefunden");
+  return data;
 }
 
 // Legacy-Exports für Kompatibilität

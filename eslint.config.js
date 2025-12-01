@@ -41,17 +41,46 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
-      'react/jsx-no-target-blank': 'off',
-      'react/prop-types': 'off', // Disabled - use TypeScript for type safety
+      
+      // React-spezifisch
+      'react/jsx-no-target-blank': 'warn', // Sicherheitswarnung für externe Links
+      'react/prop-types': 'off', // PropTypes deaktiviert - nutze JSDoc für Typen
+      'react/no-unescaped-entities': 'warn',
+      'react/jsx-key': 'error', // Keys in Listen sind Pflicht
+      'react/jsx-no-duplicate-props': 'error',
+      'react/no-direct-mutation-state': 'error',
+      
+      // React Refresh
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
+      
+      // Hooks
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      
+      // JavaScript Best Practices
       'no-unused-vars': ['warn', { 
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
         ignoreRestSiblings: true 
       }],
+      'no-console': ['warn', { allow: ['warn', 'error'] }], // Console-Logs warnen
+      'no-debugger': 'error',
+      'no-alert': 'warn',
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      
+      // Sicherheit
+      'no-script-url': 'error',
+      
+      // Code-Qualität
+      'eqeqeq': ['warn', 'smart'], // === statt ==
+      'no-var': 'error', // let/const statt var
+      'prefer-const': 'warn',
+      'prefer-template': 'warn', // Template Strings bevorzugen
     },
   },
 ]

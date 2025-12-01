@@ -42,36 +42,32 @@ const initUser = () => {
   return user;
 };
 
-// Initialisiere Beispieldaten
+// Initialisiere Beispieldaten - DEAKTIVIERT FÜR PRODUCTION
+// WICHTIG: Diese Funktion generiert Mock-Daten und wird NICHT mehr aufgerufen
+// Kunden sollen nur ECHTE Daten sehen
 const initSampleData = () => {
+  // DEAKTIVIERT - Keine Mock-Daten mehr!
+  /*
   let abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN);
   if (!abrechnungen || abrechnungen.length === 0) {
     abrechnungen = [
       {
         id: '1',
         titel: 'Nebenkostenabrechnung 2023',
-        abrechnungszeitraum: '01.01.2023 - 31.12.2023',
-        analyse_status: 'abgeschlossen',
-        rueckforderung_potential: 450.75,
-        created_date: new Date('2024-01-15').toISOString(),
-        adresse: 'Musterstraße 123, 12345 Berlin',
-        gesamtkosten: 2450.00,
-        fehler_gefunden: 3
-      },
-      {
-        id: '2',
-        titel: 'Nebenkostenabrechnung 2022',
-        abrechnungszeitraum: '01.01.2022 - 31.12.2022',
-        analyse_status: 'abgeschlossen',
-        rueckforderung_potential: 215.50,
-        created_date: new Date('2023-02-10').toISOString(),
-        adresse: 'Musterstraße 123, 12345 Berlin',
-        gesamtkosten: 2280.00,
-        fehler_gefunden: 2
+        // ... (Mock-Daten entfernt)
       }
     ];
     saveToStorage(STORAGE_KEYS.ABRECHNUNGEN, abrechnungen);
   }
+  */
+
+  // Auch Förderleistungen NICHT mehr automatisch initialisieren
+  /*
+  let foerderleistungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN);
+  if (!foerderleistungen || foerderleistungen.length === 0) {
+    // ... (Mock-Daten entfernt)
+  }
+  */
 };
 
 // Lokaler Client
@@ -80,13 +76,13 @@ export const localClient = {
     me: async () => {
       return initUser();
     },
-    
+
     logout: async (redirectUrl) => {
       // Optional: Daten löschen beim Logout
       // localStorage.clear();
       window.location.href = redirectUrl || '/';
     },
-    
+
     updateProfile: async (data) => {
       const user = initUser();
       const updatedUser = { ...user, ...data };
@@ -94,28 +90,30 @@ export const localClient = {
       return updatedUser;
     }
   },
-  
+
   entities: {
     Abrechnung: {
       list: async (order = '-created_date', limit = 100) => {
-        initSampleData();
+        // PRODUCTION MODE: Keine Auto-Generierung von Mock-Daten
+        // initSampleData(); // <-- ENTFERNT!
+
         let abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
-        
+
         // Sortierung
         if (order === '-created_date') {
           abrechnungen.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
         } else if (order === 'created_date') {
           abrechnungen.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
         }
-        
+
         return abrechnungen.slice(0, limit);
       },
-      
+
       get: async (id) => {
         const abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
         return abrechnungen.find(a => a.id === id) || null;
       },
-      
+
       create: async (data) => {
         const abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
         const newAbrechnung = {
@@ -129,7 +127,7 @@ export const localClient = {
         saveToStorage(STORAGE_KEYS.ABRECHNUNGEN, abrechnungen);
         return newAbrechnung;
       },
-      
+
       update: async (id, data) => {
         const abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
         const index = abrechnungen.findIndex(a => a.id === id);
@@ -140,7 +138,7 @@ export const localClient = {
         }
         return null;
       },
-      
+
       delete: async (id) => {
         const abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
         const filtered = abrechnungen.filter(a => a.id !== id);
@@ -148,18 +146,18 @@ export const localClient = {
         return { success: true };
       }
     },
-    
+
     Anspruchspruefung: {
       list: async (order, limit = 100) => {
         const pruefungen = getFromStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN) || [];
         return pruefungen.slice(0, limit);
       },
-      
+
       get: async (id) => {
         const pruefungen = getFromStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN) || [];
         return pruefungen.find(p => p.id === id) || null;
       },
-      
+
       create: async (data) => {
         const pruefungen = getFromStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN) || [];
         const newPruefung = {
@@ -171,7 +169,7 @@ export const localClient = {
         saveToStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN, pruefungen);
         return newPruefung;
       },
-      
+
       update: async (id, data) => {
         const pruefungen = getFromStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN) || [];
         const index = pruefungen.findIndex(p => p.id === id);
@@ -182,7 +180,7 @@ export const localClient = {
         }
         return null;
       },
-      
+
       delete: async (id) => {
         const pruefungen = getFromStorage(STORAGE_KEYS.ANSPRUCHSPRUEFUNGEN) || [];
         const filtered = pruefungen.filter(p => p.id !== id);
@@ -190,18 +188,18 @@ export const localClient = {
         return { success: true };
       }
     },
-    
+
     Foerderleistung: {
       list: async (order, limit = 100) => {
         const foerderungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN) || [];
         return foerderungen.slice(0, limit);
       },
-      
+
       get: async (id) => {
         const foerderungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN) || [];
         return foerderungen.find(f => f.id === id) || null;
       },
-      
+
       create: async (data) => {
         const foerderungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN) || [];
         const newFoerderung = {
@@ -213,7 +211,7 @@ export const localClient = {
         saveToStorage(STORAGE_KEYS.FOERDERLEISTUNGEN, foerderungen);
         return newFoerderung;
       },
-      
+
       update: async (id, data) => {
         const foerderungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN) || [];
         const index = foerderungen.findIndex(f => f.id === id);
@@ -224,7 +222,7 @@ export const localClient = {
         }
         return null;
       },
-      
+
       delete: async (id) => {
         const foerderungen = getFromStorage(STORAGE_KEYS.FOERDERLEISTUNGEN) || [];
         const filtered = foerderungen.filter(f => f.id !== id);
@@ -243,18 +241,18 @@ localClient.integrations = {
       console.warn('⚠️ DEPRECATED: Use integrations.js InvokeLLM instead');
       return { result: 'DEPRECATED', content: 'Nutze integrations.js' };
     },
-    
+
     SendEmail: async (params) => {
       console.log('SendEmail Mock:', params);
       return { success: true, message: 'E-Mail wurde simuliert (nicht wirklich versendet)' };
     },
-    
+
     UploadFile: async ({ file }) => {
       console.log('UploadFile Mock:', file?.name);
       if (!file) {
         throw new Error('No file provided to UploadFile');
       }
-      return { 
+      return {
         file_url: URL.createObjectURL(file),
         id: Date.now().toString(),
         url: URL.createObjectURL(file),
@@ -262,15 +260,15 @@ localClient.integrations = {
         size: file?.size
       };
     },
-    
+
     GenerateImage: async (params) => {
       console.log('GenerateImage Mock:', params);
-      return { 
+      return {
         url: 'https://via.placeholder.com/400x300.png?text=Mock+Image',
-        id: Date.now().toString() 
+        id: Date.now().toString()
       };
     },
-    
+
     ExtractDataFromUploadedFile: async (fileId) => {
       console.log('ExtractDataFromUploadedFile Mock:', fileId);
       return {
@@ -282,15 +280,15 @@ localClient.integrations = {
         }
       };
     },
-    
+
     CreateFileSignedUrl: async (fileId) => {
       console.log('CreateFileSignedUrl Mock:', fileId);
       return { url: 'https://via.placeholder.com/400x300.png?text=Mock+File', expiresAt: Date.now() + 3600000 };
     },
-    
+
     UploadPrivateFile: async (file) => {
       console.log('UploadPrivateFile Mock:', file?.name);
-      return { 
+      return {
         id: Date.now().toString(),
         url: URL.createObjectURL(file),
         name: file?.name,
@@ -301,6 +299,66 @@ localClient.integrations = {
   }
 };
 
-// Beim Import initialisieren
-initUser();
-initSampleData();
+// Functions API für Edge Functions (Mock)
+localClient.functions = {
+  invoke: async (functionName, params) => {
+    console.log(`🔧 Mock Function Call: ${functionName}`, params);
+
+    // Mock-Implementierungen für verschiedene Functions
+    switch (functionName) {
+      case 'analyzePdfFields':
+        return {
+          status: 200,
+          data: {
+            hasFormFields: false,
+            fieldCount: 0,
+            warning: 'Dieses PDF hat keine ausfüllbaren Formularfelder. Bitte laden Sie ein interaktives PDF-Formular hoch.',
+            suggestions: []
+          }
+        };
+
+      case 'fillPdfForm':
+        // Simuliere PDF-Ausfüllung
+        throw new Error('PDF-Ausfüllung erfordert Backend-Integration. Bitte Backend konfigurieren.');
+
+      case 'exportUserData':
+        // Simuliere Datenexport
+        const user = getFromStorage(STORAGE_KEYS.USER);
+        const abrechnungen = getFromStorage(STORAGE_KEYS.ABRECHNUNGEN) || [];
+        const exportData = {
+          user,
+          abrechnungen,
+          exportedAt: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        return {
+          status: 200,
+          data: blob
+        };
+
+      case 'deleteUserAccount':
+        // Simuliere Konto-Löschung
+        if (params.confirmation === 'DELETE') {
+          localStorage.clear();
+          return {
+            status: 200,
+            data: { success: true, message: 'Konto wurde gelöscht' }
+          };
+        }
+        throw new Error('Bestätigung fehlgeschlagen');
+
+      default:
+        console.warn(`⚠️ Unbekannte Function: ${functionName}`);
+        return {
+          status: 404,
+          data: { error: `Function '${functionName}' nicht implementiert` }
+        };
+    }
+  }
+};
+
+// PRODUCTION MODE: Keine automatische Initialisierung beim Import
+// Kunden sollen nur ECHTE Daten sehen, keine Mock-Daten!
+// 
+// initUser();        // <-- ENTFERNT
+// initSampleData();  // <-- ENTFERNT

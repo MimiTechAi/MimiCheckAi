@@ -19,11 +19,12 @@ vi.mock('@/api/entities', () => ({
 // JSDOM navigation setup uses BrowserRouter internally; ensure path
 beforeEach(() => {
   window.localStorage.removeItem('seenOnboarding');
-  window.history.pushState({}, '', '/');
+  // Start on a protected route so onboarding redirect can trigger
+  window.history.pushState({}, '', '/Dashboard');
 });
 
 describe('Onboarding routing guard', () => {
-  it('redirects once to /onboarding when completion is 0 and sets focus to H1', async () => {
+  it('redirects once to /onboarding from a protected route when completion is 0 and sets focus to H1', async () => {
     render(<Pages />);
 
     const h1 = await screen.findByRole('heading', { name: /Onboarding/i });

@@ -1,14 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Database, Bot, Cookie } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Datenschutz() {
+    const { t } = useTranslation();
+
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <div className="text-center mb-8">
-                <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">Datenschutzerklärung</h1>
+                <h1 className="text-4xl font-bold text-slate-800 dark:text-white mb-4">{t('datenschutzPage.title')}</h1>
                 <p className="text-lg text-slate-600 dark:text-slate-300">
-                    Gemäß Art. 13, 14 DSGVO • Stand: Januar 2025
+                    {t('datenschutzPage.subtitle')}
                 </p>
             </div>
 
@@ -16,14 +19,12 @@ export default function Datenschutz() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                         <Shield className="w-6 h-6 text-green-600" />
-                        Ihre Daten sind sicher
+                        {t('datenschutzPage.security.title')}
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p className="text-slate-600 dark:text-slate-300">
-                        Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst und behandeln Ihre Daten 
-                        vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften sowie dieser 
-                        Datenschutzerklärung.
+                        {t('datenschutzPage.security.text')}
                     </p>
                 </CardContent>
             </Card>
@@ -33,21 +34,21 @@ export default function Datenschutz() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-lg">
                             <Database className="w-5 h-5 text-blue-600" />
-                            Welche Daten wir sammeln
+                            {t('datenschutzPage.collection.title')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-slate-600 dark:text-slate-300 space-y-3">
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Google Login:</h4>
-                            <p>Name, E-Mail-Adresse (zur Kontenerstellung)</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.collection.google.title')}</h4>
+                            <p>{t('datenschutzPage.collection.google.text')}</p>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Profildaten:</h4>
-                            <p>Einkommen, Familienstand, Wohnsituation (für Förderprüfung)</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.collection.profile.title')}</h4>
+                            <p>{t('datenschutzPage.collection.profile.text')}</p>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Dokumente:</h4>
-                            <p>Nebenkostenabrechnungen (zur rechtlichen Analyse)</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.collection.docs.title')}</h4>
+                            <p>{t('datenschutzPage.collection.docs.text')}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -56,21 +57,21 @@ export default function Datenschutz() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-lg">
                             <Bot className="w-5 h-5 text-purple-600" />
-                            KI & Datenverarbeitung
+                            {t('datenschutzPage.ai.title')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="text-sm text-slate-600 dark:text-slate-300 space-y-3">
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Zweck:</h4>
-                            <p>Automatische Prüfung von Förderansprüchen und Nebenkostenabrechnungen</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.ai.purpose.title')}</h4>
+                            <p>{t('datenschutzPage.ai.purpose.text')}</p>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Anonymisierung:</h4>
-                            <p>Daten werden für KI-Analyse pseudonymisiert</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.ai.anon.title')}</h4>
+                            <p>{t('datenschutzPage.ai.anon.text')}</p>
                         </div>
                         <div>
-                            <h4 className="font-semibold text-slate-800 dark:text-white">Keine Weitergabe:</h4>
-                            <p>Ihre Daten werden nicht an Dritte verkauft</p>
+                            <h4 className="font-semibold text-slate-800 dark:text-white">{t('datenschutzPage.ai.noShare.title')}</h4>
+                            <p>{t('datenschutzPage.ai.noShare.text')}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -78,25 +79,25 @@ export default function Datenschutz() {
 
             <Card className="border-none shadow-xl">
                 <CardHeader>
-                    <CardTitle>Ihre Rechte</CardTitle>
+                    <CardTitle>{t('datenschutzPage.rights.title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-3 gap-6 text-sm">
                     <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">Auskunft</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">{t('datenschutzPage.rights.info.title')}</h4>
                         <p className="text-slate-600 dark:text-slate-300">
-                            Sie haben das Recht auf Auskunft über Ihre gespeicherten Daten.
+                            {t('datenschutzPage.rights.info.text')}
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">Löschung</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">{t('datenschutzPage.rights.delete.title')}</h4>
                         <p className="text-slate-600 dark:text-slate-300">
-                            Sie können jederzeit die Löschung Ihrer Daten beantragen.
+                            {t('datenschutzPage.rights.delete.text')}
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">Widerruf</h4>
+                        <h4 className="font-semibold text-slate-800 dark:text-white mb-2">{t('datenschutzPage.rights.revoke.title')}</h4>
                         <p className="text-slate-600 dark:text-slate-300">
-                            Einverständnisse können jederzeit widerrufen werden.
+                            {t('datenschutzPage.rights.revoke.text')}
                         </p>
                     </div>
                 </CardContent>
@@ -104,9 +105,9 @@ export default function Datenschutz() {
 
             <Card className="border-none shadow-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
                 <CardContent className="p-6">
-                    <h3 className="font-bold text-slate-800 dark:text-white mb-4">Kontakt zum Datenschutzbeauftragten</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white mb-4">{t('datenschutzPage.contact.title')}</h3>
                     <p className="text-slate-600 dark:text-slate-300">
-                        Bei Fragen zum Datenschutz kontaktieren Sie uns unter: <br/>
+                        {t('datenschutzPage.contact.text')} <br />
                         <strong>datenschutz@staatshilfen.ai</strong>
                     </p>
                 </CardContent>

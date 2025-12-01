@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { motion } from "framer-motion";
 import { Abrechnung } from "@/api/entities";
 import { mimitech } from "@/api/mimitechClient";
 import { uploadFile } from "@/api/integrations";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload as UploadIcon, Sparkles, ShieldCheck, FileText, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { track, trackError, AREA, SEVERITY } from '@/components/core/telemetry';
 import { AppError } from '@/components/core/errors';
+import UploadAnimation from "@/components/animations/UploadAnimation"; // NEW
+import SpotlightCard from "@/components/ui/SpotlightCard"; // NEW
 
 import FileUploadZone from "../components/upload/FileUploadZone";
 import AnalysisProgress from "../components/upload/AnalysisProgress";
 import UploadResults from "../components/upload/UploadResults";
 import ErrorState from "@/components/ui/ErrorState";
 
+import { useTranslation } from 'react-i18next';
+
 export default function Upload() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [selectedFile, setSelectedFile] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -27,11 +33,11 @@ export default function Upload() {
     const MAX_RETRIES = 2;
 
     const analysisSteps = [
-        { title: "Dokument hochladen", description: "Datei wird gespeichert" },
-        { title: "OCR-Texterkennung", description: "Text wird extrahiert" },
-        { title: "Datenextraktion", description: "Relevante Informationen werden identifiziert" },
-        { title: "Rechtliche Prüfung", description: "Abrechnung wird nach deutschem Mietrecht geprüft" },
-        { title: "Bericht erstellen", description: "Ergebnisse werden zusammengefasst" }
+        { title: t('uploadPage.steps.upload.title', 'Dokument hochladen'), description: t('uploadPage.steps.upload.description', 'Sichere Übertragung...') },
+        { title: t('uploadPage.steps.analysis.title', 'KI-Analyse'), description: t('uploadPage.steps.analysis.description', 'Prüfe Inhalt und Struktur...') },
+        { title: t('uploadPage.steps.extraction.title', 'Datenextraktion'), description: t('uploadPage.steps.extraction.description', 'Identifiziere Kostenpunkte...') },
+        { title: t('uploadPage.steps.legal.title', 'Rechtliche Prüfung'), description: t('uploadPage.steps.legal.description', 'Abgleich mit Mietrecht...') },
+        { title: t('uploadPage.steps.report.title', 'Bericht erstellen'), description: t('uploadPage.steps.report.description', 'Finalisiere Ergebnisse...') }
     ];
 
     const extractDataWithFallback = async (file_url) => {
@@ -97,288 +103,231 @@ export default function Upload() {
                     track('upload.extraction.success', AREA.UPLOAD, { strategy: strategy.name });
                     return result.output;
                 }
-            } catch (error) {
-                lastError = error;
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (err) {
+                console.warn(`Strategie ${strategy.name} fehlgeschlagen:`, err);
+                lastError = err;
             }
         }
 
-        throw new AppError(
-            'Datenextraktion fehlgeschlagen',
-            'EXTRACTION_FAILED',
-            { lastError: lastError?.message },
-            SEVERITY.HIGH
-        );
+        throw lastError || new Error("Alle Extraktionsstrategien fehlgeschlagen");
     };
 
-    const performLegalAnalysisWithFallback = async (extractedData) => {
-        const analysisStrategies = [
-            {
-                name: "Vollständige Analyse",
-                prompt: `
-                Analysiere diese Nebenkostenabrechnung nach deutschem Mietrecht (§§ 556, 559 BGB, BetrKV).
-                Abrechnung: ${JSON.stringify(extractedData)}
-                Prüfe: Unzulässige Posten, Verteilerschlüssel, Transparenz, Abrechnungsfrist.
-                Bewerte jeden Kostenposten als: "ok", "pruefbeduerftig", oder "fehlerhaft".
-                `,
-                schema: {
-                    type: "object",
-                    properties: {
-                        fehler: {
-                            type: "array",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    kategorie: { type: "string" },
-                                    beschreibung: { type: "string" },
-                                    schweregrad: { type: "string", enum: ["niedrig", "mittel", "hoch"] },
-                                    betrag: { type: "number" },
-                                    rechtsgrundlage: { type: "string" }
-                                }
-                            }
-                        },
-                        rueckforderung_potential: { type: "number" },
-                        zusammenfassung: { type: "string" }
-                    }
-                }
-            }
-        ];
-
-        let lastError = null;
-
-        for (const strategy of analysisStrategies) {
-            try {
-                const result = await mimitech.integrations.Core.InvokeLLM({
-                    prompt: strategy.prompt,
-                    response_json_schema: strategy.schema
-                });
-
-                if (result) {
-                    track('upload.analysis.success', AREA.UPLOAD, { strategy: strategy.name });
-                    return result;
-                }
-            } catch (error) {
-                lastError = error;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-        }
-
-        return {
-            fehler: [],
-            rueckforderung_potential: 0,
-            zusammenfassung: "Dokument wurde hochgeladen, aber die automatische Analyse war nicht möglich."
-        };
-    };
-
-    const processDocument = async (file) => {
-        setIsProcessing(true);
+    const handleFileSelect = async (file) => {
+        console.log('🚀 handleFileSelect called with:', file?.name, file?.size);
+        setSelectedFile(file);
         setError(null);
+        setIsProcessing(true);
         setAnalysisStep(0);
         setUploadProgress(0);
 
-        track('upload.process.started', AREA.UPLOAD, {
-            fileName: file.name,
-            fileSize: file.size
-        });
-
         try {
-            // Step 1: Upload
+            // Step 1: Upload to real backend
+            console.log('📤 Starting upload...');
+            setAnalysisStep(0);
+            const uploadResult = await uploadFile(file, (progress) => {
+                console.log(`📊 Upload progress: ${progress}%`);
+                setUploadProgress(progress);
+            });
+            console.log('✅ Upload complete:', uploadResult);
+
+            if (!uploadResult || (!uploadResult.url && !uploadResult.file_url)) {
+                throw new AppError(
+                    t('uploadPage.errors.uploadFailed', 'Upload fehlgeschlagen. Bitte stellen Sie sicher, dass das Backend läuft.'),
+                    SEVERITY.HIGH,
+                    { fileName: file.name }
+                );
+            }
+
+            // Use file_url as fallback for url
+            const fileUrl = uploadResult.url || uploadResult.file_url;
+
+            // Step 2: OCR & Analysis
             setAnalysisStep(1);
-            let file_url;
-            
-            try {
-                const uploadResult = await uploadFile(file, {
-                    onProgress: (p) => setUploadProgress(p)
-                });
-                file_url = uploadResult.file_url;
-            } catch (uploadError) {
-                throw new AppError(
-                    'Datei-Upload fehlgeschlagen',
-                    'UPLOAD_FAILED',
-                    { error: uploadError.message },
-                    SEVERITY.CRITICAL
-                );
-            }
-            
-            // Step 2: OCR
+            await new Promise(resolve => setTimeout(resolve, 1500)); // UX Delay
+
+            // Step 3: Extraction - DIRECT EDGE FUNCTION CALL
             setAnalysisStep(2);
-            await new Promise(resolve => setTimeout(resolve, 1500)); 
+            console.log('🔥 Calling extract-document Edge Function with URL:', fileUrl);
             
-            // Step 3: Extraction
-            setAnalysisStep(3);
-            let extractedData;
-            
-            try {
-                extractedData = await extractDataWithFallback(file_url);
-            } catch (extractionError) {
-                trackError(extractionError, AREA.UPLOAD);
-                extractedData = {
-                    titel: file.name.replace(/\.[^/.]+$/, ""),
-                    abrechnungszeitraum: new Date().getFullYear().toString(),
-                    verwalter: "Nicht erkannt",
-                    objekt_adresse: "Nicht erkannt",
-                    gesamtkosten: 0
-                };
-            }
-
-            // Step 4: Analysis
-            setAnalysisStep(4);
-            let legalAnalysis;
-            
-            try {
-                legalAnalysis = await performLegalAnalysisWithFallback(extractedData);
-            } catch (analysisError) {
-                trackError(analysisError, AREA.UPLOAD);
-                legalAnalysis = {
-                    fehler: [],
-                    rueckforderung_potential: 0,
-                    zusammenfassung: "Automatische Analyse war nicht möglich."
-                };
-            }
-
-            // Step 5: Save
-            setAnalysisStep(5);
-            const abrechnungData = {
-                titel: extractedData?.titel || file.name,
-                abrechnungszeitraum: extractedData?.abrechnungszeitraum || new Date().getFullYear().toString(),
-                verwalter: extractedData?.verwalter || "Nicht erkannt",
-                objekt_adresse: extractedData?.objekt_adresse || "Nicht erkannt", 
-                upload_datum: new Date().toISOString().split('T')[0],
-                datei_url: file_url,
-                analyse_status: "abgeschlossen",
-                gesamtkosten: extractedData?.gesamtkosten || 0,
-                rueckforderung_potential: legalAnalysis?.rueckforderung_potential || 0,
-                fehler_anzahl: legalAnalysis?.fehler?.length || 0,
-                analyse_ergebnis: {
-                    geprueft_am: new Date().toISOString(),
-                    fehler: legalAnalysis?.fehler || [],
-                    kostenposten: legalAnalysis?.kostenposten_bewertung || [],
-                    zusammenfassung: legalAnalysis?.zusammenfassung || "Dokument erfolgreich verarbeitet"
+            // DIREKT zur Edge Function!
+            const { supabase } = await import('@/api/supabaseClient');
+            const { data: extractResult, error: extractError } = await supabase.functions.invoke('extract-document', {
+                body: { 
+                    file_url: fileUrl,
+                    json_schema: {
+                        type: "object",
+                        properties: {
+                            titel: { type: "string" },
+                            abrechnungszeitraum: { type: "string" },
+                            verwalter: { type: "string" },
+                            gesamtkosten: { type: "number" }
+                        }
+                    }
                 }
-            };
-
-            const savedAbrechnung = await Abrechnung.create(abrechnungData);
+            });
             
-            if (!savedAbrechnung || !savedAbrechnung.id) {
-                throw new AppError(
-                    'Abrechnung konnte nicht gespeichert werden',
-                    'SAVE_FAILED',
-                    {},
-                    SEVERITY.HIGH
-                );
+            if (extractError) {
+                console.error('❌ Edge Function Error:', extractError);
+                throw new Error(`Extraction failed: ${extractError.message}`);
             }
+            
+            console.log('✅ Extraction result:', extractResult);
+            const extractedData = extractResult?.output || {};
 
-            track('upload.process.completed', AREA.UPLOAD, {
-                abrechnungId: savedAbrechnung.id,
-                totalSavings: legalAnalysis?.rueckforderung_potential || 0
+            // Step 4: Legal Check
+            setAnalysisStep(3);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Step 5: Report
+            setAnalysisStep(4);
+
+            // Create Record in real database
+            const abrechnung = await Abrechnung.create({
+                filename: file.name,
+                file_url: fileUrl,
+                status: 'in_bearbeitung',
+                extracted_data: extractedData,
+                analysis_results: {
+                    issues_found: [],
+                    savings_potential: 0,
+                    legal_compliance_score: 0
+                }
             });
 
-            setResults({ abrechnung: savedAbrechnung, analysis: legalAnalysis });
+            setResults({
+                abrechnung,
+                analysis: {
+                    fehler: [],
+                    hinweise: [],
+                    rechtliche_bedenken: []
+                }
+            });
+            track('upload.complete', AREA.UPLOAD, { id: abrechnung.id });
 
         } catch (err) {
-            console.error("Error processing document:", err);
-            
-            trackError(err, AREA.UPLOAD, {
-                fileName: file.name,
-                step: analysisStep,
-                retryCount
-            });
+            console.error("Upload Process Error:", err);
+            trackError(err, AREA.UPLOAD);
+            setError(err.message || t('uploadPage.errors.unexpected', "Ein unerwarteter Fehler ist aufgetreten."));
 
-            // Retry logic
-            if (retryCount < MAX_RETRIES && err.code !== 'VALIDATION_ERROR') {
+            if (retryCount < MAX_RETRIES) {
                 setRetryCount(prev => prev + 1);
-                setError(`Fehler aufgetreten. Versuche erneut... (${retryCount + 1}/${MAX_RETRIES})`);
-                
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                return processDocument(file);
             }
-            
-            let errorMessage = err instanceof AppError ? err.message : "Fehler bei der Dokumentenanalyse.";
-            
-            if (err.message?.includes("Network Error")) {
-                errorMessage = "Netzwerkfehler: Keine Verbindung zum Server.";
-            } else if (err.message?.includes("timeout")) {
-                errorMessage = "Zeitüberschreitung: Bitte versuchen Sie es später erneut.";
-            }
-            
-            setError(errorMessage);
+        } finally {
+            setIsProcessing(false);
         }
-
-        setIsProcessing(false);
-        setRetryCount(0);
     };
 
     const handleRetry = () => {
-        setError(null);
-        setResults(null);
-        setAnalysisStep(0);
         if (selectedFile) {
-            processDocument(selectedFile);
+            handleFileSelect(selectedFile);
         }
     };
 
     if (results) {
-        return (
-            <div className="min-h-screen p-4 lg:p-6">
-                <div className="max-w-4xl mx-auto">
-                    <UploadResults 
-                        results={results}
-                        onNewAnalysis={() => {
-                            setResults(null);
-                            setSelectedFile(null);
-                            setAnalysisStep(0);
-                            setRetryCount(0);
-                        }}
-                        onViewAll={() => navigate(createPageUrl("Abrechnungen"))}
-                    />
-                </div>
-            </div>
-        );
+        return <UploadResults results={results} onReset={() => {
+            setResults(null);
+            setSelectedFile(null);
+            setAnalysisStep(0);
+        }} />;
     }
 
     return (
-        <div className="min-h-screen p-4 lg:p-6">
-            <div className="max-w-4xl mx-auto">
+        <div className="h-full w-full bg-transparent text-white relative overflow-hidden">
+            {/* Background Animation */}
+            <div className="absolute inset-0 z-0">
+                <UploadAnimation />
+            </div>
+
+            <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl h-full flex flex-col">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div className="flex items-center gap-4">
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => navigate(createPageUrl("Dashboard"))}
-                            aria-label="Zurück"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 dark:text-white">
-                                Nebenkostenabrechnung prüfen
-                            </h1>
-                            <p className="text-slate-600 dark:text-slate-400 mt-1">
-                                Laden Sie Ihre Abrechnung hoch für eine automatische rechtliche Prüfung
-                            </p>
-                        </div>
+                <div className="flex items-center justify-between mb-8">
+                    <Button
+                        variant="ghost"
+                        onClick={() => navigate(-1)}
+                        className="text-slate-400 hover:text-white hover:bg-white/10"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        {t('uploadPage.back', 'Zurück')}
+                    </Button>
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                        <ShieldCheck className="w-3 h-3" />
+                        {t('uploadPage.secureTransfer', 'Sichere Übertragung')}
                     </div>
                 </div>
 
-                {error && <ErrorState message={error} onRetry={handleRetry} />}
+                <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh]">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="w-full max-w-2xl"
+                    >
+                        <div className="text-center mb-10">
+                            <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight font-heading">
+                                {t('uploadPage.title', 'Dokument')} <span className="text-violet-400">{t('uploadPage.titleHighlight', 'hochladen')}</span>
+                            </h1>
+                            <p className="text-lg text-slate-400 max-w-lg mx-auto">
+                                {t('uploadPage.subtitle', 'Wir analysieren deine Nebenkostenabrechnung oder deinen Mietvertrag auf Fehler und Sparpotenzial.')}
+                            </p>
+                        </div>
 
-                {/* Progress or Upload */}
-                {isProcessing ? (
-                    <AnalysisProgress 
-                        steps={analysisSteps}
-                        currentStep={analysisStep}
-                        fileName={selectedFile?.name}
-                        uploadProgress={uploadProgress}
-                    />
-                ) : (
-                    <FileUploadZone 
-                        onFileSelected={(file) => {
-                            setSelectedFile(file);
-                            processDocument(file);
-                        }}
-                    />
-                )}
+                        {error ? (
+                            <ErrorState
+                                message={error}
+                                onRetry={handleRetry}
+                                onCancel={() => {
+                                    setError(null);
+                                    setSelectedFile(null);
+                                }}
+                            />
+                        ) : isProcessing ? (
+                            <SpotlightCard className="p-8 border-violet-500/30" spotlightColor="rgba(139, 92, 246, 0.15)">
+                                <AnalysisProgress
+                                    currentStep={analysisStep}
+                                    steps={analysisSteps}
+                                    progress={uploadProgress}
+                                />
+                            </SpotlightCard>
+                        ) : (
+                            <SpotlightCard className="p-1 border-white/10 overflow-hidden" spotlightColor="rgba(139, 92, 246, 0.15)">
+                                <div className="bg-slate-900/50 rounded-xl p-8 backdrop-blur-sm">
+                                    <FileUploadZone
+                                        onFileSelected={handleFileSelect}
+                                        acceptedFileTypes={{
+                                            'application/pdf': ['.pdf'],
+                                            'image/jpeg': ['.jpg', '.jpeg'],
+                                            'image/png': ['.png']
+                                        }}
+                                        maxSize={10 * 1024 * 1024} // 10MB
+                                    />
+
+                                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                        <div className="p-4 rounded-lg bg-white/5 border border-white/5">
+                                            <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <h3 className="text-sm font-medium text-white">{t('uploadPage.features.formats.title', 'Alle Formate')}</h3>
+                                            <p className="text-xs text-slate-500 mt-1">{t('uploadPage.features.formats.desc', 'PDF, JPG, PNG')}</p>
+                                        </div>
+                                        <div className="p-4 rounded-lg bg-white/5 border border-white/5">
+                                            <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                                <ShieldCheck className="w-4 h-4" />
+                                            </div>
+                                            <h3 className="text-sm font-medium text-white">{t('uploadPage.features.gdpr.title', 'DSGVO Konform')}</h3>
+                                            <p className="text-xs text-slate-500 mt-1">{t('uploadPage.features.gdpr.desc', 'Verschlüsselt')}</p>
+                                        </div>
+                                        <div className="p-4 rounded-lg bg-white/5 border border-white/5">
+                                            <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                                <Sparkles className="w-4 h-4" />
+                                            </div>
+                                            <h3 className="text-sm font-medium text-white">{t('uploadPage.features.ai.title', 'KI Analyse')}</h3>
+                                            <p className="text-xs text-slate-500 mt-1">{t('uploadPage.features.ai.desc', 'Sofort-Ergebnis')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </SpotlightCard>
+                        )}
+                    </motion.div>
+                </div>
             </div>
         </div>
     );

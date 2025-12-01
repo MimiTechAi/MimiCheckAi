@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { User } from "@/api/entities";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -20,40 +21,40 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import DsgvoActions from "@/components/profile/DsgvoActions";
 
 // Manuelle Validierungsfunktionen (statt zod)
-const validateRequired = (value, fieldName) => {
+const validateRequired = (value, fieldName, t) => {
     if (!value || value === '') {
-        return `${fieldName} ist erforderlich`;
+        return t('lebenslagenPage.validation.required', { field: fieldName });
     }
     return null;
 };
 
-const validatePLZ = (value) => {
+const validatePLZ = (value, t) => {
     if (!value) return null;
     if (!/^\d{5}$/.test(value)) {
-        return 'PLZ muss 5 Ziffern enthalten';
+        return t('lebenslagenPage.validation.zip');
     }
     return null;
 };
 
-const validateMinLength = (value, min, fieldName) => {
+const validateMinLength = (value, min, fieldName, t) => {
     if (!value) return null;
     if (value.length < min) {
-        return `${fieldName} muss mindestens ${min} Zeichen haben`;
+        return t('lebenslagenPage.validation.minLength', { field: fieldName, min });
     }
     return null;
 };
 
-const validateNumber = (value, min, max, fieldName) => {
+const validateNumber = (value, min, max, fieldName, t) => {
     if (value === null || value === undefined || value === '') return null;
     const num = Number(value);
     if (isNaN(num)) {
-        return `${fieldName} muss eine Zahl sein`;
+        return t('lebenslagenPage.validation.number', { field: fieldName });
     }
     if (min !== undefined && num < min) {
-        return `${fieldName} muss mindestens ${min} sein`;
+        return t('lebenslagenPage.validation.min', { field: fieldName, min });
     }
     if (max !== undefined && num > max) {
-        return `${fieldName} darf maximal ${max} sein`;
+        return t('lebenslagenPage.validation.max', { field: fieldName, max });
     }
     return null;
 };
@@ -113,6 +114,7 @@ const FormSection = ({ title, icon: Icon, children }) => (
 );
 
 export default function Lebenslagen() {
+    const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -120,11 +122,11 @@ export default function Lebenslagen() {
     const [showConsent, setShowConsent] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
     const [completionData, setCompletionData] = useState(null);
-    
+
     const { control, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm({
         mode: 'onBlur'
     });
-    
+
     const navigate = useNavigate();
     const { user: contextUser, updateUserProfile, profileVersion } = useUserProfile();
 
@@ -143,7 +145,7 @@ export default function Lebenslagen() {
                     ki_automation_level: currentUser.ki_automation_level || 'assistiert',
                     lebenssituation: currentUser.lebenssituation || {}
                 };
-                
+
                 // Delay reset to avoid React rendering crash
                 setTimeout(() => {
                     reset(formData);
@@ -155,20 +157,20 @@ export default function Lebenslagen() {
                 if (!currentUser.lebenssituation?.vollmachten_einverstaendnis?.datenschutz_zustimmung) {
                     setShowConsent(true);
                 }
-                
+
                 track('profile.loaded', AREA.PROFILE, {
                     completionScore: completion.score
                 });
             } catch (e) {
                 console.error("Fehler beim Laden:", e);
-                navigate(createPageUrl('Dashboard'));
+                navigate(createPageUrl('ProfilSeite'));
             }
             setIsLoading(false);
         };
-        
+
         loadUserData();
     }, [reset, navigate, contextUser, profileVersion]);
-    
+
     const handleConsent = async () => {
         try {
             await updateUserProfile({
@@ -184,30 +186,30 @@ export default function Lebenslagen() {
             console.error("Fehler beim Speichern der Zustimmung:", error);
         }
     };
-    
+
     const validateFormData = (data) => {
         const errors = {};
 
         // Basis-Validierung
-        const vornameError = validateRequired(data.vorname, 'Vorname') || validateMinLength(data.vorname, 2, 'Vorname');
+        const vornameError = validateRequired(data.vorname, t('lebenslagenPage.sections.personal.firstName'), t) || validateMinLength(data.vorname, 2, t('lebenslagenPage.sections.personal.firstName'), t);
         if (vornameError) errors.vorname = vornameError;
 
-        const nachnameError = validateRequired(data.nachname, 'Nachname') || validateMinLength(data.nachname, 2, 'Nachname');
+        const nachnameError = validateRequired(data.nachname, t('lebenslagenPage.sections.personal.lastName'), t) || validateMinLength(data.nachname, 2, t('lebenslagenPage.sections.personal.lastName'), t);
         if (nachnameError) errors.nachname = nachnameError;
 
         // PLZ Validierung
         if (data.lebenssituation?.wohnadresse?.plz) {
-            const plzError = validatePLZ(data.lebenssituation.wohnadresse.plz);
+            const plzError = validatePLZ(data.lebenssituation.wohnadresse.plz, t);
             if (plzError) errors['lebenssituation.wohnadresse.plz'] = plzError;
         }
 
         // Abhängige Validierungen
         if (data.lebenssituation?.besondere_umstaende?.grad_der_behinderung && !data.lebenssituation?.besondere_umstaende?.schwerbehinderung) {
-            errors['lebenssituation.besondere_umstaende.grad_der_behinderung'] = 'Nur bei Schwerbehinderung';
+            errors['lebenssituation.besondere_umstaende.grad_der_behinderung'] = t('lebenslagenPage.validation.onlyDisability');
         }
 
         if (data.lebenssituation?.besondere_umstaende?.pflegegrad && !data.lebenssituation?.besondere_umstaende?.pflegebeduerftig) {
-            errors['lebenssituation.besondere_umstaende.pflegegrad'] = 'Nur bei Pflegebedürftigkeit';
+            errors['lebenssituation.besondere_umstaende.pflegegrad'] = t('lebenslagenPage.validation.onlyCare');
         }
 
         return {
@@ -215,10 +217,10 @@ export default function Lebenslagen() {
             errors
         };
     };
-    
+
     const onSubmit = async (data) => {
         const validation = validateFormData(data);
-        
+
         if (!validation.isValid) {
             setValidationErrors(validation.errors);
             track('profile.validation.failed', AREA.PROFILE, {
@@ -226,28 +228,28 @@ export default function Lebenslagen() {
             });
             return;
         }
-        
+
         setValidationErrors({});
         setIsSaving(true);
         setSaveSuccess(false);
-        
+
         try {
             const completion = computeProfileCompletion({ ...contextUser, ...data });
-            
+
             await updateUserProfile({
                 ...data,
                 profile_completeness: completion.score
             });
-            
+
             // Delay state updates to avoid React crash
             setTimeout(() => {
                 setCompletionData(completion);
                 setSaveSuccess(true);
-                
+
                 track('profile.saved', AREA.PROFILE, {
                     completionScore: completion.score
                 });
-                
+
                 setTimeout(() => setSaveSuccess(false), 3000);
             }, 0);
         } catch (e) {
@@ -264,32 +266,32 @@ export default function Lebenslagen() {
         <div className="flex items-center justify-center h-64">
             <div className="text-center">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-                <p className="text-slate-700 dark:text-slate-300">Lade Formulardaten...</p>
+                <p className="text-slate-700 dark:text-slate-300">{t('lebenslagenPage.loading')}</p>
             </div>
         </div>
     );
 
     return (
         <>
-            <ConsentDialog 
+            <ConsentDialog
                 isOpen={showConsent}
                 onConfirm={handleConsent}
-                onCancel={() => navigate(createPageUrl('Dashboard'))}
+                onCancel={() => navigate(createPageUrl('ProfilSeite'))}
             />
             <div className={`${showConsent ? 'opacity-20 blur-sm pointer-events-none' : ''}`}>
                 <div className="flex items-center gap-4 mb-8">
                     <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => navigate(createPageUrl("Dashboard"))}
+                        onClick={() => navigate(createPageUrl("ProfilSeite"))}
                         className="shadow-md hover:shadow-lg transition-all duration-300"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <div className="flex-1">
-                        <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white">Vollständiges Profil</h1>
+                        <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white">{t('lebenslagenPage.title')}</h1>
                         <p className="text-base lg:text-lg text-slate-600 dark:text-slate-400 mt-2">
-                            Für vollautomatisierte KI-Prozesse und Antragsstellung
+                            {t('lebenslagenPage.subtitle')}
                         </p>
                     </div>
                 </div>
@@ -304,7 +306,7 @@ export default function Lebenslagen() {
                     <Alert variant="destructive" className="mb-6">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                            <strong>Validierungsfehler:</strong>
+                            <strong>{t('lebenslagenPage.validationErrorTitle')}</strong>
                             <ul className="mt-2 space-y-1">
                                 {Object.values(validationErrors).map((error, idx) => (
                                     <li key={idx}>• {error}</li>
@@ -319,35 +321,35 @@ export default function Lebenslagen() {
                         <div className="flex items-center gap-4">
                             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                             <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                Profil wird automatisch gespeichert
+                                {t('lebenslagenPage.autoSave')}
                             </span>
                         </div>
                         <Button type="submit" disabled={isSaving || saveSuccess} size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {saveSuccess && <Check className="mr-2 h-4 w-4" />}
-                            {isSaving ? "Speichern..." : saveSuccess ? "Gespeichert!" : "Speichern"}
+                            {isSaving ? t('lebenslagenPage.buttons.saving') : saveSuccess ? t('lebenslagenPage.buttons.saved') : t('lebenslagenPage.buttons.save')}
                         </Button>
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                            <TabsTrigger value="persoenlich">Persönlich</TabsTrigger>
-                            <TabsTrigger value="wohnen">Wohnen</TabsTrigger>
-                            <TabsTrigger value="finanzen">Finanzen</TabsTrigger>
-                            <TabsTrigger value="behoerden">Behörden</TabsTrigger>
-                            <TabsTrigger value="dsgvo">Datenschutz</TabsTrigger>
+                            <TabsTrigger value="persoenlich">{t('lebenslagenPage.tabs.personal')}</TabsTrigger>
+                            <TabsTrigger value="wohnen">{t('lebenslagenPage.tabs.living')}</TabsTrigger>
+                            <TabsTrigger value="finanzen">{t('lebenslagenPage.tabs.finance')}</TabsTrigger>
+                            <TabsTrigger value="behoerden">{t('lebenslagenPage.tabs.authorities')}</TabsTrigger>
+                            <TabsTrigger value="dsgvo">{t('lebenslagenPage.tabs.privacy')}</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="persoenlich" className="space-y-6 mt-8">
-                            <FormSection title="Persönliche Grunddaten" icon={UserIcon}>
+                            <FormSection title={t('lebenslagenPage.sections.personal.title')} icon={UserIcon}>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <Controller
                                         name="vorname"
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Vorname *</Label>
-                                                <Input {...field} placeholder="Max" />
+                                                <Label>{t('lebenslagenPage.sections.personal.firstName')}</Label>
+                                                <Input {...field} placeholder={t('lebenslagenPage.sections.personal.firstName')} />
                                                 {validationErrors.vorname && <p className="text-red-500 text-sm mt-1">{validationErrors.vorname}</p>}
                                             </div>
                                         )}
@@ -357,8 +359,8 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Nachname *</Label>
-                                                <Input {...field} placeholder="Mustermann" />
+                                                <Label>{t('lebenslagenPage.sections.personal.lastName')}</Label>
+                                                <Input {...field} placeholder={t('lebenslagenPage.sections.personal.lastName')} />
                                                 {validationErrors.nachname && <p className="text-red-500 text-sm mt-1">{validationErrors.nachname}</p>}
                                             </div>
                                         )}
@@ -368,7 +370,7 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Geburtsdatum</Label>
+                                                <Label>{t('lebenslagenPage.sections.personal.birthDate')}</Label>
                                                 <Input type="date" {...field} />
                                             </div>
                                         )}
@@ -382,17 +384,17 @@ export default function Lebenslagen() {
                                         defaultValue=""
                                         render={({ field: { onChange, value } }) => (
                                             <div>
-                                                <Label>Familienstand</Label>
+                                                <Label>{t('lebenslagenPage.sections.personal.maritalStatus')}</Label>
                                                 <NativeSelect
                                                     value={value || ''}
                                                     onChange={(e) => onChange(e.target.value)}
-                                                    placeholder="Bitte auswählen"
+                                                    placeholder={t('lebenslagenPage.sections.personal.options.select')}
                                                     options={[
-                                                        { value: "ledig", label: "Ledig" },
-                                                        { value: "verheiratet", label: "Verheiratet" },
-                                                        { value: "in_partnerschaft", label: "In Lebenspartnerschaft" },
-                                                        { value: "verwitwet", label: "Verwitwet" },
-                                                        { value: "geschieden", label: "Geschieden" }
+                                                        { value: "ledig", label: t('lebenslagenPage.sections.personal.options.single') },
+                                                        { value: "verheiratet", label: t('lebenslagenPage.sections.personal.options.married') },
+                                                        { value: "in_partnerschaft", label: t('lebenslagenPage.sections.personal.options.partnership') },
+                                                        { value: "verwitwet", label: t('lebenslagenPage.sections.personal.options.widowed') },
+                                                        { value: "geschieden", label: t('lebenslagenPage.sections.personal.options.divorced') }
                                                     ]}
                                                 />
                                             </div>
@@ -404,19 +406,19 @@ export default function Lebenslagen() {
                                         defaultValue=""
                                         render={({ field: { onChange, value } }) => (
                                             <div>
-                                                <Label>Beschäftigungsstatus</Label>
+                                                <Label>{t('lebenslagenPage.sections.personal.employmentStatus')}</Label>
                                                 <NativeSelect
                                                     value={value || ''}
                                                     onChange={(e) => onChange(e.target.value)}
-                                                    placeholder="Bitte auswählen"
+                                                    placeholder={t('lebenslagenPage.sections.personal.options.select')}
                                                     options={[
-                                                        { value: "angestellt", label: "Angestellt" },
-                                                        { value: "arbeitslos", label: "Arbeitslos" },
-                                                        { value: "selbststaendig", label: "Selbstständig" },
-                                                        { value: "student", label: "Student" },
-                                                        { value: "rentner", label: "Rentner" },
-                                                        { value: "elternzeit", label: "Elternzeit" },
-                                                        { value: "arbeitsunfaehig", label: "Arbeitsunfähig" }
+                                                        { value: "angestellt", label: t('lebenslagenPage.sections.personal.options.employed') },
+                                                        { value: "arbeitslos", label: t('lebenslagenPage.sections.personal.options.unemployed') },
+                                                        { value: "selbststaendig", label: t('lebenslagenPage.sections.personal.options.selfEmployed') },
+                                                        { value: "student", label: t('lebenslagenPage.sections.personal.options.student') },
+                                                        { value: "rentner", label: t('lebenslagenPage.sections.personal.options.retired') },
+                                                        { value: "elternzeit", label: t('lebenslagenPage.sections.personal.options.parentalLeave') },
+                                                        { value: "arbeitsunfaehig", label: t('lebenslagenPage.sections.personal.options.incapacitated') }
                                                     ]}
                                                 />
                                             </div>
@@ -431,7 +433,7 @@ export default function Lebenslagen() {
                                         defaultValue={0}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Anzahl Personen im Haushalt</Label>
+                                                <Label>{t('lebenslagenPage.sections.personal.householdSize')}</Label>
                                                 <Input
                                                     type="number"
                                                     min="0"
@@ -451,7 +453,7 @@ export default function Lebenslagen() {
                                         defaultValue={0}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Anzahl Kinder</Label>
+                                                <Label>{t('lebenslagenPage.sections.personal.childrenCount')}</Label>
                                                 <Input
                                                     type="number"
                                                     min="0"
@@ -468,7 +470,7 @@ export default function Lebenslagen() {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <Label className="text-base font-semibold">Besondere Umstände</Label>
+                                    <Label className="text-base font-semibold">{t('lebenslagenPage.sections.personal.specialCircumstances')}</Label>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Controller
                                             name="lebenssituation.besondere_umstaende.alleinerziehend"
@@ -479,7 +481,7 @@ export default function Lebenslagen() {
                                                         checked={field.value || false}
                                                         onCheckedChange={field.onChange}
                                                     />
-                                                    <Label>Alleinerziehend</Label>
+                                                    <Label>{t('lebenslagenPage.sections.personal.singleParent')}</Label>
                                                 </div>
                                             )}
                                         />
@@ -492,7 +494,7 @@ export default function Lebenslagen() {
                                                         checked={field.value || false}
                                                         onCheckedChange={field.onChange}
                                                     />
-                                                    <Label>Schwerbehinderung</Label>
+                                                    <Label>{t('lebenslagenPage.sections.personal.disability')}</Label>
                                                 </div>
                                             )}
                                         />
@@ -505,7 +507,7 @@ export default function Lebenslagen() {
                                                         checked={field.value || false}
                                                         onCheckedChange={field.onChange}
                                                     />
-                                                    <Label>Pflegebedürftig</Label>
+                                                    <Label>{t('lebenslagenPage.sections.personal.careNeed')}</Label>
                                                 </div>
                                             )}
                                         />
@@ -518,7 +520,7 @@ export default function Lebenslagen() {
                                                         checked={field.value || false}
                                                         onCheckedChange={field.onChange}
                                                     />
-                                                    <Label>Student</Label>
+                                                    <Label>{t('lebenslagenPage.sections.personal.student')}</Label>
                                                 </div>
                                             )}
                                         />
@@ -531,7 +533,7 @@ export default function Lebenslagen() {
                                                         checked={field.value || false}
                                                         onCheckedChange={field.onChange}
                                                     />
-                                                    <Label>Chronische Krankheit</Label>
+                                                    <Label>{t('lebenslagenPage.sections.personal.chronicIllness')}</Label>
                                                 </div>
                                             )}
                                         />
@@ -544,12 +546,12 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Grad der Behinderung (%)</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    min="20" 
-                                                    max="100" 
-                                                    {...field} 
+                                                <Label>{t('lebenslagenPage.sections.personal.disabilityDegree')}</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="20"
+                                                    max="100"
+                                                    {...field}
                                                     onChange={e => field.onChange(parseInt(e.target.value) || null)}
                                                 />
                                                 {validationErrors['lebenssituation.besondere_umstaende.grad_der_behinderung'] && (
@@ -568,12 +570,12 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Pflegegrad (1-5)</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    min="1" 
-                                                    max="5" 
-                                                    {...field} 
+                                                <Label>{t('lebenslagenPage.sections.personal.careLevel')}</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    max="5"
+                                                    {...field}
                                                     onChange={e => field.onChange(parseInt(e.target.value) || null)}
                                                 />
                                                 {validationErrors['lebenssituation.besondere_umstaende.pflegegrad'] && (
@@ -589,14 +591,14 @@ export default function Lebenslagen() {
                         </TabsContent>
 
                         <TabsContent value="wohnen" className="space-y-6 mt-8">
-                            <FormSection title="Wohnsituation" icon={Home}>
+                            <FormSection title={t('lebenslagenPage.sections.living.title')} icon={Home}>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <Controller
                                         name="lebenssituation.wohnadresse.strasse"
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Straße</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.street')}</Label>
                                                 <Input {...field} placeholder="Musterstraße" />
                                             </div>
                                         )}
@@ -606,7 +608,7 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Hausnummer</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.houseNumber')}</Label>
                                                 <Input {...field} placeholder="12A" />
                                             </div>
                                         )}
@@ -616,7 +618,7 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>PLZ *</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.zip')}</Label>
                                                 <Input {...field} placeholder="10115" maxLength={5} />
                                                 {validationErrors['lebenssituation.wohnadresse.plz'] && (
                                                     <p className="text-red-500 text-sm mt-1">
@@ -634,7 +636,7 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Ort *</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.city')}</Label>
                                                 <Input {...field} placeholder="Berlin" />
                                             </div>
                                         )}
@@ -645,11 +647,11 @@ export default function Lebenslagen() {
                                         defaultValue=""
                                         render={({ field: { onChange, value } }) => (
                                             <div>
-                                                <Label>Bundesland</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.state')}</Label>
                                                 <NativeSelect
                                                     value={value || ''}
                                                     onChange={(e) => onChange(e.target.value)}
-                                                    placeholder="Bitte auswählen"
+                                                    placeholder={t('lebenslagenPage.sections.personal.options.select')}
                                                     options={[
                                                         { value: "BW", label: "Baden-Württemberg" },
                                                         { value: "BY", label: "Bayern" },
@@ -681,16 +683,16 @@ export default function Lebenslagen() {
                                         defaultValue=""
                                         render={({ field: { onChange, value } }) => (
                                             <div>
-                                                <Label>Wohnart *</Label>
+                                                <Label>{t('lebenslagenPage.sections.living.type')}</Label>
                                                 <NativeSelect
                                                     value={value || ''}
                                                     onChange={(e) => onChange(e.target.value)}
-                                                    placeholder="Bitte auswählen"
+                                                    placeholder={t('lebenslagenPage.sections.personal.options.select')}
                                                     options={[
-                                                        { value: "miete", label: "Miete" },
-                                                        { value: "eigentum", label: "Eigentum (abbezahlt)" },
-                                                        { value: "wohneigentum_mit_kredit", label: "Eigentum mit Kredit" },
-                                                        { value: "sozialwohnung", label: "Sozialwohnung" }
+                                                        { value: "miete", label: t('lebenslagenPage.sections.living.options.rent') },
+                                                        { value: "eigentum", label: t('lebenslagenPage.sections.living.options.ownPaid') },
+                                                        { value: "wohneigentum_mit_kredit", label: t('lebenslagenPage.sections.living.options.ownCredit') },
+                                                        { value: "sozialwohnung", label: t('lebenslagenPage.sections.living.options.socialHousing') }
                                                     ]}
                                                 />
                                             </div>
@@ -701,10 +703,10 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Wohnfläche (m²)</Label>
-                                                <Input 
-                                                    type="number" 
-                                                    {...field} 
+                                                <Label>{t('lebenslagenPage.sections.living.area')}</Label>
+                                                <Input
+                                                    type="number"
+                                                    {...field}
                                                     onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     placeholder="75"
                                                 />
@@ -720,11 +722,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Kaltmiete (€/Monat)</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.living.rentCold')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                         placeholder="800.00"
                                                     />
@@ -736,11 +738,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Nebenkosten (€/Monat)</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.living.utilities')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                         placeholder="150.00"
                                                     />
@@ -752,11 +754,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Heizkosten (€/Monat)</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.living.heating')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                         placeholder="100.00"
                                                     />
@@ -769,17 +771,17 @@ export default function Lebenslagen() {
                         </TabsContent>
 
                         <TabsContent value="finanzen" className="space-y-6 mt-8">
-                            <FormSection title="Einkommen & Finanzen" icon={Euro}>
+                            <FormSection title={t('lebenslagenPage.sections.finance.title')} icon={Euro}>
                                 <Controller
                                     name="lebenssituation.monatliches_nettoeinkommen"
                                     control={control}
                                     render={({ field }) => (
                                         <div>
-                                            <Label>Gesamtes monatl. Nettoeinkommen (€) *</Label>
-                                            <Input 
-                                                type="number" 
-                                                step="0.01" 
-                                                {...field} 
+                                            <Label>{t('lebenslagenPage.sections.finance.netIncome')}</Label>
+                                            <Input
+                                                type="number"
+                                                step="0.01"
+                                                {...field}
                                                 onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                 placeholder="2500.00"
                                             />
@@ -788,18 +790,18 @@ export default function Lebenslagen() {
                                 />
 
                                 <div>
-                                    <Label className="text-base font-semibold mb-3 block">Einkommensdetails (optional)</Label>
+                                    <Label className="text-base font-semibold mb-3 block">{t('lebenslagenPage.sections.finance.detailsTitle')}</Label>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Controller
                                             name="lebenssituation.einkommen_details.gehalt_angestellt"
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Gehalt (angestellt)</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.salaryEmployed')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -810,11 +812,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Einkommen (selbstständig)</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.incomeSelfEmployed')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -825,11 +827,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Rente</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.pension')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -840,11 +842,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Arbeitslosengeld</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.unemploymentBenefit')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -855,11 +857,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Kindergeld</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.childBenefit')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -870,11 +872,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Elterngeld</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.parentalBenefit')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -885,11 +887,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Unterhalt</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.alimony')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -900,11 +902,11 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Sonstige Einkommen</Label>
-                                                    <Input 
-                                                        type="number" 
+                                                    <Label>{t('lebenslagenPage.sections.finance.otherIncome')}</Label>
+                                                    <Input
+                                                        type="number"
                                                         step="0.01"
-                                                        {...field} 
+                                                        {...field}
                                                         onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                     />
                                                 </div>
@@ -918,23 +920,23 @@ export default function Lebenslagen() {
                                     control={control}
                                     render={({ field }) => (
                                         <div>
-                                            <Label>Gesamtvermögen (€)</Label>
-                                            <Input 
-                                                type="number" 
+                                            <Label>{t('lebenslagenPage.sections.finance.assets')}</Label>
+                                            <Input
+                                                type="number"
                                                 step="0.01"
-                                                {...field} 
+                                                {...field}
                                                 onChange={e => field.onChange(parseFloat(e.target.value) || null)}
                                                 placeholder="10000.00"
                                             />
                                             <p className="text-xs text-slate-500 mt-1">
-                                                Sparguthaben, Aktien, Immobilienwerte etc.
+                                                {t('lebenslagenPage.sections.finance.assetsHint')}
                                             </p>
                                         </div>
                                     )}
                                 />
 
                                 <div>
-                                    <Label className="text-base font-semibold mb-3 block">Krankenversicherung</Label>
+                                    <Label className="text-base font-semibold mb-3 block">{t('lebenslagenPage.sections.finance.insuranceTitle')}</Label>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <Controller
                                             name="lebenssituation.krankenversicherung.art"
@@ -942,15 +944,15 @@ export default function Lebenslagen() {
                                             defaultValue=""
                                             render={({ field: { onChange, value } }) => (
                                                 <div>
-                                                    <Label>Art der Krankenversicherung</Label>
+                                                    <Label>{t('lebenslagenPage.sections.finance.insuranceType')}</Label>
                                                     <NativeSelect
                                                         value={value || ''}
                                                         onChange={(e) => onChange(e.target.value)}
-                                                        placeholder="Bitte auswählen"
+                                                        placeholder={t('lebenslagenPage.sections.personal.options.select')}
                                                         options={[
-                                                            { value: "gesetzlich", label: "Gesetzlich" },
-                                                            { value: "privat", label: "Privat" },
-                                                            { value: "keine", label: "Keine" }
+                                                            { value: "gesetzlich", label: t('lebenslagenPage.sections.finance.options.public') },
+                                                            { value: "privat", label: t('lebenslagenPage.sections.finance.options.private') },
+                                                            { value: "keine", label: t('lebenslagenPage.sections.finance.options.none') }
                                                         ]}
                                                     />
                                                 </div>
@@ -961,8 +963,8 @@ export default function Lebenslagen() {
                                             control={control}
                                             render={({ field }) => (
                                                 <div>
-                                                    <Label>Name der Krankenkasse</Label>
-                                                    <Input {...field} placeholder="z.B. AOK, TK, Barmer" />
+                                                    <Label>{t('lebenslagenPage.sections.finance.insuranceName')}</Label>
+                                                    <Input {...field} placeholder={t('lebenslagenPage.sections.finance.insurancePlaceholder')} />
                                                 </div>
                                             )}
                                         />
@@ -972,12 +974,11 @@ export default function Lebenslagen() {
                         </TabsContent>
 
                         <TabsContent value="behoerden" className="space-y-6 mt-8">
-                            <FormSection title="Behördendaten (für Auto-Anträge)" icon={Shield}>
-                                <Alert>
-                                    <Shield className="h-4 w-4" />
-                                    <AlertDescription>
-                                        Diese Daten sind optional und werden nur für automatische Antragsstellung benötigt. 
-                                        Alle Daten werden verschlüsselt gespeichert.
+                            <FormSection title={t('lebenslagenPage.sections.authorities.title')} icon={Shield}>
+                                <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                                    <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    <AlertDescription className="text-blue-700 dark:text-blue-300">
+                                        {t('lebenslagenPage.sections.authorities.alert')}
                                     </AlertDescription>
                                 </Alert>
 
@@ -987,13 +988,13 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Steuer-Identifikationsnummer</Label>
-                                                <Input 
-                                                    {...field} 
-                                                    placeholder="12345678901"
+                                                <Label>{t('lebenslagenPage.sections.authorities.taxId')}</Label>
+                                                <Input
+                                                    {...field}
+                                                    placeholder={t('lebenslagenPage.sections.authorities.taxIdPlaceholder')}
                                                     maxLength={11}
                                                 />
-                                                <p className="text-xs text-slate-500 mt-1">11-stellig</p>
+                                                <p className="text-xs text-slate-500 mt-1">{t('lebenslagenPage.sections.authorities.taxIdHint')}</p>
                                             </div>
                                         )}
                                     />
@@ -1002,13 +1003,13 @@ export default function Lebenslagen() {
                                         control={control}
                                         render={({ field }) => (
                                             <div>
-                                                <Label>Sozialversicherungsnummer</Label>
-                                                <Input 
-                                                    {...field} 
-                                                    placeholder="12345678A123"
+                                                <Label>{t('lebenslagenPage.sections.authorities.socialSecurityNumber')}</Label>
+                                                <Input
+                                                    {...field}
+                                                    placeholder={t('lebenslagenPage.sections.authorities.socialSecurityNumberPlaceholder')}
                                                     maxLength={12}
                                                 />
-                                                <p className="text-xs text-slate-500 mt-1">12 Zeichen</p>
+                                                <p className="text-xs text-slate-500 mt-1">{t('lebenslagenPage.sections.authorities.socialSecurityNumberHint')}</p>
                                             </div>
                                         )}
                                     />
@@ -1019,22 +1020,22 @@ export default function Lebenslagen() {
                                     control={control}
                                     render={({ field }) => (
                                         <div>
-                                            <Label>IBAN (für Auszahlungen)</Label>
-                                            <Input 
-                                                {...field} 
-                                                placeholder="DE89370400440532013000"
+                                            <Label>{t('lebenslagenPage.sections.authorities.iban')}</Label>
+                                            <Input
+                                                {...field}
+                                                placeholder={t('lebenslagenPage.sections.authorities.ibanPlaceholder')}
                                                 maxLength={34}
                                             />
                                             <p className="text-xs text-slate-500 mt-1">
-                                                Erforderlich für direkte Auszahlungen von Fördergeldern
+                                                {t('lebenslagenPage.sections.authorities.ibanHint')}
                                             </p>
                                         </div>
                                     )}
                                 />
 
-                                <div className="space-y-3">
-                                    <Label className="text-base font-semibold">Vollmachten & Einverständnis</Label>
-                                    <div className="space-y-3">
+                                <div>
+                                    <Label className="text-base font-semibold mb-3 block">{t('lebenslagenPage.sections.authorities.consentTitle')}</Label>
+                                    <div className="space-y-4">
                                         <Controller
                                             name="lebenssituation.vollmachten_einverstaendnis.automatische_antragsstellung"
                                             control={control}
@@ -1046,11 +1047,11 @@ export default function Lebenslagen() {
                                                         className="mt-1"
                                                     />
                                                     <div>
-                                                        <Label className="font-semibold">
-                                                            Automatische Antragsstellung erlauben
+                                                        <Label className="font-medium">
+                                                            {t('lebenslagenPage.sections.authorities.autoApply')}
                                                         </Label>
-                                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                                            Die KI darf in meinem Namen Anträge bei Behörden stellen
+                                                        <p className="text-sm text-slate-500">
+                                                            {t('lebenslagenPage.sections.authorities.autoApplyDesc')}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1067,11 +1068,11 @@ export default function Lebenslagen() {
                                                         className="mt-1"
                                                     />
                                                     <div>
-                                                        <Label className="font-semibold">
-                                                            Behörden-Vollmacht erteilen
+                                                        <Label className="font-medium">
+                                                            {t('lebenslagenPage.sections.authorities.authorityPower')}
                                                         </Label>
-                                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                                                            Die Plattform darf Auskünfte bei Behörden einholen
+                                                        <p className="text-sm text-slate-500">
+                                                            {t('lebenslagenPage.sections.authorities.authorityPowerDesc')}
                                                         </p>
                                                     </div>
                                                 </div>
