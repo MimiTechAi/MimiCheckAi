@@ -1,49 +1,92 @@
-# 🏢 Nebenkosten Knacker (MimiCheck) - Monorepo
+# 🏢 MiMiCheck - Nebenkosten Knacker
 
-Dieses Repository enthält das gesamte MimiCheck-Ökosystem, bestehend aus zwei Hauptkomponenten:
+KI-gestützte Analyse von Nebenkostenabrechnungen und Förderanträgen.
+
+## 🚀 Quick Start
+
+### 1. Environment einrichten
+
+```bash
+# .env Datei erstellen (siehe .env.example)
+cp .env.example .env
+# Fülle die Supabase-Credentials aus
+```
+
+### 2. Landing Page starten
+
+```bash
+cd mimicheck-landing
+pnpm install
+pnpm run dev
+# → http://localhost:3000
+```
+
+### 3. Core App starten
+
+```bash
+npm install
+npm run dev
+# → http://localhost:8005
+```
 
 ## 📂 Projekt-Struktur
 
-### 1. 🚀 [Landing Page & V2 Platform](./mimicheck-landing)
-**Pfad:** `/mimicheck-landing`
-*   **Tech:** React 19, TypeScript, Tailwind v4, Node.js, tRPC, Drizzle.
-*   **Zweck:** Marketing, User Onboarding, Modernes Dashboard.
-*   **Status:** Production Ready ✅
+| Komponente | Pfad | Tech | Beschreibung |
+|------------|------|------|--------------|
+| **Landing Page** | `/mimicheck-landing` | React 19, TypeScript, Tailwind v4 | Marketing, Auth, Onboarding |
+| **Core App** | `/src` | React 18, JavaScript, Vite | Dashboard, Features, AI-Assistent |
+| **Backend** | `/backend` | Python, FastAPI | PDF-Analyse, AI-Integration |
+| **Supabase** | `/supabase` | Edge Functions, PostgreSQL | Auth, DB, Storage |
 
-### 2. 🧠 [Core App & AI Engine](./src)
-**Pfad:** `/src` (Frontend) & `/backend` (Backend)
-*   **Tech:** React 18 (JS), Python (FastAPI), OpenAI, PDF Mining.
-*   **Zweck:** Die "Maschine" - PDF-Analyse, KI-Auswertung, Formular-Befüllung.
-*   **Status:** Functional (No Mocks) ✅
+## 🌐 Deployment
 
----
+Siehe **[DEPLOYMENT.md](./DEPLOYMENT.md)** für die vollständige Anleitung.
 
-## 🛠️ Quick Start
+### Kurzfassung
 
-### Landing Page starten
+1. **Supabase Secrets setzen** (OpenAI, Stripe, etc.)
+2. **Landing Page auf Vercel** deployen (Root: `mimicheck-landing`)
+3. **Core App auf Vercel** deployen (Root: `.`)
+4. **Domains konfigurieren** (mimicheck.de, app.mimicheck.de)
+
+## 🔧 Environment Variables
+
+### Frontend (.env)
+
 ```bash
-cd mimicheck-landing
-npm install
-npm run dev
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
+VITE_APP_URL=https://app.mimicheck.de
+VITE_LANDING_URL=https://mimicheck.de
 ```
 
-### Core App starten (Full Stack)
+### Backend (Supabase Secrets)
+
 ```bash
-# Backend
-cd backend
-source venv/bin/activate
-python -m uvicorn main_enhanced:app --reload
-
-# Frontend
-# (In neuem Terminal)
-npm run dev
+npx supabase secrets set OPENAI_API_KEY=sk-proj-...
+npx supabase secrets set STRIPE_SECRET_KEY=sk_live_...
 ```
-
----
 
 ## 📚 Dokumentation
-*   **[TASKS.md](./TASKS.md):** Aktueller Projekt-Status & Roadmap.
-*   **[METHODOLOGY_HANDBOOK.md](./METHODOLOGY_HANDBOOK.md):** TDD, PDCA & SOTA Design Standards.
-*   **[EXPERTEN_INVENTUR_BERICHT.md](./EXPERTEN_INVENTUR_BERICHT.md):** Detaillierte Analyse der Architektur.
-*   **[docs/reports](./docs/reports):** Technische Detail-Dokumentation (API, Setup).
-*   **[docs/archive](./docs/archive):** Archivierte Pläne und Berichte.
+
+| Dokument | Beschreibung |
+|----------|--------------|
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Vercel Deployment Anleitung |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Technische Architektur |
+| [TASKS.md](./TASKS.md) | Projekt-Status & Roadmap |
+| [docs/reports](./docs/reports) | Technische Detail-Dokumentation |
+
+## 🧪 Tests
+
+```bash
+# Unit Tests
+npm run test:run
+
+# Build testen
+npm run build
+```
+
+## 📄 Lizenz
+
+Proprietär - MiMiTech AI

@@ -33,21 +33,26 @@ const CATEGORY_STYLES = {
 export default function Antraege() {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const { userProfile } = useUserProfile();
+    const { user: userProfile, isLoading: profileLoading } = useUserProfile();
     const [recommendations, setRecommendations] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
-        loadRecommendations();
-    }, [userProfile, t]); // Reload when language changes
+        if (!profileLoading) {
+            loadRecommendations();
+        }
+    }, [userProfile, profileLoading, t]); // Reload when language changes
 
     const loadRecommendations = async () => {
         // Simulate loading delay for smoother UX
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        if (!userProfile) {
+        // Check if user has completed onboarding (has basic profile data)
+        const hasProfile = userProfile && (userProfile.vorname || userProfile.name || userProfile.onboarding_completed_at);
+        
+        if (!hasProfile) {
             setLoading(false);
             return;
         }
@@ -149,7 +154,7 @@ export default function Antraege() {
                 </div>
 
                 {/* No Profile Warning */}
-                {!loading && !userProfile && (
+                {!loading && (!userProfile || (!userProfile.vorname && !userProfile.name && !userProfile.onboarding_completed_at)) && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}

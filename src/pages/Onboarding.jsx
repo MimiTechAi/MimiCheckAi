@@ -59,7 +59,9 @@ export default function Onboarding() {
       setError(null);
       if (step === 1) {
         await updateUserProfile({
-          full_name: `${vorname} ${nachname}`.trim(),
+          name: `${vorname} ${nachname}`.trim(),
+          vorname,
+          nachname,
           geburtsdatum,
         });
         setStep(2);
@@ -72,7 +74,9 @@ export default function Onboarding() {
       }
       if (step === 3) {
         await updateUserProfile({
-          full_name: `${vorname} ${nachname}`.trim(),
+          name: `${vorname} ${nachname}`.trim(),
+          vorname,
+          nachname,
           geburtsdatum,
           wohnart,
           zustimmung,

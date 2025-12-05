@@ -184,9 +184,10 @@ class PdfFillService {
   }
   
   /**
-   * Füllt PDF mit Claude AI Unterstützung
+   * Füllt PDF mit AI Unterstützung über Supabase Edge Function
+   * SECURITY: API Keys werden NICHT im Frontend verwendet!
    */
-  static async fillPdfWithAI(pdfFile, userData, claudeApiKey) {
+  static async fillPdfWithAI(pdfFile, userData) {
     try {
       // Erst normale Befüllung
       const basicFill = await this.fillPdfForm(pdfFile, userData);
@@ -195,17 +196,15 @@ class PdfFillService {
         throw new Error(basicFill.error);
       }
       
-      // Wenn unmapped fields existieren, Claude fragen
-      if (basicFill.unmappedFields.length > 0 && claudeApiKey) {
-        const aiSuggestions = await this.getAISuggestionsForFields(
+      // Wenn unmapped fields existieren, über Edge Function AI fragen
+      if (basicFill.unmappedFields.length > 0) {
+        const aiSuggestions = await this.getAISuggestionsViaEdgeFunction(
           basicFill.unmappedFields,
-          userData,
-          claudeApiKey
+          userData
         );
         
         // AI-Vorschläge anwenden
         if (aiSuggestions.success) {
-          // TODO: Implementiere AI-basierte Befüllung
           console.log('AI-Vorschläge:', aiSuggestions.suggestions);
         }
       }
@@ -222,56 +221,37 @@ class PdfFillService {
   }
   
   /**
-   * Holt AI-Vorschläge für unmapped fields
+   * Holt AI-Vorschläge über sichere Supabase Edge Function
+   * SECURITY: Keine API Keys im Frontend!
    */
-  static async getAISuggestionsForFields(unmappedFields, userData, claudeApiKey) {
+  static async getAISuggestionsViaEdgeFunction(unmappedFields, userData) {
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const response = await fetch(`${supabaseUrl}/functions/v1/fill-pdf-claude`, {
         method: 'POST',
         headers: {
-          'x-api-key': claudeApiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+          'apikey': supabaseKey
         },
         body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 1024,
-          messages: [{
-            role: 'user',
-            content: `Ich habe folgende PDF-Formularfelder, die ich nicht automatisch zuordnen konnte:
-
-${JSON.stringify(unmappedFields, null, 2)}
-
-User-Daten:
-${JSON.stringify(userData, null, 2)}
-
-Bitte schlage für jedes unmapped field vor, welchen Wert aus den User-Daten ich verwenden sollte.
-Antworte mit JSON im Format:
-{
-  "suggestions": [
-    {
-      "pdfField": "feldname",
-      "suggestedValue": "wert",
-      "reasoning": "begründung",
-      "confidence": 0-100
-    }
-  ]
-}`
-          }]
+          unmappedFields,
+          userData
         })
       });
       
       if (!response.ok) {
-        throw new Error('Claude API Fehler');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'AI Service nicht verfügbar');
       }
       
       const data = await response.json();
-      const content = data.content[0].text;
-      const suggestions = JSON.parse(content);
       
       return {
         success: true,
-        suggestions: suggestions.suggestions
+        suggestions: data.suggestions || []
       };
       
     } catch (error) {

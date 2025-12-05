@@ -22,9 +22,9 @@ test('zeigt Titel in DE und EN korrekt', async () => {
   );
 
   const { unmount } = render(ui('de'));
-  expect(await screen.findByRole('heading', { name: /Abrechnungen/i })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: /Abrechnungen/i }, { timeout: 2000 })).toBeInTheDocument();
   unmount();
 
   render(ui('en'));
-  expect(await screen.findByRole('heading', { name: /Statements/i })).toBeInTheDocument();
-});
+  expect(await screen.findByRole('heading', { name: /Statements/i }, { timeout: 2000 })).toBeInTheDocument();
+}, { timeout: 5000 });

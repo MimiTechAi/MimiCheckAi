@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { User } from '@/api/entities';
+import { User, Abrechnung } from '@/api/entities';
 import { InvokeLLM } from '@/api/integrations';
+import { createPageUrl } from '@/utils';
 import { 
     Bot, 
     Send, 
     Loader2, 
     User as UserIcon,
-    Zap
+    Zap,
+    FileText,
+    X
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
@@ -62,11 +66,16 @@ const MessageBubble = ({ message, isBot }) => {
 };
 
 export default function Assistent() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+    const documentId = searchParams.get('documentId');
+    
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
     const [dailyQuestions, setDailyQuestions] = useState(0);
+    const [currentDocument, setCurrentDocument] = useState(null);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -75,9 +84,36 @@ export default function Assistent() {
             setDailyQuestions(user.subscription_tier === 'free' ? 3 : 0);
         }).catch(console.error);
 
-        // Begrüßungsnachricht
-        setMessages([{
-            text: `👋 Hallo! Ich bin Ihr persönlicher Mietrechts-Assistent. 
+        // Lade Dokument wenn documentId vorhanden
+        if (documentId) {
+            Abrechnung.get(documentId).then(doc => {
+                setCurrentDocument(doc);
+                
+                // Begrüßungsnachricht mit Dokument-Kontext
+                const extractedData = doc?.extracted_data || {};
+                const dokumenttyp = extractedData.dokumenttyp || 'Dokument';
+                
+                setMessages([{
+                    text: `👋 Hallo! Ich habe Ihr **${dokumenttyp}** geladen und kann Ihnen jetzt spezifisch dazu helfen.
+
+**Über dieses Dokument:**
+${extractedData.zusammenfassung || 'Ich habe die Daten aus Ihrem Dokument analysiert.'}
+
+**Ich kann Ihnen helfen bei:**
+• Erklärung der einzelnen Posten
+• Prüfung auf Fehler oder Ungereimtheiten
+• Erstellung eines Widerspruchs
+• Rechtliche Einschätzung
+
+**Stellen Sie mir einfach eine Frage zu diesem Dokument!** 🚀`,
+                    isBot: true
+                }]);
+            }).catch(err => {
+                console.error('Fehler beim Laden des Dokuments:', err);
+                setCurrentDocument(null);
+                // Fallback Begrüßung
+                setMessages([{
+                    text: `👋 Hallo! Ich bin Ihr persönlicher Mietrechts-Assistent. 
 
 Ich helfe Ihnen bei:
 • **Nebenkostenabrechnung prüfen** - Finden Sie Fehler und Einsparpotentiale
@@ -86,9 +122,25 @@ Ich helfe Ihnen bei:
 • **Staatliche Hilfen** - Welche Zuschüsse stehen Ihnen zu?
 
 **Stellen Sie mir einfach eine Frage!** 🚀`,
-            isBot: true
-        }]);
-    }, []);
+                    isBot: true
+                }]);
+            });
+        } else {
+            // Normale Begrüßungsnachricht ohne Dokument
+            setMessages([{
+                text: `👋 Hallo! Ich bin Ihr persönlicher Mietrechts-Assistent. 
+
+Ich helfe Ihnen bei:
+• **Nebenkostenabrechnung prüfen** - Finden Sie Fehler und Einsparpotentiale
+• **Mietrecht verstehen** - Ihre Rechte und Pflichten als Mieter
+• **Widersprüche formulieren** - Professionelle Musterbriefe
+• **Staatliche Hilfen** - Welche Zuschüsse stehen Ihnen zu?
+
+**Stellen Sie mir einfach eine Frage!** 🚀`,
+                isBot: true
+            }]);
+        }
+    }, [documentId]);
 
     useEffect(() => {
         if (messages.length > 1) {
@@ -115,12 +167,41 @@ Ich helfe Ihnen bei:
         setIsLoading(true);
 
         try {
+            // Baue Dokument-Kontext auf wenn vorhanden
+            let dokumentKontext = '';
+            if (currentDocument) {
+                const extractedData = currentDocument.extracted_data || {};
+                const analysisResults = currentDocument.analysis_results || {};
+                
+                dokumentKontext = `
+
+**AKTUELLES DOKUMENT DES NUTZERS:**
+- Dokumenttyp: ${extractedData.dokumenttyp || 'Unbekannt'}
+- Titel: ${currentDocument.title || currentDocument.filename || 'Unbekannt'}
+- Datum: ${extractedData.datum || 'Unbekannt'}
+- Zeitraum: ${extractedData.abrechnungszeitraum || 'Unbekannt'}
+- Absender: ${extractedData.absender || extractedData.verwalter || 'Unbekannt'}
+- Gesamtbetrag: ${extractedData.gesamtbetrag || extractedData.gesamtkosten || 'Unbekannt'}
+- Zusammenfassung: ${extractedData.zusammenfassung || 'Keine Zusammenfassung verfügbar'}
+- Wichtige Hinweise: ${(extractedData.wichtige_hinweise || []).join(', ') || 'Keine'}
+- Handlungsbedarf: ${extractedData.handlungsbedarf ? 'JA' : 'NEIN'}
+- Rückforderungspotential: ${currentDocument.rueckforderung_potential || 0}€
+- Gefundene Fehler: ${currentDocument.fehler_anzahl || 0}
+
+**EXTRAHIERTE DATEN:**
+${JSON.stringify(extractedData, null, 2)}
+
+**WICHTIG:** Beziehe dich in deiner Antwort KONKRET auf die Daten aus diesem Dokument!
+`;
+            }
+            
             const response = await InvokeLLM({
                 prompt: `Du bist ein Experte für deutsches Mietrecht und Nebenkostenabrechnungen. 
                 
 **Nutzerfrage:** "${userQuestion}"
 
 **Kontext:** Der Nutzer hat ein ${user?.subscription_tier || 'free'} Abonnement.
+${dokumentKontext}
 
 **Antwort-Stil:**
 - Freundlich und verständlich
@@ -128,6 +209,7 @@ Ich helfe Ihnen bei:
 - Bei rechtlichen Fragen: Verweis auf Rechtsanwalt für finale Beratung
 - Strukturiert mit Aufzählungen oder Schritten
 - Deutsch verwenden
+${currentDocument ? '- WICHTIG: Beziehe dich konkret auf die Daten aus dem Dokument des Nutzers!' : ''}
 
 Antworte hilfreich und kompetent auf die Frage.`
             });
@@ -169,6 +251,52 @@ Antworte hilfreich und kompetent auf die Frage.`
                         Ihr persönlicher Experte für Mietrecht, Nebenkostenabrechnungen und staatliche Förderungen
                     </p>
                     
+                    {/* Dokument-Kontext Anzeige */}
+                    {currentDocument && (
+                        <div className="mt-6 max-w-2xl mx-auto">
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                            <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="font-semibold text-emerald-800 dark:text-emerald-200">
+                                                Dokument geladen
+                                            </p>
+                                            <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                                                {currentDocument.extracted_data?.dokumenttyp || 'Dokument'} - {currentDocument.title || currentDocument.filename}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setCurrentDocument(null);
+                                            setSearchParams({});
+                                            setMessages([{
+                                                text: `👋 Hallo! Ich bin Ihr persönlicher Mietrechts-Assistent. 
+
+Ich helfe Ihnen bei:
+• **Nebenkostenabrechnung prüfen** - Finden Sie Fehler und Einsparpotentiale
+• **Mietrecht verstehen** - Ihre Rechte und Pflichten als Mieter
+• **Widersprüche formulieren** - Professionelle Musterbriefe
+• **Staatliche Hilfen** - Welche Zuschüsse stehen Ihnen zu?
+
+**Stellen Sie mir einfach eine Frage!** 🚀`,
+                                                isBot: true
+                                            }]);
+                                        }}
+                                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
                     {/* Usage Counter */}
                     <div className="flex justify-center mt-6">
                         <Badge className={`px-6 py-2 text-base ${
@@ -194,7 +322,10 @@ Antworte hilfreich und kompetent auf die Frage.`
                             <p className="text-sm text-purple-700 dark:text-purple-300 mb-3 text-center">
                                 Unbegrenzte Fragen + Widerspruchs-Generator + Musterbriefe
                             </p>
-                            <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm py-2 rounded-xl">
+                            <Button 
+                                onClick={() => navigate(createPageUrl('Pricing'))}
+                                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-sm py-2 rounded-xl"
+                            >
                                 Ab €14.99 upgraden
                             </Button>
                         </div>

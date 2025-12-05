@@ -1,14 +1,100 @@
-import React, { useState } from 'react';
-import { User, MapPin, CreditCard, Heart, Home, Briefcase, Users, PiggyBank, Shield, ChevronRight, Check, AlertCircle, Save, Lock, Sparkles, Baby, GraduationCap, Info } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, MapPin, CreditCard, Heart, Home, Briefcase, Users, PiggyBank, Shield, ChevronRight, Check, AlertCircle, Save, Lock, Sparkles, Baby, GraduationCap, Info, Loader2 } from 'lucide-react';
+import { useUserProfile } from '@/components/UserProfileContext.jsx';
 
 export default function ProfilSeite() {
+  const { user: userProfile, updateUserProfile, isLoading: profileLoading } = useUserProfile();
   const [activeSection, setActiveSection] = useState('persoenlich');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
+  
+  // Initialize profil state from userProfile
   const [profil, setProfil] = useState({
     persoenlich: { anrede: '', vorname: '', nachname: '', geburtsdatum: '', steuer_id: '' },
     kontakt: { strasse: '', hausnummer: '', plz: '', ort: '', email: '' },
     bank: { kontoinhaber: '', iban: '' },
     einwilligungen: { dsgvo_einwilligung: false }
   });
+
+  // Load profile data when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      setProfil({
+        persoenlich: {
+          anrede: userProfile.anrede || '',
+          vorname: userProfile.vorname || userProfile.name?.split(' ')[0] || '',
+          nachname: userProfile.nachname || userProfile.name?.split(' ').slice(1).join(' ') || '',
+          geburtsdatum: userProfile.geburtsdatum || '',
+          steuer_id: userProfile.steuer_id || ''
+        },
+        kontakt: {
+          strasse: userProfile.strasse || '',
+          hausnummer: userProfile.hausnummer || '',
+          plz: userProfile.plz || '',
+          ort: userProfile.ort || '',
+          email: userProfile.email || ''
+        },
+        bank: {
+          kontoinhaber: userProfile.kontoinhaber || '',
+          iban: userProfile.iban || ''
+        },
+        einwilligungen: {
+          dsgvo_einwilligung: userProfile.dsgvo_einwilligung || false
+        }
+      });
+    }
+  }, [userProfile]);
+
+  // Calculate profile completeness
+  const calculateCompleteness = () => {
+    const requiredFields = [
+      profil.persoenlich.vorname,
+      profil.persoenlich.nachname,
+      profil.persoenlich.geburtsdatum,
+      profil.kontakt.strasse,
+      profil.kontakt.plz,
+      profil.kontakt.ort,
+      profil.einwilligungen.dsgvo_einwilligung
+    ];
+    const filledFields = requiredFields.filter(f => f && f !== '').length;
+    return Math.round((filledFields / requiredFields.length) * 100);
+  };
+
+  const profileCompleteness = calculateCompleteness();
+
+  // Save profile
+  const handleSave = async () => {
+    if (!profil.einwilligungen.dsgvo_einwilligung) return;
+    
+    setIsSaving(true);
+    setSaveMessage(null);
+    
+    try {
+      await updateUserProfile({
+        anrede: profil.persoenlich.anrede,
+        vorname: profil.persoenlich.vorname,
+        nachname: profil.persoenlich.nachname,
+        name: `${profil.persoenlich.vorname} ${profil.persoenlich.nachname}`.trim(),
+        geburtsdatum: profil.persoenlich.geburtsdatum || null,
+        steuer_id: profil.persoenlich.steuer_id,
+        strasse: profil.kontakt.strasse,
+        hausnummer: profil.kontakt.hausnummer,
+        plz: profil.kontakt.plz,
+        ort: profil.kontakt.ort,
+        kontoinhaber: profil.bank.kontoinhaber,
+        iban: profil.bank.iban,
+        dsgvo_einwilligung: profil.einwilligungen.dsgvo_einwilligung,
+        profile_completeness: profileCompleteness
+      });
+      setSaveMessage({ type: 'success', text: 'Profil erfolgreich gespeichert!' });
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveMessage({ type: 'error', text: 'Fehler beim Speichern. Bitte versuchen Sie es erneut.' });
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+  };
 
   const sections = [
     { id: 'persoenlich', label: 'Persönliche Daten', icon: User },
@@ -186,14 +272,26 @@ export default function ProfilSeite() {
           <p className="text-white/60 mt-2">Einmal erfassen – alle Anträge ausfüllen.</p>
         </div>
 
+        {/* Save Message */}
+        {saveMessage && (
+          <div className={`mb-4 p-4 rounded-xl border ${saveMessage.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-red-500/10 border-red-500/30 text-red-300'}`}>
+            {saveMessage.text}
+          </div>
+        )}
+
         <div className="mb-8 p-4 rounded-xl bg-white/5 border border-white/10">
           <div className="flex justify-between mb-2">
             <span className="text-sm text-white/60">Profil-Vollständigkeit</span>
-            <span className="text-sm font-bold text-cyan-400">25%</span>
+            <span className="text-sm font-bold text-cyan-400">{profileCompleteness}%</span>
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500" style={{ width: '25%' }} />
+            <div className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 transition-all duration-500" style={{ width: `${profileCompleteness}%` }} />
           </div>
+          {profileCompleteness < 100 && (
+            <p className="text-xs text-white/40 mt-2">
+              Füllen Sie Ihr Profil aus, um passende Förderungen zu finden.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -226,9 +324,12 @@ export default function ProfilSeite() {
                   </div>
                   <h2 className="text-xl font-semibold">{currentSection?.label}</h2>
                 </div>
-                <button disabled={!profil.einwilligungen.dsgvo_einwilligung}
-                  className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 text-sm bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed">
-                  <Save size={16} /> Speichern
+                <button 
+                  onClick={handleSave}
+                  disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
+                  className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 text-sm bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed hover:from-cyan-400 hover:to-teal-400 transition-all">
+                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                  {isSaving ? 'Speichern...' : 'Speichern'}
                 </button>
               </div>
               {renderContent()}

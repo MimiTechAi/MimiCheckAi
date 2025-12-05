@@ -53,13 +53,18 @@ serve(async (req) => {
                 if (userId && planId) {
                     console.log(`Processing checkout for user ${userId}, plan ${planId}`)
 
+                    // Get subscription details
+                    const subscription = await stripe.subscriptions.retrieve(session.subscription)
+                    
                     // Update user_profiles
                     const { error: profileError } = await supabaseAdmin
                         .from('users')
                         .update({
                             subscription_tier: planId,
                             subscription_status: 'active',
-                            stripe_subscription_id: session.subscription
+                            subscription_id: session.subscription,
+                            subscription_current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+                            stripe_customer_id: session.customer
                         })
                         .eq('auth_id', userId)
 
@@ -101,8 +106,9 @@ serve(async (req) => {
                         .from('users')
                         .update({
                             subscription_tier: 'free',
-                            subscription_status: 'cancelled',
-                            stripe_subscription_id: null
+                            subscription_status: 'canceled',
+                            subscription_id: null,
+                            subscription_current_period_end: null
                         })
                         .eq('auth_id', userId)
 

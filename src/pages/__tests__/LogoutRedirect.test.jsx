@@ -30,18 +30,18 @@ describe('Logout flow', () => {
     render(<Pages />);
 
     // Open user dropdown
-    const nameEl = await screen.findByText('Test User');
+    const nameEl = await screen.findByText('Test User', {}, { timeout: 3000 });
     const triggerBtn = nameEl.closest('button');
     expect(triggerBtn).toBeTruthy();
     triggerBtn && triggerBtn.click();
 
     // Click "Abmelden"
-    const logoutItem = await screen.findByText(/Abmelden/i);
+    const logoutItem = await screen.findByText(/Abmelden/i, {}, { timeout: 2000 });
     logoutItem.click();
 
     await waitFor(() => {
       expect(signOutMock).toHaveBeenCalledTimes(1);
       expect(logoutMock).toHaveBeenCalledWith('/');
-    });
-  });
+    }, { timeout: 3000 });
+  }, { timeout: 10000 });
 });

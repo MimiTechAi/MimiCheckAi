@@ -25,7 +25,7 @@ async function getCurrentUserProfileId() {
   if (!user) throw new Error('Not authenticated');
 
   // Try to find existing profile
-  const { data: profile, error: selectError } = await supabase
+  const { data: profile, error: _selectError } = await supabase
     .from('users')
     .select('id')
     .eq('auth_id', user.id)
@@ -35,13 +35,13 @@ async function getCurrentUserProfileId() {
   if (profile) return profile.id;
 
   // Profile not found - create one automatically
-  console.log('Creating new user profile for:', user.email);
+  console.warn('Creating new user profile for:', user.email);
   const { data: newProfile, error: insertError } = await supabase
     .from('users')
     .insert({
       auth_id: user.id,
       email: user.email,
-      full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+      name: user.user_metadata?.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
       created_at: new Date().toISOString()
     })
     .select('id')
@@ -81,14 +81,24 @@ export const UserProfile = {
    */
   async getCurrent(forceRefresh = false) {
     try {
-      // Check cache
+      // Check cache first (schnellster Pfad)
       const now = Date.now();
       if (!forceRefresh && this._profileCache && (now - this._profileCacheTime < this._CACHE_TTL)) {
         return this._profileCache;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      // Timeout für getUser (verhindert Hängen)
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => resolve({ data: { user: null } }), 3000);
+      });
+      
+      const userPromise = supabase.auth.getUser();
+      const { data: { user } } = await Promise.race([userPromise, timeoutPromise]);
+      
+      if (!user) {
+        // No auth user found - return null silently
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('users')
@@ -96,15 +106,48 @@ export const UserProfile = {
         .eq('auth_id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('UserProfile.getCurrent: Error fetching profile:', error);
+        // Wenn kein Profil gefunden, erstelle eines
+        if (error.code === 'PGRST116') {
+          console.warn('UserProfile.getCurrent: Creating new profile for', user.email);
+          const { data: newProfile, error: createError } = await supabase
+            .from('users')
+            .insert({
+              auth_id: user.id,
+              email: user.email,
+              name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              created_at: new Date().toISOString()
+            })
+            .select('*')
+            .single();
+          
+          if (createError) {
+            console.error('UserProfile.getCurrent: Failed to create profile:', createError);
+            return null;
+          }
+          
+          // Füge full_name als Alias hinzu für Kompatibilität
+          const profileWithAlias = { ...newProfile, full_name: newProfile.name };
+          this._profileCache = profileWithAlias;
+          this._profileCacheTime = now;
+          return profileWithAlias;
+        }
+        throw error;
+      }
 
+      // Füge full_name als Alias hinzu für Kompatibilität mit bestehendem Code
+      const profileWithAlias = { ...data, full_name: data.name };
+      
       // Update cache
-      this._profileCache = data;
+      this._profileCache = profileWithAlias;
       this._profileCacheTime = now;
 
-      return data;
+      return profileWithAlias;
     } catch (error) {
-      handleError(error, 'Get user profile');
+      console.error('UserProfile.getCurrent: Unexpected error:', error);
+      // Nicht werfen - einfach null zurückgeben
+      return null;
     }
   },
 
@@ -158,27 +201,29 @@ export const UserProfile = {
 };
 
 // ============================================
-// ABRECHNUNGEN
+// ABRECHNUNGEN (mapped to 'applications' table)
 // ============================================
 
 export const Abrechnung = {
   /**
    * List all abrechnungen for current user
+   * NOTE: Uses 'applications' table in database
    */
   async list(options = {}) {
     try {
       const userId = await getCurrentUserProfileId();
 
       let query = supabase
-        .from('abrechnungen')
+        .from('applications')
         .select('*')
         .eq('user_id', userId);
 
-      // Sorting
+      // Sorting - map legacy field names to actual columns
       if (options.orderBy) {
-        query = query.order(options.orderBy, { ascending: options.ascending ?? false });
+        const orderField = options.orderBy === 'created_date' ? 'created_at' : options.orderBy;
+        query = query.order(orderField, { ascending: options.ascending ?? false });
       } else {
-        query = query.order('created_date', { ascending: false });
+        query = query.order('created_at', { ascending: false });
       }
 
       // Limit
@@ -188,9 +233,17 @@ export const Abrechnung = {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      
+      // Map fields for backward compatibility
+      return (data || []).map(item => ({
+        ...item,
+        filename: item.title, // Alias for Dashboard display
+        created_date: item.created_at // Legacy field name
+      }));
     } catch (error) {
-      handleError(error, 'List abrechnungen');
+      console.error('List abrechnungen failed:', error);
+      // Return empty array instead of throwing - graceful degradation
+      return [];
     }
   },
 
@@ -202,14 +255,14 @@ export const Abrechnung = {
       const userId = await getCurrentUserProfileId();
 
       const { data, error } = await supabase
-        .from('abrechnungen')
+        .from('applications')
         .select('*')
         .eq('id', id)
         .eq('user_id', userId)
         .single();
 
       if (error) throw error;
-      return data;
+      return data ? { ...data, filename: data.title, created_date: data.created_at } : null;
     } catch (error) {
       handleError(error, 'Get abrechnung');
     }
@@ -222,17 +275,24 @@ export const Abrechnung = {
     try {
       const userId = await getCurrentUserProfileId();
 
+      // Map legacy field names to actual columns
+      const mappedData = {
+        ...abrechnungData,
+        title: abrechnungData.filename || abrechnungData.title || 'Neue Abrechnung',
+        type: abrechnungData.type || 'abrechnung',
+        user_id: userId
+      };
+      delete mappedData.filename;
+      delete mappedData.created_date;
+
       const { data, error } = await supabase
-        .from('abrechnungen')
-        .insert({
-          ...abrechnungData,
-          user_id: userId
-        })
+        .from('applications')
+        .insert(mappedData)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data ? { ...data, filename: data.title, created_date: data.created_at } : null;
     } catch (error) {
       handleError(error, 'Create abrechnung');
     }
@@ -245,16 +305,23 @@ export const Abrechnung = {
     try {
       const userId = await getCurrentUserProfileId();
 
+      // Map legacy field names
+      const mappedUpdates = { ...updates };
+      if (mappedUpdates.filename) {
+        mappedUpdates.title = mappedUpdates.filename;
+        delete mappedUpdates.filename;
+      }
+
       const { data, error } = await supabase
-        .from('abrechnungen')
-        .update(updates)
+        .from('applications')
+        .update(mappedUpdates)
         .eq('id', id)
         .eq('user_id', userId)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      return data ? { ...data, filename: data.title, created_date: data.created_at } : null;
     } catch (error) {
       handleError(error, 'Update abrechnung');
     }
@@ -268,7 +335,7 @@ export const Abrechnung = {
       const userId = await getCurrentUserProfileId();
 
       const { error } = await supabase
-        .from('abrechnungen')
+        .from('applications')
         .delete()
         .eq('id', id)
         .eq('user_id', userId);
@@ -291,12 +358,23 @@ export const Foerderleistung = {
    */
   async list(options = {}) {
     try {
-      const userId = await getCurrentUserProfileId();
+      let userId = null;
+      try {
+        userId = await getCurrentUserProfileId();
+      } catch {
+        // Not authenticated - only show public entries
+      }
 
       let query = supabase
         .from('foerderleistungen')
-        .select('*')
-        .or(`user_id.eq.${userId},user_id.is.null`);
+        .select('*');
+
+      // Show public (user_id IS NULL) and own entries
+      if (userId) {
+        query = query.or(`user_id.eq.${userId},user_id.is.null`);
+      } else {
+        query = query.is('user_id', null);
+      }
 
       // Filter by type
       if (options.typ) {
@@ -309,13 +387,14 @@ export const Foerderleistung = {
       }
 
       // Sorting
-      query = query.order('created_date', { ascending: false });
+      query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;
       return data || [];
     } catch (error) {
-      handleError(error, 'List förderleistungen');
+      console.error('List förderleistungen failed:', error);
+      return [];
     }
   },
 
@@ -384,20 +463,21 @@ export const Foerderleistung = {
 };
 
 // ============================================
-// ANTRÄGE
+// ANTRÄGE (mapped to 'applications' table)
 // ============================================
 
 export const Antrag = {
   /**
    * List all anträge for current user
+   * NOTE: Uses 'applications' table in database
    */
   async list(options = {}) {
     try {
       const userId = await getCurrentUserProfileId();
 
       let query = supabase
-        .from('antraege')
-        .select('*, foerderleistungen(*)')
+        .from('applications')
+        .select('*')
         .eq('user_id', userId);
 
       // Filter by status
@@ -412,7 +492,8 @@ export const Antrag = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      handleError(error, 'List anträge');
+      console.error('List anträge failed:', error);
+      return [];
     }
   },
 
@@ -424,8 +505,8 @@ export const Antrag = {
       const userId = await getCurrentUserProfileId();
 
       const { data, error } = await supabase
-        .from('antraege')
-        .select('*, foerderleistungen(*)')
+        .from('applications')
+        .select('*')
         .eq('id', id)
         .eq('user_id', userId)
         .single();
@@ -445,10 +526,11 @@ export const Antrag = {
       const userId = await getCurrentUserProfileId();
 
       const { data, error } = await supabase
-        .from('antraege')
+        .from('applications')
         .insert({
           ...antragData,
-          user_id: userId
+          user_id: userId,
+          type: antragData.type || 'other'
         })
         .select()
         .single();
@@ -468,7 +550,7 @@ export const Antrag = {
       const userId = await getCurrentUserProfileId();
 
       const { data, error } = await supabase
-        .from('antraege')
+        .from('applications')
         .update(updates)
         .eq('id', id)
         .eq('user_id', userId)
@@ -517,7 +599,29 @@ export const Notification = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      handleError(error, 'List notifications');
+      console.error('List notifications failed:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get unread count
+   */
+  async getUnreadCount() {
+    try {
+      const userId = await getCurrentUserProfileId();
+
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('gelesen', false);
+
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error('Get unread count failed:', error);
+      return 0;
     }
   },
 
@@ -566,6 +670,24 @@ export const Notification = {
       return { success: true };
     } catch (error) {
       handleError(error, 'Mark all notifications as read');
+    }
+  },
+
+  /**
+   * Create notification (for system use)
+   */
+  async create(notificationData) {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert(notificationData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleError(error, 'Create notification');
     }
   }
 };

@@ -19,7 +19,11 @@ import {
     RefreshCcw,
     Search,
     Filter,
-    Euro
+    Euro,
+    Receipt,
+    FileCheck,
+    Building,
+    User
 } from "lucide-react";
 import {
     AlertDialog,
@@ -243,6 +247,7 @@ export default function Abrechnungen() {
                             <div className="relative">
                                 <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                                 <select
+                                    data-testid="filter-status"
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                     className="w-full pl-9 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none"
@@ -261,6 +266,7 @@ export default function Abrechnungen() {
                             <div className="relative">
                                 <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                                 <input
+                                    data-testid="filter-min-potential"
                                     type="number"
                                     min="0"
                                     placeholder="0.00"
@@ -274,6 +280,7 @@ export default function Abrechnungen() {
                         <div className="flex flex-col gap-2">
                             <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Sortierung</label>
                             <select
+                                data-testid="sort-by"
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
                                 className="w-full px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none"
@@ -339,33 +346,89 @@ export default function Abrechnungen() {
                                                         abrechnung.status === 'in_bearbeitung' ? 'bg-blue-500/10 text-blue-400' :
                                                             'bg-slate-800 text-slate-400'
                                                         }`}>
-                                                        <FileText className="w-8 h-8" />
+                                                        {/* Icon basierend auf Dokumenttyp */}
+                                                        {abrechnung.extracted_data?.dokumenttyp?.includes('Nebenkosten') || abrechnung.extracted_data?.dokumenttyp?.includes('Betriebskosten') ? (
+                                                            <Receipt className="w-8 h-8" />
+                                                        ) : abrechnung.extracted_data?.dokumenttyp?.includes('Mietvertrag') ? (
+                                                            <FileCheck className="w-8 h-8" />
+                                                        ) : abrechnung.extracted_data?.dokumenttyp?.includes('Gehalt') || abrechnung.extracted_data?.dokumenttyp?.includes('Lohn') ? (
+                                                            <Euro className="w-8 h-8" />
+                                                        ) : abrechnung.extracted_data?.dokumenttyp?.includes('Behörde') ? (
+                                                            <Building className="w-8 h-8" />
+                                                        ) : (
+                                                            <FileText className="w-8 h-8" />
+                                                        )}
                                                     </div>
 
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-3 mb-1">
                                                             <h3 className="font-bold text-lg text-white truncate group-hover:text-blue-400 transition-colors">
-                                                                {abrechnung.titel || `Abrechnung ${abrechnung.abrechnungszeitraum || ''}`}
+                                                                {abrechnung.extracted_data?.dokumenttyp || abrechnung.titel || `Dokument vom ${format(new Date(abrechnung.created_date || abrechnung.created_at), "dd.MM.yyyy", { locale: de })}`}
                                                             </h3>
                                                             <StatusBadge status={abrechnung.status} />
+                                                            {abrechnung.extracted_data?.dokumenttyp_confidence > 0 && (
+                                                                <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
+                                                                    {abrechnung.extracted_data.dokumenttyp_confidence}% sicher
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400 mb-3">
-                                                            <span>{abrechnung.abrechnungszeitraum || 'Kein Zeitraum'}</span>
-                                                            {abrechnung.verwalter && (
+                                                            {/* Extrahierte Daten anzeigen */}
+                                                            {abrechnung.extracted_data?.abrechnungszeitraum ? (
+                                                                <span className="flex items-center gap-1">
+                                                                    <span className="text-slate-500">Zeitraum:</span>
+                                                                    {abrechnung.extracted_data.abrechnungszeitraum}
+                                                                </span>
+                                                            ) : abrechnung.abrechnungszeitraum ? (
+                                                                <span>{abrechnung.abrechnungszeitraum}</span>
+                                                            ) : null}
+                                                            
+                                                            {(abrechnung.extracted_data?.absender || abrechnung.extracted_data?.verwalter || abrechnung.verwalter) && (
                                                                 <>
                                                                     <span className="text-slate-600">•</span>
-                                                                    <span>{abrechnung.verwalter}</span>
+                                                                    <span className="flex items-center gap-1">
+                                                                        <span className="text-slate-500">Von:</span>
+                                                                        {abrechnung.extracted_data?.absender || abrechnung.extracted_data?.verwalter || abrechnung.verwalter}
+                                                                    </span>
                                                                 </>
                                                             )}
+                                                            
+                                                            {(abrechnung.extracted_data?.gesamtbetrag || abrechnung.extracted_data?.gesamtkosten) && (
+                                                                <>
+                                                                    <span className="text-slate-600">•</span>
+                                                                    <span className="flex items-center gap-1 text-emerald-400">
+                                                                        <Euro className="w-3 h-3" />
+                                                                        {typeof (abrechnung.extracted_data.gesamtbetrag || abrechnung.extracted_data.gesamtkosten) === 'number' 
+                                                                            ? `${(abrechnung.extracted_data.gesamtbetrag || abrechnung.extracted_data.gesamtkosten).toFixed(2)} €`
+                                                                            : `${abrechnung.extracted_data.gesamtbetrag || abrechnung.extracted_data.gesamtkosten} €`}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                            
                                                             <span className="text-slate-600">•</span>
-                                                            <span>
+                                                            <span className="text-slate-500">
                                                                 {format(new Date(abrechnung.created_date || abrechnung.created_at), "dd.MM.yyyy", { locale: de })}
                                                             </span>
                                                         </div>
 
-                                                        <div>
+                                                        {/* Zusammenfassung wenn vorhanden */}
+                                                        {abrechnung.extracted_data?.zusammenfassung && (
+                                                            <p className="text-sm text-slate-500 mb-3 line-clamp-2">
+                                                                {abrechnung.extracted_data.zusammenfassung}
+                                                            </p>
+                                                        )}
+
+                                                        <div className="flex items-center gap-4">
                                                             {getAnalysisResult(abrechnung)}
+                                                            
+                                                            {/* Handlungsbedarf-Warnung */}
+                                                            {abrechnung.extracted_data?.handlungsbedarf && (
+                                                                <span className="flex items-center gap-1 text-amber-400 text-sm">
+                                                                    <AlertTriangle className="w-4 h-4" />
+                                                                    Handlungsbedarf
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

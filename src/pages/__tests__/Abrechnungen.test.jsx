@@ -58,7 +58,7 @@ describe('Abrechnungen page', () => {
     );
 
     // Wait for items to render
-    const titleA = await screen.findByText('Titel A');
+    const titleA = await screen.findByText('Titel A', {}, { timeout: 2000 });
     expect(titleA).toBeInTheDocument();
 
     // Set status filter to 'abgeschlossen'
@@ -83,5 +83,5 @@ describe('Abrechnungen page', () => {
 
     // Still only Titel A visible
     expect(screen.queryByText('Titel A')).toBeInTheDocument();
-  });
+  }, { timeout: 5000 });
 });

@@ -1,19 +1,33 @@
 /**
  * TEST AUTH FLOW - TDD Approach
  * Testet den kompletten Authentifizierungsflow
+ * 
+ * WICHTIG: Erstelle zuerst eine .env Datei mit:
+ *   VITE_SUPABASE_URL=https://your-project.supabase.co
+ *   VITE_SUPABASE_ANON_KEY=your-anon-key
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-// Supabase Config
-const supabaseUrl = 'https://yjjauvmjyhlxcoumwqlj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqamF1dm1qeWhseGNvdW13cWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0Mzc4NzgsImV4cCI6MjA3ODAxMzg3OH0.A8e7YwJA6VJ0fTJJt8TBVRT4vktVxB1DFL8U5RLTzZg';
+// Lade .env Datei
+config();
+
+// Supabase Config aus Environment
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY';
+
+// Validierung
+if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseAnonKey === 'YOUR_ANON_KEY') {
+  console.error('❌ FEHLER: Bitte .env Datei mit Supabase Credentials erstellen!');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Test User Credentials
 const TEST_USER = {
-  email: 'oezdelie.h@gmail.com',  // Die Email aus dem Screenshot
+  email: 'test@example.com',
   password: 'Test123456!',
   name: 'Test User'
 };
@@ -107,8 +121,7 @@ async function runTests() {
   
   console.log('✅ Redirect URL built!');
   console.log('🔗 URL Length:', redirectUrl.length, 'characters');
-  console.log('📋 Copy this URL to test manually:');
-  console.log('\n' + redirectUrl.substring(0, 150) + '...\n');
+  console.log('\n');
 
   // TEST 6: Test Session Setting (simulate auth-bridge)
   console.log('TEST 6: Test setting session with tokens...');
@@ -136,7 +149,6 @@ async function runTests() {
   console.log('✅ User can log in from landing page.');
   console.log('✅ Tokens are generated correctly.');
   console.log('✅ Session can be restored with tokens.');
-  console.log('\n📝 Next: Test in browser with console open to see debug logs.');
 }
 
 // Run tests

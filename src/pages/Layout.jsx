@@ -15,7 +15,9 @@ import {
     User as UserIcon,
     HelpCircle,
     Settings,
-    Globe
+    Globe,
+    Crown,
+    CreditCard
 } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell.jsx";
 import AIChatAssistant from "@/components/ui/AIChatAssistant";
@@ -36,12 +38,61 @@ export default function Layout({ children }) {
     const { t, i18n } = useTranslation();
 
     useEffect(() => {
-        User.me().then(u => setUser(u)).catch(() => { });
+        // Versuche User-Profil zu laden
+        const loadUser = async () => {
+            try {
+                // Erst versuchen das Profil zu laden
+                const profile = await User.me();
+                if (profile) {
+                    setUser(profile);
+                    return;
+                }
+                
+                // Fallback: Auth-User direkt verwenden
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (authUser) {
+                    setUser({
+                        email: authUser.email,
+                        full_name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Benutzer'
+                    });
+                }
+            } catch (err) {
+                console.warn('Layout: User load failed:', err);
+                // Trotzdem versuchen Auth-User zu bekommen
+                try {
+                    const { data: { user: authUser } } = await supabase.auth.getUser();
+                    if (authUser) {
+                        setUser({
+                            email: authUser.email,
+                            full_name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Benutzer'
+                        });
+                    }
+                } catch { /* ignore */ }
+            }
+        };
+        
+        loadUser();
+        
+        // Auth State Listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                setUser(null);
+            } else if (session?.user) {
+                loadUser();
+            }
+        });
+        
+        return () => subscription?.unsubscribe();
     }, []);
 
     const handleLogout = useCallback(async () => {
-        try { await supabase.auth.signOut(); } catch { }
-        await User.logout('/');
+        try { 
+            await supabase.auth.signOut(); 
+            // Clear localStorage
+            localStorage.removeItem('sb-yjjauvmjyhlxcoumwqlj-auth-token');
+        } catch { }
+        setUser(null);
+        window.location.href = '/';
     }, []);
 
     const navItems = [
@@ -49,6 +100,7 @@ export default function Layout({ children }) {
         { name: t('layout.nav.upload', 'Upload'), icon: UploadIcon, page: 'Upload' },
         { name: t('abrechnungen.title', 'Abrechnungen'), icon: FileText, page: 'Abrechnungen' },
         { name: t('layout.nav.antraege', 'Anträge'), icon: FileCheck, page: 'Antraege' },
+        { name: t('layout.nav.pricing', 'Preise & Abo'), icon: Crown, page: 'Pricing', highlight: user?.subscription_tier === 'free' },
         { name: t('layout.nav.contact', 'Kontakt'), icon: HelpCircle, page: 'Contact' },
     ];
 
@@ -89,13 +141,28 @@ export default function Layout({ children }) {
                                 key={item.name}
                                 to={createPageUrl(item.page)}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-emerald-500/10 text-emerald-400 font-semibold shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/20'
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium border border-transparent'
-                                    }`}
+                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative ${
+                                    isActive
+                                        ? 'bg-emerald-500/10 text-emerald-400 font-semibold shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/20'
+                                        : item.highlight
+                                            ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-400 hover:from-purple-500/20 hover:to-pink-500/20 font-semibold border border-purple-500/30 animate-pulse'
+                                            : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium border border-transparent'
+                                }`}
                             >
-                                <item.icon className={`w-5 h-5 ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                                <item.icon className={`w-5 h-5 ${
+                                    isActive 
+                                        ? 'text-emerald-400' 
+                                        : item.highlight 
+                                            ? 'text-purple-400' 
+                                            : 'text-slate-500 group-hover:text-slate-300'
+                                }`} />
                                 <span>{item.name}</span>
+                                {item.highlight && (
+                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}
@@ -122,6 +189,14 @@ export default function Layout({ children }) {
                                     <Link to={createPageUrl('Lebenslagen')}>
                                         <UserIcon className="w-4 h-4 mr-2" />
                                         {t('layout.profile.edit', 'Profil bearbeiten')}
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild className="focus:bg-white/5 focus:text-white cursor-pointer">
+                                    <Link to={createPageUrl('Pricing')}>
+                                        <CreditCard className="w-4 h-4 mr-2" />
+                                        {user?.subscription_tier === 'free' 
+                                            ? t('layout.profile.upgrade', 'Upgrade zu Premium') 
+                                            : t('layout.profile.manageSubscription', 'Abo verwalten')}
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-white/10" />

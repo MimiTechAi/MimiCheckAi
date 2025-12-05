@@ -1,24 +1,47 @@
 /**
  * SUPABASE KONFIGURATION FÜR AUTO-CONFIRM
  * 
- * Führe das in der Browser-Konsole auf http://localhost:3000 oder http://localhost:8005 aus
+ * WICHTIG: Erstelle zuerst eine .env Datei mit:
+ *   VITE_SUPABASE_URL=https://your-project.supabase.co
+ *   VITE_SUPABASE_ANON_KEY=your-anon-key
+ *   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key (optional, für Admin-Funktionen)
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-const supabaseUrl = 'https://yjjauvmjyhlxcoumwqlj.supabase.co';
-const supabaseServiceKey = 'YOUR_SERVICE_ROLE_KEY'; // Ersetze mit deinem Service Role Key
+// Lade .env Datei
+config();
 
-// Service Client mit Admin-Rechten
-const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'YOUR_SERVICE_ROLE_KEY';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY';
+
+// Validierung
+if (supabaseUrl === 'YOUR_SUPABASE_URL') {
+  console.error('❌ FEHLER: Bitte .env Datei mit Supabase Credentials erstellen!');
+  process.exit(1);
+}
+
+// Service Client mit Admin-Rechten (nur wenn Service Key vorhanden)
+const adminClient = supabaseServiceKey !== 'YOUR_SERVICE_ROLE_KEY' 
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+  : null;
 
 async function configureAutoConfirm() {
   console.log('🔧 KONFIGURIERE SUPABASE FÜR AUTO-CONFIRM\n');
+  
+  if (!adminClient) {
+    console.error('❌ Service Role Key nicht konfiguriert!');
+    console.log('   Füge SUPABASE_SERVICE_ROLE_KEY zur .env Datei hinzu.');
+    console.log('   Alternativ: Nutze quickUserSetup() ohne Admin-Rechte.');
+    return;
+  }
   
   try {
     // 1. Alle existierenden User bestätigen
@@ -53,38 +76,7 @@ async function configureAutoConfirm() {
       }
     }
     
-    // 2. Test-User erstellen
-    console.log('\n2️⃣ Erstelle Test-User...');
-    
-    const testEmail = 'test@mimicheck.de';
-    const testPassword = 'Test123456!';
-    
-    const { data: testUser, error: createError } = await adminClient.auth.admin.createUser({
-      email: testEmail,
-      password: testPassword,
-      email_confirm: true,
-      user_metadata: { name: 'Test User' }
-    });
-    
-    if (createError) {
-      if (createError.message?.includes('already exists')) {
-        console.log('ℹ️ Test-User existiert bereits');
-      } else {
-        console.error('❌ Fehler beim Erstellen:', createError);
-      }
-    } else {
-      console.log('✅ Test-User erstellt:', testEmail);
-      console.log('🔑 Password:', testPassword);
-    }
-    
     console.log('\n✅ KONFIGURATION ABGESCHLOSSEN!');
-    console.log('\n📝 Nächste Schritte:');
-    console.log('1. Gehe zu http://localhost:3000/landing/#auth');
-    console.log('2. Registriere dich mit einer beliebigen Email');
-    console.log('3. Du wirst automatisch eingeloggt (keine Bestätigung nötig)');
-    console.log('\nODER nutze den Test-User:');
-    console.log('Email: test@mimicheck.de');
-    console.log('Password: Test123456!');
     
   } catch (error) {
     console.error('❌ Unerwarteter Fehler:', error);
@@ -95,9 +87,14 @@ async function configureAutoConfirm() {
 async function quickUserSetup() {
   console.log('🚀 QUICK USER SETUP (ohne Admin-Rechte)\n');
   
-  const supabase = createClient(supabaseUrl, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqamF1dm1qeWhseGNvdW13cWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0Mzc4NzgsImV4cCI6MjA3ODAxMzg3OH0.A8e7YwJA6VJ0fTJJt8TBVRT4vktVxB1DFL8U5RLTzZg');
+  if (supabaseAnonKey === 'YOUR_ANON_KEY') {
+    console.error('❌ FEHLER: Bitte .env Datei mit VITE_SUPABASE_ANON_KEY erstellen!');
+    return;
+  }
   
-  // Erstelle mehrere Test-User
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  
+  // Erstelle Test-User
   const testUsers = [
     { email: 'test1@test.com', password: 'Test123!' },
     { email: 'test2@test.com', password: 'Test123!' },
@@ -113,8 +110,7 @@ async function quickUserSetup() {
       options: {
         emailRedirectTo: 'http://localhost:8005/auth-bridge',
         data: { 
-          skip_confirmation: true,
-          email_confirmed: true
+          name: 'Test User'
         }
       }
     });

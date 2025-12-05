@@ -43,9 +43,9 @@ export default function Auth() {
       
       if (sessErr) throw sessErr;
       
-      // Main App URL früh deklarieren - HARDCODED FOR NOW
-      const mainUrl = 'http://localhost:8005';
-      console.log('🔧 HARDCODED mainUrl:', mainUrl);
+      // Main App URL - hardcoded for production reliability
+      const mainUrl = 'https://app.mimicheck.ai';
+      console.log('🔧 Main App URL:', mainUrl);
       
       const access_token = sess.session?.access_token;
       const refresh_token = sess.session?.refresh_token as string | undefined;

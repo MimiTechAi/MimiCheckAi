@@ -56,7 +56,9 @@ export default function LandingPage() {
       const emailParam = encodeURIComponent(formData.email);
       const nameParam = encodeURIComponent(formData.name || '');
       const qs = `access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&email=${emailParam}&name=${nameParam}`;
-      const dest = `${window.location.origin}/auth-bridge?${qs}`;
+      // WICHTIG: Redirect zur Main App, nicht zur Landing Page!
+      const mainAppUrl = 'https://app.mimicheck.ai';
+      const dest = `${mainAppUrl}/auth-bridge?${qs}`;
       window.location.href = dest;
     } catch (err: any) {
       setError(err?.message || String(err));

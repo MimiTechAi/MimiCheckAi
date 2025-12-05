@@ -2,6 +2,9 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/api/supabaseClient';
 
+// Storage Key muss mit supabaseClient.js übereinstimmen
+const STORAGE_KEY = 'sb-yjjauvmjyhlxcoumwqlj-auth-token';
+
 export default function ProtectedRoute({ children }) {
   // 🔧 DEV MODE: Bypass Auth für lokale Entwicklung
   const DEV_BYPASS = false; // ✅ Production-ready
@@ -15,77 +18,126 @@ export default function ProtectedRoute({ children }) {
       console.log('🔧 DEV MODE: Auth bypassed');
       return;
     }
+    
     let mounted = true;
+    let retryCount = 0;
+    const MAX_RETRIES = 2; // Reduziert für schnellere Antwort
     
     async function checkSession() {
-      // 1. Prüfe zuerst localStorage für manuelle Session
+      console.log(`🔍 ProtectedRoute: Checking session (attempt ${retryCount + 1}/${MAX_RETRIES + 1})`);
+      
       try {
-        const storageKey = 'mimicheck-auth';
-        // Dynamisch: Extrahiere Projekt-Ref aus Supabase-URL
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-        const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase/)?.[1] || '';
-        const supabaseKey = projectRef ? `sb-${projectRef}-auth-token` : storageKey;
-        const stored = localStorage.getItem(storageKey) || localStorage.getItem(supabaseKey);
-        
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed?.access_token) {
-            console.log('✅ ProtectedRoute: Found session in localStorage');
-            // Setze Session mit gespeichertem Token
-            const { data, error } = await supabase.auth.setSession({
-              access_token: parsed.access_token,
-              refresh_token: parsed.refresh_token
-            });
-            if (!error && data?.session) {
-              if (mounted) {
-                setSession(data.session);
-                setReady(true);
+        // METHODE 1: Prüfe localStorage direkt (schneller)
+        const storedSession = localStorage.getItem(STORAGE_KEY);
+        if (storedSession) {
+          try {
+            const parsed = JSON.parse(storedSession);
+            if (parsed.access_token) {
+              console.log('✅ ProtectedRoute: Session in localStorage gefunden');
+              
+              // Versuche Session über Supabase zu laden
+              const { data, error } = await supabase.auth.getSession();
+              
+              if (data?.session) {
+                console.log('✅ ProtectedRoute: Supabase Session bestätigt:', {
+                  userId: data.session.user?.id,
+                  email: data.session.user?.email
+                });
+                
+                if (mounted) {
+                  setSession(data.session);
+                  setReady(true);
+                }
+                return true;
               }
-              return;
+              
+              // Falls Supabase keine Session hat, aber localStorage schon
+              // Versuche Session zu setzen
+              if (parsed.access_token && parsed.refresh_token) {
+                console.log('🔄 ProtectedRoute: Versuche Session aus localStorage wiederherzustellen...');
+                const { data: restoredData } = await supabase.auth.setSession({
+                  access_token: parsed.access_token,
+                  refresh_token: parsed.refresh_token
+                });
+                
+                if (restoredData?.session) {
+                  console.log('✅ ProtectedRoute: Session wiederhergestellt!');
+                  if (mounted) {
+                    setSession(restoredData.session);
+                    setReady(true);
+                  }
+                  return true;
+                }
+              }
             }
+          } catch (parseError) {
+            console.warn('⚠️ ProtectedRoute: localStorage parse error:', parseError);
           }
         }
-      } catch (e) {
-        console.warn('ProtectedRoute: localStorage check failed:', e);
-      }
-      
-      // 2. Fallback: Prüfe Supabase direkt
-      try {
+        
+        // METHODE 2: Direkt Supabase fragen
         const { data, error } = await supabase.auth.getSession();
-        if (!error && data?.session) {
+        
+        if (error) {
+          console.error('❌ ProtectedRoute: getSession error:', error);
+          // Nicht abbrechen - vielleicht ist localStorage noch gültig
+        }
+        
+        if (data?.session) {
+          console.log('✅ ProtectedRoute: Session found via Supabase!', {
+            userId: data.session.user?.id,
+            email: data.session.user?.email
+          });
+          
           if (mounted) {
             setSession(data.session);
             setReady(true);
           }
-          return;
+          return true;
         }
+        
+        console.warn('⚠️ ProtectedRoute: No session found');
+        return false;
+        
       } catch (e) {
-        console.warn('ProtectedRoute: getSession failed:', e);
+        console.error('❌ ProtectedRoute: Session check failed:', e);
+        return false;
       }
+    }
+    
+    async function checkWithRetry() {
+      const hasSession = await checkSession();
       
-      // 3. Keine Session gefunden
-      if (mounted) {
-        console.log('❌ ProtectedRoute: No session found');
+      if (!hasSession && retryCount < MAX_RETRIES && mounted) {
+        // Retry nach kurzer Wartezeit (für den Fall dass Session gerade gesetzt wird)
+        retryCount++;
+        console.log(`⏳ ProtectedRoute: Retrying in 300ms... (${retryCount}/${MAX_RETRIES})`);
+        setTimeout(() => {
+          if (mounted) checkWithRetry();
+        }, 300);
+      } else if (mounted) {
+        // Fertig - entweder Session gefunden oder alle Retries aufgebraucht
         setReady(true);
       }
     }
     
-    // Timeout nach 5 Sekunden
-    const timeout = setTimeout(() => {
-      if (!mounted) return;
-      console.warn('ProtectedRoute: Session check timeout');
-      setReady(true);
-    }, 5000);
+    // Start check
+    checkWithRetry();
     
-    checkSession().finally(() => clearTimeout(timeout));
-    
-    const { data: { subscription } = { subscription: null } } = supabase.auth.onAuthStateChange((_evt, s) => {
-      setSession(s);
+    // Listen for auth state changes
+    const { data: { subscription } = { subscription: null } } = supabase.auth.onAuthStateChange((event, s) => {
+      console.log('🔔 ProtectedRoute: Auth state changed:', event);
+      if (mounted) {
+        setSession(s);
+        if (s) {
+          console.log('✅ ProtectedRoute: Session updated via auth state change');
+          setReady(true);
+        }
+      }
     });
     
     return () => {
       mounted = false;
-      clearTimeout(timeout);
       subscription?.unsubscribe?.();
     };
   }, []);
@@ -96,17 +148,21 @@ export default function ProtectedRoute({ children }) {
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/60">Authentifizierung wird geprüft...</p>
+          <p className="text-white/40 text-sm mt-2">Bitte warten...</p>
         </div>
       </div>
     );
   }
   
-  // Nicht eingeloggt? → Weiterleitung zu Port 3000 Landing Page Auth
+  // Nicht eingeloggt? → Weiterleitung zur Auth-Seite
   if (!session) {
-    const landingUrl = import.meta.env.VITE_LANDING_URL || 'http://localhost:3000/landing';
-    window.location.href = `${landingUrl}#auth`;
-    return null;
+    console.log('🚫 ProtectedRoute: No session - redirecting to auth');
+    
+    // WICHTIG: Immer zur internen Auth-Seite weiterleiten (nicht zur Landing Page)
+    // Das vermeidet Cross-Domain Session-Probleme
+    return <Navigate to="/auth" replace />;
   }
   
+  console.log('✅ ProtectedRoute: Access granted');
   return children;
 }

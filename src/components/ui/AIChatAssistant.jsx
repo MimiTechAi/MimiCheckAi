@@ -73,43 +73,53 @@ ${profileContext}
 
 Antworte auf Deutsch.`;
 
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            // Verwende Supabase Edge Function statt direktem OpenAI Call
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+            
+            const response = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || 'DEIN_KEY_HIER_FALLS_LOKAL'}`
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'apikey': supabaseKey
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4o',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        ...messages,
-                        userMessage
-                    ]
+                    systemPrompt,
+                    messages: [...messages, userMessage],
+                    userProfile: user
                 })
             });
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                if (response.status === 401) {
-                    throw new Error(t('chat.configError', 'API-Key fehlt oder ist ungültig. Bitte prüfe deine .env Datei (VITE_OPENAI_API_KEY).'));
+                
+                // Fallback: Wenn Edge Function nicht existiert, zeige hilfreiche Nachricht
+                if (response.status === 404) {
+                    throw new Error('AI-Chat Funktion wird eingerichtet. Bitte versuche es später erneut.');
                 }
-                throw new Error(errorData.error?.message || `API Fehler: ${response.status}`);
+                
+                throw new Error(errorData.error || `API Fehler: ${response.status}`);
             }
 
             const data = await response.json();
-            const aiMessage = { role: 'assistant', content: data.choices[0].message.content };
+            const aiMessage = { role: 'assistant', content: data.response || data.message || 'Keine Antwort erhalten.' };
             setMessages(prev => [...prev, aiMessage]);
 
         } catch (error) {
             console.error('Chat Error:', error);
-            let errorMessage = t('chat.error', 'Entschuldigung, ich habe gerade Verbindungsprobleme.');
+            
+            // Fallback-Antwort wenn AI nicht verfügbar
+            const fallbackResponse = `Ich bin gerade nicht verfügbar. 
 
-            if (error.message.includes('API-Key')) {
-                errorMessage = t('chat.configError', '⚠️ Konfigurationsfehler: Der OpenAI API-Key fehlt oder ist ungültig.');
-            }
+**Was du jetzt tun kannst:**
+📋 Gehe zu "Profil" und vervollständige deine Daten
+🔍 Nutze "Anträge" um passende Förderungen zu finden
+📄 Lade Dokumente unter "Upload" hoch
 
-            setMessages(prev => [...prev, { role: 'assistant', content: errorMessage }]);
+Bei Fragen: kontakt@mimicheck.ai`;
+
+            setMessages(prev => [...prev, { role: 'assistant', content: fallbackResponse }]);
         } finally {
             setIsLoading(false);
         }

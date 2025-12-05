@@ -245,6 +245,7 @@ function PagesContent() {
                 <Route path="/hilfe" element={<Hilfe />} />
 
                 <Route path="/Bericht" element={<ProtectedRoute><Bericht /></ProtectedRoute>} />
+                <Route path="/bericht" element={<ProtectedRoute><Bericht /></ProtectedRoute>} />
 
                 <Route path="/Pricing" element={<Pricing />} />
                 <Route path="/pricing" element={<Pricing />} />
@@ -274,7 +275,8 @@ function PagesContent() {
                 <Route path="/Contact" element={<Contact />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/Home" element={<Home />} />
-                {/* Auth Route ENTFERNT - Anmeldung nur auf Port 3000! */}
+                {/* Auth Route - Direkt auf Core App */}
+                <Route path="/auth" element={<Auth />} />
                 <Route path="/auth-bridge" element={<AuthBridge />} />
                 <Route path="/reports/:id" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
 

@@ -194,13 +194,49 @@ export default function Upload() {
                 }
             });
 
+            // Step 5: Calculate refund potential for Nebenkostenabrechnungen
+            let analysisResults = { fehler: [], hinweise: [], rechtliche_bedenken: [] };
+            const dokumenttyp = (extractedData.dokumenttyp || '').toLowerCase();
+            
+            if (dokumenttyp.includes('nebenkosten') || dokumenttyp.includes('betriebskosten')) {
+                console.log('💰 Calculating refund potential...');
+                try {
+                    const { data: refundResult, error: refundError } = await supabase.functions.invoke('calculate-refund-potential', {
+                        body: { abrechnung_id: abrechnung.id }
+                    });
+                    
+                    if (!refundError && refundResult) {
+                        console.log('✅ Refund calculation result:', refundResult);
+                        analysisResults = {
+                            fehler: refundResult.fehler_gefunden || [],
+                            hinweise: extractedData.wichtige_hinweise || [],
+                            rechtliche_bedenken: [],
+                            rueckforderung_potential: refundResult.gesamtes_rueckforderungspotential || 0,
+                            empfehlung: refundResult.empfehlung,
+                            widerspruch_sinnvoll: refundResult.widerspruch_sinnvoll
+                        };
+                        
+                        // Reload abrechnung to get updated data
+                        const updatedAbrechnung = await Abrechnung.get(abrechnung.id);
+                        if (updatedAbrechnung) {
+                            abrechnung.rueckforderung_potential = updatedAbrechnung.rueckforderung_potential;
+                            abrechnung.fehler_anzahl = updatedAbrechnung.fehler_anzahl;
+                            abrechnung.analysis_results = updatedAbrechnung.analysis_results;
+                            abrechnung.status = updatedAbrechnung.status;
+                        }
+                    }
+                } catch (refundErr) {
+                    console.warn('Refund calculation failed:', refundErr);
+                }
+            } else {
+                // For non-Nebenkosten documents, just mark as complete
+                await Abrechnung.update(abrechnung.id, { status: 'abgeschlossen' });
+                abrechnung.status = 'abgeschlossen';
+            }
+
             setResults({
                 abrechnung,
-                analysis: {
-                    fehler: [],
-                    hinweise: [],
-                    rechtliche_bedenken: []
-                }
+                analysis: analysisResults
             });
             track('upload.complete', AREA.UPLOAD, { id: abrechnung.id });
 

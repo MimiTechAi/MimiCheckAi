@@ -1,10 +1,26 @@
 // Script zum Erstellen eines Test-Users in Supabase
 // Führe aus mit: node CREATE-TEST-USER.js
+//
+// WICHTIG: Erstelle zuerst eine .env Datei mit:
+//   VITE_SUPABASE_URL=https://your-project.supabase.co
+//   VITE_SUPABASE_ANON_KEY=your-anon-key
 
 import { createClient } from '@supabase/supabase-js';
+import { config } from 'dotenv';
 
-const supabaseUrl = 'https://yjjauvmjyhlxcoumwqlj.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlqamF1dm1qeWhseGNvdW13cWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0Mzc4NzgsImV4cCI6MjA3ODAxMzg3OH0.A8e7YwJA6VJ0fTJJt8TBVRT4vktVxB1DFL8U5RLTzZg';
+// Lade .env Datei
+config();
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'YOUR_ANON_KEY';
+
+// Validierung
+if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseAnonKey === 'YOUR_ANON_KEY') {
+  console.error('❌ FEHLER: Bitte .env Datei mit Supabase Credentials erstellen!');
+  console.error('   VITE_SUPABASE_URL=https://your-project.supabase.co');
+  console.error('   VITE_SUPABASE_ANON_KEY=your-anon-key');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

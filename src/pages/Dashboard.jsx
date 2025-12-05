@@ -48,13 +48,32 @@ export default function Dashboard() {
         setError(null);
 
         try {
-            const currentUser = await User.me();
+            console.log('Dashboard: Loading user data...');
+            
+            // Timeout für User-Laden (10 Sekunden)
+            const userPromise = User.me();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout beim Laden der Benutzerdaten')), 10000)
+            );
+            
+            const currentUser = await Promise.race([userPromise, timeoutPromise]);
+            console.log('Dashboard: User loaded:', currentUser?.email || 'null');
             setUser(currentUser);
 
-            const userAbrechnungen = await Abrechnung.list("-created_date", 10);
-            setAbrechnungen(userAbrechnungen);
+            // Abrechnungen laden (mit Timeout)
+            try {
+                const abrechnungenPromise = Abrechnung.list({ orderBy: 'created_date', ascending: false, limit: 10 });
+                const abrechnungenTimeout = new Promise((resolve) => 
+                    setTimeout(() => resolve([]), 10000)
+                );
+                const userAbrechnungen = await Promise.race([abrechnungenPromise, abrechnungenTimeout]);
+                setAbrechnungen(userAbrechnungen || []);
+            } catch (abrErr) {
+                console.warn('Dashboard: Abrechnungen konnten nicht geladen werden:', abrErr);
+                setAbrechnungen([]);
+            }
         } catch (error) {
-            console.error("Fehler beim Laden:", error);
+            console.error("Dashboard: Fehler beim Laden:", error);
             setError("Dashboard konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.");
         } finally {
             setIsLoading(false);
@@ -215,6 +234,16 @@ export default function Dashboard() {
                                 <FileText className="w-5 h-5 mr-2 inline" />
                                 {t('dashboard.hero.ctaAntraege', 'Meine Anträge')}
                             </MagneticButton>
+                            {user?.subscription_tier === 'free' && (
+                                <MagneticButton
+                                    onClick={() => navigate(createPageUrl("Pricing"))}
+                                    data-cursor-text="Premium upgraden"
+                                    className="px-8 py-4 rounded-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 animate-pulse"
+                                >
+                                    <Sparkles className="w-5 h-5 mr-2 inline" />
+                                    Premium upgraden
+                                </MagneticButton>
+                            )}
                         </div>
                     </motion.div>
                 </div>

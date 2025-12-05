@@ -16,13 +16,17 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function UploadResults({ results, onNewAnalysis, onViewAll }) {
+export default function UploadResults({ results, onReset, onNewAnalysis, onViewAll }) {
     const { abrechnung, analysis } = results;
     const errors = analysis?.fehler || [];
     const hasErrors = errors.length > 0;
     const savings = abrechnung?.rueckforderung_potential || 0;
+    
+    // Extrahierte Daten aus der Abrechnung
+    const extractedData = abrechnung?.extracted_data || {};
+    const titel = extractedData.titel || abrechnung?.title || abrechnung?.filename || 'Dokument';
+    const zeitraum = extractedData.abrechnungszeitraum || 'Nicht erkannt';
 
-    // FIXED: Ensure abrechnung has valid ID
     console.log("UploadResults - Abrechnung:", abrechnung);
 
     return (
@@ -51,11 +55,15 @@ export default function UploadResults({ results, onNewAnalysis, onViewAll }) {
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                             <FileText className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-2">Dokument</h3>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm">{abrechnung.titel}</p>
-                        <Badge className="mt-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800">
-                            {abrechnung.abrechnungszeitraum}
-                        </Badge>
+                        <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-2">
+                            {extractedData.dokumenttyp || 'Dokument'}
+                        </h3>
+                        <p className="text-slate-600 dark:text-slate-400 text-sm">{titel}</p>
+                        {extractedData.dokumenttyp_confidence && (
+                            <Badge className="mt-2 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800">
+                                {extractedData.dokumenttyp_confidence}% Konfidenz
+                            </Badge>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -123,7 +131,7 @@ export default function UploadResults({ results, onNewAnalysis, onViewAll }) {
                 
                 <Button 
                     variant="outline" 
-                    onClick={onNewAnalysis}
+                    onClick={onReset || onNewAnalysis}
                     className="w-full sm:w-auto border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-6 py-3 rounded-2xl"
                 >
                     <Upload className="w-4 h-4 mr-2" />
@@ -140,20 +148,64 @@ export default function UploadResults({ results, onNewAnalysis, onViewAll }) {
                 </Button>
             </div>
 
+            {/* Found Issues - if any */}
+            {hasErrors && (
+                <Card className="shadow-lg border-amber-200/60 dark:border-amber-700/60 bg-amber-50/80 dark:bg-amber-900/20">
+                    <CardHeader>
+                        <CardTitle className="text-lg text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5" />
+                            Gefundene Auffälligkeiten
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {errors.map((fehler, index) => (
+                            <div key={index} className="p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-amber-200/50 dark:border-amber-700/50">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-semibold text-slate-800 dark:text-white">{fehler.typ}</h4>
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{fehler.beschreibung}</p>
+                                    </div>
+                                    {fehler.betrag > 0 && (
+                                        <Badge className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300">
+                                            {fehler.betrag.toFixed(2)}€
+                                        </Badge>
+                                    )}
+                                </div>
+                                {fehler.sicherheit && (
+                                    <div className="mt-2 text-xs text-slate-500">
+                                        Sicherheit: {fehler.sicherheit}%
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Next Steps Hint */}
             <Card className="shadow-lg border-slate-200/60 dark:border-slate-700/60 bg-gradient-to-r from-purple-50/80 to-pink-50/80 dark:from-purple-900/20 dark:to-pink-900/20">
                 <CardContent className="p-6 text-center">
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">Was kommt als Nächstes?</h3>
+                        <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                            {hasErrors ? 'Empfehlung: Widerspruch einlegen' : 'Was kommt als Nächstes?'}
+                        </h3>
                     </div>
                     <p className="text-slate-600 dark:text-slate-400 mb-4">
-                        Im detaillierten Bericht finden Sie rechtliche Einschätzungen, Musterbriefe für den Widerspruch und Schritt-für-Schritt Anleitungen.
+                        {hasErrors 
+                            ? `Wir haben ${errors.length} Auffälligkeiten gefunden. Im detaillierten Bericht erhalten Sie Musterbriefe und eine Schritt-für-Schritt Anleitung für Ihren Widerspruch.`
+                            : 'Im detaillierten Bericht finden Sie alle extrahierten Informationen und können bei Bedarf den KI-Assistenten um Hilfe bitten.'
+                        }
                     </p>
                     {savings > 0 && (
                         <Badge className="bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                            💰 Mit unserem Widerspruchs-Wizard können Sie Ihre {savings.toFixed(0)}€ zurückfordern
+                            💰 Mögliche Rückforderung: {savings.toFixed(2)}€
                         </Badge>
+                    )}
+                    {analysis?.empfehlung && (
+                        <p className="mt-4 text-sm text-purple-700 dark:text-purple-300 italic">
+                            "{analysis.empfehlung}"
+                        </p>
                     )}
                 </CardContent>
             </Card>

@@ -1,102 +1,108 @@
 import React from 'react';
 import { supabase } from '@/api/supabaseClient';
-import { User } from '@/api/entities';
 
 export default function AuthBridge() {
+  const [debugMsg, setDebugMsg] = React.useState('Initialisierung...');
+  
   React.useEffect(() => {
-    console.log('🌉 AuthBridge LOADED');
-    console.log('📍 Current URL:', window.location.href);
-    
     const url = new URL(window.location.href);
     const access_token = url.searchParams.get('access_token');
     const refresh_token = url.searchParams.get('refresh_token');
     
-    console.log('🎫 Received tokens:', {
-      hasAccess: !!access_token,
-      hasRefresh: !!refresh_token,
-      accessLength: access_token?.length,
-      refreshLength: refresh_token?.length
+    console.warn('🔐 AuthBridge: Start', { 
+      hasAccessToken: !!access_token, 
+      hasRefreshToken: !!refresh_token
     });
+    
+    if (!access_token || !refresh_token) {
+      setDebugMsg('Keine Tokens - Redirect zu /auth');
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
+      return;
+    }
 
-    async function run() {
-      if (!access_token || !refresh_token) {
-        console.warn('⚠️ No tokens found, redirecting to Landing Page');
-        const landingUrl = import.meta.env.VITE_LANDING_URL || 'http://localhost:3000/landing';
-        window.location.href = `${landingUrl}#auth`;
-        return;
-      }
-      
+    setDebugMsg('Tokens empfangen - setze Session...');
+
+    // KRITISCH: Direkt localStorage setzen für sofortige Verfügbarkeit
+    const STORAGE_KEY = 'sb-yjjauvmjyhlxcoumwqlj-auth-token';
+    
+    (async () => {
       try {
-        console.log('🔐 Setting session manually...');
+        setDebugMsg('Schritt 1: Session wird gesetzt...');
         
-        // Session MANUELL im localStorage speichern (Supabase Format)
+        // METHODE 1: Direkt in localStorage schreiben (schneller & zuverlässiger)
         const sessionData = {
           access_token,
           refresh_token,
           token_type: 'bearer',
-          expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 Stunde
-          user: {
-            id: 'pending',
-            email: url.searchParams.get('email') || '',
-          }
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600
         };
         
-        // Speichere in BEIDEN möglichen Keys
-        const storageKey = 'mimicheck-auth';
-        // Dynamisch: Extrahiere Projekt-Ref aus Supabase-URL
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-        const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase/)?.[1] || '';
-        const supabaseKey = projectRef ? `sb-${projectRef}-auth-token` : storageKey;
-        
         try {
-          localStorage.setItem(storageKey, JSON.stringify(sessionData));
-          localStorage.setItem(supabaseKey, JSON.stringify(sessionData));
-          console.log('💾 Session manually saved to localStorage');
-        } catch (e) {
-          console.warn('⚠️ localStorage save failed:', e);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+          console.warn('✅ AuthBridge: Session direkt in localStorage gesetzt');
+        } catch (storageError) {
+          console.warn('⚠️ localStorage write failed:', storageError);
         }
         
-        // Versuche auch Supabase setSession (aber warte nicht lange)
-        try {
-          const result = await Promise.race([
-            supabase.auth.setSession({ access_token, refresh_token }),
-            new Promise(resolve => setTimeout(() => resolve({ data: null, error: 'timeout' }), 2000))
-          ]);
-          console.log('📦 Supabase setSession result:', result?.error ? 'error/timeout' : 'success');
-        } catch (e) {
-          console.warn('⚠️ Supabase setSession failed (non-critical):', e);
+        setDebugMsg('Schritt 2: Supabase Session wird initialisiert...');
+        
+        // METHODE 2: Auch über Supabase API setzen (für Auth State)
+        const { data, error } = await supabase.auth.setSession({
+          access_token,
+          refresh_token
+        });
+        
+        if (error) {
+          console.warn('⚠️ setSession error (ignoriert):', error.message);
+          // Nicht abbrechen - localStorage sollte funktionieren
         }
         
-        // Session ist jetzt gesetzt - speichere Login-Flag
-        try { 
-          localStorage.setItem('justLoggedIn', '1');
-          console.log('💾 Saved login flag to localStorage');
-        } catch {}
-        
-        // Profil-Update ist optional und blockiert nicht
-        const name = url.searchParams.get('name');
-        const email = url.searchParams.get('email');
-        if (name || email) {
-          console.log('👤 User info:', { name, email });
-          // Nicht await - lass es im Hintergrund laufen
-          User.updateProfile({ full_name: name || email || undefined, email: email || undefined })
-            .then(() => console.log('✅ Profile updated'))
-            .catch((e) => console.warn('⚠️ Profile update failed (non-critical):', e));
+        if (data?.session) {
+          console.warn('✅ AuthBridge: Supabase Session gesetzt:', {
+            userId: data.session.user?.id,
+            email: data.session.user?.email
+          });
         }
         
-        // Zur Profilseite
-        console.log('🚀 Redirecting to /profilseite...');
-        window.location.replace('/profilseite');
+        setDebugMsg('Schritt 3: Session wird verifiziert...');
+        
+        // Kurz warten für Persistierung
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Verifiziere Session
+        const { data: verifyData } = await supabase.auth.getSession();
+        const hasSession = !!verifyData?.session;
+        const hasLocalStorage = !!localStorage.getItem(STORAGE_KEY);
+        
+        console.warn('🔍 AuthBridge: Verification', { hasSession, hasLocalStorage });
+        
+        if (!hasSession && !hasLocalStorage) {
+          throw new Error('Session konnte nicht gesetzt werden');
+        }
+        
+        // Markiere als "gerade eingeloggt" um Onboarding-Redirect zu verhindern
+        localStorage.setItem('justLoggedIn', '1');
+        
+        setDebugMsg('✅ Erfolgreich! Weiterleitung...');
+        
+        // URL bereinigen und weiterleiten
+        setTimeout(() => {
+          window.location.replace('/profilseite');
+        }, 200);
         
       } catch (e) {
-        console.error('❌ AuthBridge error:', e);
-        // Trotzdem zur Profilseite versuchen
-        console.log('🚀 Trying redirect to /profilseite anyway...');
-        window.location.replace('/profilseite');
+        console.error('❌ AuthBridge Fehler:', e);
+        setDebugMsg(`FEHLER: ${e.message}`);
+        
+        // Bei Fehler: Zur Auth-Seite
+        setTimeout(() => {
+          window.location.href = '/auth';
+        }, 3000);
       }
-    }
-
-    run();
+    })();
   }, []);
 
   return (
@@ -109,8 +115,24 @@ export default function AuthBridge() {
       color: '#fff'
     }}>
       <div style={{ textAlign: 'center' }}>
-        <h2>🔐 Authentifizierung läuft...</h2>
-        <p>Bitte warten...</p>
+        <div style={{
+          width: '60px',
+          height: '60px',
+          border: '4px solid rgba(16, 185, 129, 0.3)',
+          borderTop: '4px solid rgb(16, 185, 129)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 20px'
+        }} />
+        <h2 style={{ fontSize: '24px', marginBottom: '10px' }}>🔐 Authentifizierung läuft...</h2>
+        <p style={{ color: '#888' }}>Bitte warten, Sie werden weitergeleitet...</p>
+        <p style={{ color: '#10b981', marginTop: '20px', fontSize: '14px' }}>{debugMsg}</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     </div>
   );

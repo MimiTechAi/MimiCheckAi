@@ -128,46 +128,49 @@ export async function getReport(abrechnungId) {
 export const Core = {};
 
 /**
- * InvokeLLM - OpenAI Integration über Backend
- * 2025 Best Practice: Returns structured response with content string
+ * InvokeLLM - OpenAI Integration über Supabase Edge Function
+ * 2025 Best Practice: Uses Supabase Edge Function for secure API calls
  */
 export const InvokeLLM = async ({ prompt, system_prompt, temperature, max_tokens, response_json_schema }) => {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-  
   try {
-    const res = await fetch(`${apiBase}/api/llm/invoke`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        prompt,
-        system_prompt,
-        temperature: temperature || 0.7,
-        max_tokens: max_tokens || 4096,
-        json_mode: !!response_json_schema
-      }),
-      credentials: "include"
+    // Use Supabase Edge Function for AI chat
+    const { data, error } = await supabase.functions.invoke('ai-chat', {
+      body: {
+        systemPrompt: system_prompt || `Du bist ein hilfreicher KI-Assistent für MiMiCheck, 
+eine App die Nutzern hilft ihre Nebenkostenabrechnungen zu prüfen und staatliche Förderungen zu finden.
+Antworte immer auf Deutsch, freundlich und kompetent.`,
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      }
     });
     
-    if (!res.ok) {
-      const error = await res.json().catch(() => ({ detail: "LLM-Anfrage fehlgeschlagen" }));
-      throw new Error(error.detail || "LLM service unavailable");
+    if (error) {
+      console.error('[LLM Edge Function Error]', error);
+      throw new Error(error.message || 'Edge Function Fehler');
     }
     
-    const result = await res.json();
+    // Edge Function returns { response: "..." }
+    const responseText = data?.response || data?.content || '';
     
-    // If JSON mode and schema provided, parse and validate
-    if (response_json_schema && result.content) {
+    // If JSON mode and schema provided, try to parse
+    if (response_json_schema && responseText) {
       try {
-        const parsed = JSON.parse(result.content);
-        return parsed; // Return parsed JSON directly for convenience
+        // Try to extract JSON from response
+        const jsonMatch = responseText.match(/```json\n?([\s\S]*?)\n?```/) || 
+                         responseText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+          return parsed;
+        }
+        return JSON.parse(responseText);
       } catch (e) {
         console.warn('[LLM] Failed to parse JSON response:', e);
-        return result.content; // Fallback to raw content
+        return responseText;
       }
     }
     
-    // Return content string for text responses
-    return result.content || result;
+    return responseText;
   } catch (error) {
     console.error('[LLM Error]', error);
     
@@ -176,57 +179,66 @@ export const InvokeLLM = async ({ prompt, system_prompt, temperature, max_tokens
       return {};
     }
     
-    // For text mode, return error message
-    return `⚠️ **Backend nicht erreichbar**
+    // For text mode, return helpful error message
+    return `⚠️ **KI-Assistent vorübergehend nicht verfügbar**
 
-Die KI-Funktion ist derzeit nicht verfügbar.
+Bitte versuchen Sie es in wenigen Minuten erneut.
 
-**Error:** ${error.message}`;
+Falls das Problem weiterhin besteht, kontaktieren Sie bitte unseren Support.`;
   }
 };
 
 /**
- * ExtractDataFromUploadedFile - PDF-Extraktion
- * Uses /api/forms/extract for universal PDF form extraction
+ * ExtractDataFromUploadedFile - PDF/Dokument-Extraktion
+ * Uses Supabase Edge Function for document extraction
  */
 export const ExtractDataFromUploadedFile = async (fileOrId) => {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-  
   try {
-    // If it's a file object, upload it first
+    // If it's a file object, we need to upload it first and then extract
     if (fileOrId instanceof File || (fileOrId && fileOrId.name)) {
-      const formData = new FormData();
-      formData.append('file', fileOrId);
-      formData.append('ocr_enabled', 'true');
+      // First upload the file
+      const uploadResult = await uploadFile(fileOrId);
       
-      const res = await fetch(`${apiBase}/api/forms/extract`, {
-        method: "POST",
-        body: formData,
-        credentials: "include"
+      if (!uploadResult?.file_url) {
+        throw new Error('File upload failed');
+      }
+      
+      // Then call extract-document Edge Function
+      const { data, error } = await supabase.functions.invoke('extract-document', {
+        body: {
+          file_url: uploadResult.file_url,
+          filename: fileOrId.name
+        }
       });
       
-      if (!res.ok) throw new Error("PDF extraction failed");
+      if (error) {
+        console.error('[Extract Document Error]', error);
+        throw new Error(error.message || 'Extraction failed');
+      }
       
-      const result = await res.json();
       return {
         success: true,
-        form_schema: result.form_schema,
-        upload_id: result.upload_id
+        form_schema: data?.form_schema || data,
+        upload_id: uploadResult.id,
+        extracted_data: data?.extracted_data || data
       };
     }
     
-    // Otherwise, treat as upload_id and fetch schema
-    const res = await fetch(`${apiBase}/api/forms/schema/${fileOrId}`, {
-      credentials: "include"
-    });
+    // If it's an ID, we assume the document is already in the database
+    // Fetch from abrechnungen table
+    const { data: abrechnung, error } = await supabase
+      .from('abrechnungen')
+      .select('extracted_data')
+      .eq('id', fileOrId)
+      .single();
     
-    if (!res.ok) throw new Error("Schema retrieval failed");
+    if (error) throw new Error('Document not found');
     
-    const schema = await res.json();
     return {
       success: true,
-      form_schema: schema,
-      upload_id: fileOrId
+      form_schema: abrechnung?.extracted_data || {},
+      upload_id: fileOrId,
+      extracted_data: abrechnung?.extracted_data
     };
   } catch (error) {
     console.error('[PDF Extraction Error]', error);
