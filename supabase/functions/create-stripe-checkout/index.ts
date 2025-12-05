@@ -13,20 +13,42 @@ serve(async (req) => {
     }
 
     try {
+        // Get the authorization header
+        const authHeader = req.headers.get('Authorization')
+        
+        if (!authHeader) {
+            console.error('No Authorization header provided')
+            return new Response(
+                JSON.stringify({ error: 'No authorization header' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-            { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+            { global: { headers: { Authorization: authHeader } } }
         )
 
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
 
-        if (userError || !user) {
+        if (userError) {
+            console.error('Auth error:', userError)
             return new Response(
-                JSON.stringify({ error: 'Unauthorized' }),
+                JSON.stringify({ error: 'Authentication failed', details: userError.message }),
                 { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
+
+        if (!user) {
+            console.error('No user found')
+            return new Response(
+                JSON.stringify({ error: 'User not found' }),
+                { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        console.log('User authenticated:', user.email)
 
         const { planId, successUrl, cancelUrl } = await req.json()
 
