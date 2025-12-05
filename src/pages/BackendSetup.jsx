@@ -16,7 +16,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 
-import BackendFunctionTemplates from '@/components/backend/BackendFunctionTemplates';
+import BackendFunctionTemplates from '@/components/backend/BackendFunctionTemplates.jsx';
 
 /**
  * BACKEND SETUP CONTROL PANEL
