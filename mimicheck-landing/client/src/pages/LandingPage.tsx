@@ -23,7 +23,7 @@ export default function LandingPage() {
       <ScrollStory
         title="Dokumente hochladen"
         description="Lade deine Abrechnungen, Belege und Nachweise einfach hoch. Unsere KI erkennt automatisch relevante Informationen und prüft, welche Förderungen für dich in Frage kommen. Drag & Drop oder Datei auswählen – fertig."
-        imageUrl="/landing/story-upload.jpg"
+        imageUrl="/story-upload.jpg"
         imageAlt="Person lädt Dokumente hoch"
       />
 
@@ -31,7 +31,7 @@ export default function LandingPage() {
       <ScrollStory
         title="KI analysiert"
         description="Unsere KI durchsucht tausende Förderprogramme und findet die passenden Leistungen für dich. Sie prüft Anspruchsvoraussetzungen und bereitet alle Formulare automatisch vor. EU AI Act konform & transparent."
-        imageUrl="/landing/story-ai-analysis.jpg"
+        imageUrl="/story-ai-analysis.jpg"
         imageAlt="KI analysiert Dokumente"
         reverse
       />
@@ -42,7 +42,7 @@ export default function LandingPage() {
         description="Prüfe die KI-vorbereiteten Anträge in Sekunden, reiche sie digital ein und verfolge den Status in Echtzeit. Vollautomatisch und sicher."
         stat="847€"
         statLabel="Mehr Förderung pro Jahr"
-        imageUrl="/landing/story-success-v2.jpg"
+        imageUrl="/story-success-v2.jpg"
         imageAlt="Erfolgreiche Förderung genehmigt"
       />
 

@@ -36,27 +36,38 @@ export default function Navbar() {
       >
       <div className="container">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img src={APP_LOGO} alt={APP_TITLE} className="h-8 w-8" width="32" height="32" />
-            <span className="text-xl font-bold">MiMiCheck</span>
+          {/* Logo - MiMiCheck AI */}
+          <a href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-shadow">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-600 bg-clip-text text-transparent">
+              MiMiCheck
+            </span>
           </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             <a 
-              href="#footer"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-sm font-medium hover:text-primary transition-colors"
+              href="/#features"
+              className="text-sm font-medium hover:text-emerald-400 transition-colors"
+            >
+              Förderungen
+            </a>
+            <a 
+              href="/contact"
+              className="text-sm font-medium hover:text-emerald-400 transition-colors"
             >
               Kontakt
             </a>
 
-            <Button asChild>
-              <a href="#auth">Anmelden</a>
+            <Button 
+              asChild 
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30"
+            >
+              <a href="/auth">Anmelden</a>
             </Button>
           </div>
 
@@ -82,18 +93,24 @@ export default function Navbar() {
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col gap-4">
               <a 
-                href="#footer"
-                className="text-sm font-medium hover:text-primary transition-colors py-2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsMobileMenuOpen(false);
-                  document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                href="/#features"
+                className="text-sm font-medium hover:text-emerald-400 transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Förderungen
+              </a>
+              <a 
+                href="/contact"
+                className="text-sm font-medium hover:text-emerald-400 transition-colors py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Kontakt
               </a>
-              <Button asChild className="w-full">
-                <a href="#auth" onClick={() => setIsMobileMenuOpen(false)}>Anmelden</a>
+              <Button 
+                asChild 
+                className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+              >
+                <a href="/auth" onClick={() => setIsMobileMenuOpen(false)}>Anmelden</a>
               </Button>
             </div>
           </div>
