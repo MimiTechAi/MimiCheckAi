@@ -6,65 +6,10 @@ import Navbar from '@/components/Navbar';
 import HeroSOTA from '@/components/landing/HeroSOTA';
 import ScrollStory from '@/components/landing/ScrollStory';
 import QuoteSlide from '@/components/landing/QuoteSlide';
-import MosaicGallery from '@/components/landing/MosaicGallery';
 import CTAEnhanced from '@/components/landing/CTAEnhanced';
 import CookieBanner from '@/components/CookieBanner';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 
 export default function LandingPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '' });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-        if (error) throw error;
-      } else {
-        const { data: signUpData, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: { data: { name: formData.name || formData.email } },
-        });
-        if (error) throw error;
-        
-        // Bei Signup ohne sofortige Session: Email-Bestätigung erforderlich
-        if (!signUpData.session) {
-          setError('Registrierung erfolgreich! Bitte bestätige deine E-Mail, um dich anzumelden.');
-          setLoading(false);
-          setIsLogin(true); // Wechsel zu Login für spätere Anmeldung
-          return;
-        }
-      }
-      
-      const { data, error: sessErr } = await supabase.auth.getSession();
-      if (sessErr) throw sessErr;
-      const access_token = data.session?.access_token;
-      const refresh_token = data.session?.refresh_token as string | undefined;
-      if (!access_token || !refresh_token) {
-        throw new Error('Kein Session-Token verfügbar. Bitte E-Mail bestätigen oder erneut versuchen.');
-      }
-      const emailParam = encodeURIComponent(formData.email);
-      const nameParam = encodeURIComponent(formData.name || '');
-      const qs = `access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}&email=${emailParam}&name=${nameParam}`;
-      // WICHTIG: Redirect zur Main App, nicht zur Landing Page!
-      const mainAppUrl = 'https://app.mimicheck.ai';
-      const dest = `${mainAppUrl}/auth-bridge?${qs}`;
-      window.location.href = dest;
-    } catch (err: any) {
-      setError(err?.message || String(err));
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,109 +62,131 @@ export default function LandingPage() {
         bgColor="bg-gradient-to-br from-blue-500/10 to-purple-500/10"
       />
 
-      {/* Förderungen Section - NEUE EINFACHE VERSION */}
-      <section className="py-32 px-4 bg-slate-950">
-        <div className="container max-w-7xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold mb-16 text-center text-white">
-            Diese Förderungen findest du mit MiMiCheck
-          </h2>
+      {/* Förderungen Section - SOTA 2025 mit konsistenten Farben */}
+      <section id="features" className="py-32 px-4 bg-gradient-to-b from-slate-950 to-slate-900 relative overflow-hidden">
+        {/* Subtle Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#10b98120_1px,transparent_1px),linear-gradient(to_bottom,#10b98120_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        
+        <div className="container max-w-7xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-teal-600 bg-clip-text text-transparent">
+              Diese Förderungen findest du
+            </h2>
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+              Unsere KI durchsucht automatisch alle relevanten Förderprogramme für deine Situation
+            </p>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Wohngeld Card MIT BILD */}
-            <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-xl cursor-pointer">
-              {/* BILD - DIREKT SICHTBAR */}
-              <img
-                src="/images/placeholder-keys.svg"
-                alt="Wohngeld"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Wohngeld Card - Emerald Theme */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="group relative aspect-square rounded-3xl overflow-hidden shadow-2xl cursor-pointer border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-500"
+            >
+              {/* Glassmorphism Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-600/10 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
               
-              {/* Leichter Overlay für Lesbarkeit */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-600/20" />
+              {/* Animated Glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-600/0 group-hover:from-emerald-500/20 group-hover:to-teal-600/20 transition-all duration-700" />
               
               {/* Content */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end">
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white drop-shadow-2xl">
+              <div className="relative z-10 p-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/50">
+                  <Upload className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                   Wohngeld
                 </h3>
-                <p className="text-white text-lg leading-relaxed drop-shadow-xl">
-                  Bis zu 3.600€ pro Jahr für Miete oder Eigentum. Automatische Prüfung deiner Anspruchsvoraussetzungen.
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  Bis zu <span className="text-emerald-400 font-semibold">3.600€ pro Jahr</span> für Miete oder Eigentum. Automatische Prüfung deiner Anspruchsvoraussetzungen.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Kindergeld Card MIT BILD */}
-            <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-xl cursor-pointer">
-              {/* BILD */}
-              <img
-                src="/images/card-kindergeld.svg"
-                alt="Kindergeld & Zuschlag"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-
-              {/* Overlay für Lesbarkeit */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20" />
-
-              {/* Content */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end">
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
+            {/* Kindergeld Card - Teal Theme */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="group relative aspect-square rounded-3xl overflow-hidden shadow-2xl cursor-pointer border border-teal-500/20 hover:border-teal-500/50 transition-all duration-500"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-cyan-600/10 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-500/0 to-cyan-600/0 group-hover:from-teal-500/20 group-hover:to-cyan-600/20 transition-all duration-700" />
+              
+              <div className="relative z-10 p-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/50">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                   Kindergeld & Zuschlag
                 </h3>
-                <p className="text-white/90 text-lg leading-relaxed">
-                  250€ pro Kind + bis zu 292€ Zuschlag. Wir prüfen alle Varianten für dich.
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  <span className="text-teal-400 font-semibold">250€ pro Kind</span> + bis zu 292€ Zuschlag. Wir prüfen alle Varianten für dich.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Elterngeld Card MIT BILD */}
-            <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-xl cursor-pointer">
-              {/* BILD */}
-              <img
-                src="/images/card-elterngeld.svg"
-                alt="Elterngeld"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-
-              {/* Overlay für Lesbarkeit */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20" />
-
-              {/* Content */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end">
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
+            {/* Elterngeld Card - Emerald Theme */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="group relative aspect-square rounded-3xl overflow-hidden shadow-2xl cursor-pointer border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-500"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-600/10 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-teal-600/0 group-hover:from-emerald-500/20 group-hover:to-teal-600/20 transition-all duration-700" />
+              
+              <div className="relative z-10 p-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/50">
+                  <CheckCircle className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                   Elterngeld
                 </h3>
-                <p className="text-white/90 text-lg leading-relaxed">
-                  65-100% deines Nettoeinkommens, bis zu 1.800€/Monat. Optimale Aufteilung berechnen.
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  65-100% deines Nettoeinkommens, bis zu <span className="text-emerald-400 font-semibold">1.800€/Monat</span>. Optimale Aufteilung berechnen.
                 </p>
               </div>
-            </div>
+            </motion.div>
 
-            {/* BAföG Card MIT BILD */}
-            <div className="group relative aspect-square rounded-2xl overflow-hidden shadow-xl cursor-pointer">
-              {/* BILD */}
-              <img
-                src="/images/card-bafoeg.svg"
-                alt="BAföG & Bildung"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-
-              {/* Overlay für Lesbarkeit */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20" />
-
-              {/* Content */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end">
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-white">
+            {/* BAföG Card - Cyan Theme */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="group relative aspect-square rounded-3xl overflow-hidden shadow-2xl cursor-pointer border border-cyan-500/20 hover:border-cyan-500/50 transition-all duration-500"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-teal-600/10 backdrop-blur-sm" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 to-teal-600/0 group-hover:from-cyan-500/20 group-hover:to-teal-600/20 transition-all duration-700" />
+              
+              <div className="relative z-10 p-10 h-full flex flex-col justify-end">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-lg shadow-cyan-500/50">
+                  <Sparkles className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                   BAföG & Bildung
                 </h3>
-                <p className="text-white/90 text-lg leading-relaxed">
-                  Bis zu 934€/Monat für Studium oder Ausbildung. Inklusive Wohnzuschlag.
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  Bis zu <span className="text-cyan-400 font-semibold">934€/Monat</span> für Studium oder Ausbildung. Inklusive Wohnzuschlag.
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -283,131 +250,176 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="auth" className="py-24 px-4 bg-muted/30">
-        <div className="container max-w-3xl">
-          <div className="bg-card rounded-2xl p-8 border border-border shadow-lg">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{isLogin ? 'Anmelden' : 'Registrieren'}</h2>
-              <button
-                className="text-sm text-primary hover:underline"
-                onClick={() => setIsLogin(v => !v)}
-                type="button"
+      {/* Final CTA Section - Jetzt starten */}
+      <section className="py-32 px-4 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 relative overflow-hidden">
+        {/* Animated Background Gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)] animate-pulse" />
+        
+        <div className="container max-w-4xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="text-center"
+          >
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-teal-600 bg-clip-text text-transparent">
+              Bereit für mehr Förderung?
+            </h2>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Starte jetzt kostenlos und finde heraus, welche Förderungen dir zustehen.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button 
+                size="lg" 
+                className="text-lg px-8 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-2xl shadow-emerald-500/50 group"
+                asChild
               >
-                {isLogin ? 'Jetzt registrieren' : 'Bereits Konto? Anmelden'}
-              </button>
+                <a href="/auth">
+                  Jetzt kostenlos starten
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </Button>
+              
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8 py-6 border-2 border-emerald-500/50 hover:border-emerald-500 hover:bg-emerald-500/10"
+                asChild
+              >
+                <a href="#features">
+                  Mehr erfahren
+                </a>
+              </Button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">Name</label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border rounded px-3 py-2 bg-background"
-                    required
-                  />
-                </div>
-              )}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-2">E-Mail</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full border rounded px-3 py-2 bg-background"
-                  required
-                />
+
+            {/* Trust Indicators */}
+            <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                <span>Kostenlos testen</span>
               </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium mb-2">Passwort</label>
-                <input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full border rounded px-3 py-2 bg-background"
-                  required
-                  minLength={8}
-                />
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                <span>Keine Kreditkarte nötig</span>
               </div>
-              {error && <p className={`text-sm ${error.includes('erfolgreich') ? 'text-green-600' : 'text-red-600'}`}>{error}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-4 py-3 rounded bg-primary text-primary-foreground"
-              >
-                {loading ? 'Bitte warten…' : (isLogin ? 'Login' : 'Konto anlegen')}
-              </button>
-            </form>
-          </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500" />
+                <span>DSGVO-konform</span>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       <CTAEnhanced />
 
-      <footer id="footer" className="py-12 px-4 border-t border-border bg-muted/30">
-        <div className="container">
-          <div className="grid md:grid-cols-3 gap-8 mb-8">
-            <div>
-              <h3 className="font-semibold mb-4">MiMiCheck by MiMiTech AI</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Dein digitaler Assistent für Förderanträge – sicher, transparent und DSGVO-konform.
-              </p>
-              <div className="text-sm text-muted-foreground">
-                <p className="font-medium">MiMi Tech Ai UG (haftungsbeschränkt)</p>
-                <p>Lindenplatz 23</p>
-                <p>75378 Bad Liebenzell</p>
-                <p className="mt-2">
-                  <a href="mailto:info@mimitechai.com" className="hover:text-primary transition-colors">
-                    info@mimitechai.com
-                  </a>
+      {/* Premium Footer - SOTA 2025 */}
+      <footer id="footer" className="relative bg-slate-950 border-t border-emerald-500/20">
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-emerald-500/5 pointer-events-none" />
+        
+        <div className="container relative z-10">
+          {/* Main Footer Content */}
+          <div className="py-16 px-4">
+            <div className="grid md:grid-cols-4 gap-12 mb-12">
+              {/* Brand Column */}
+              <div className="md:col-span-2">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/50">
+                    <CheckCircle className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">MiMiCheck</h3>
+                </div>
+                <p className="text-slate-400 mb-6 leading-relaxed max-w-md">
+                  Dein digitaler Assistent für Förderanträge – sicher, transparent und DSGVO-konform. Entwickelt mit ❤️ für EU AI Act & ISO Konformität.
                 </p>
-                <p>
-                  <a href="tel:+4915758805737" className="hover:text-primary transition-colors">
-                    +49 1575 8805737
-                  </a>
-                </p>
+                
+                {/* Company Info */}
+                <div className="text-sm text-slate-500 space-y-1">
+                  <p className="font-medium text-slate-400">MiMi Tech Ai UG (haftungsbeschränkt)</p>
+                  <p>Lindenplatz 23, 75378 Bad Liebenzell</p>
+                  <div className="flex flex-col gap-1 mt-3">
+                    <a href="mailto:info@mimitechai.com" className="hover:text-emerald-400 transition-colors inline-flex items-center gap-2">
+                      <span>✉</span> info@mimitechai.com
+                    </a>
+                    <a href="tel:+4915758805737" className="hover:text-emerald-400 transition-colors inline-flex items-center gap-2">
+                      <span>📞</span> +49 1575 8805737
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Links Column 1 */}
+              <div>
+                <h4 className="text-white font-semibold mb-4">Rechtliches</h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a href="/impressum" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      Impressum
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/datenschutz" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      Datenschutz
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/agb" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      AGB
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Links Column 2 */}
+              <div>
+                <h4 className="text-white font-semibold mb-4">Support</h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a href="/contact" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      Hilfe & FAQ
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/auth" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      Anmelden
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/#features" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                      Förderungen
+                    </a>
+                  </li>
+                </ul>
               </div>
             </div>
-            <div>
-              <h3 className="font-semibold mb-4">Rechtliches</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="/impressum" className="hover:text-primary transition-colors">
-                    Impressum
-                  </a>
-                </li>
-                <li>
-                  <a href="/datenschutz" className="hover:text-primary transition-colors">
-                    Datenschutz
-                  </a>
-                </li>
-                <li>
-                  <a href="/agb" className="hover:text-primary transition-colors">
-                    AGB
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="/contact" className="hover:text-primary transition-colors">
-                    Hilfe & FAQ
-                  </a>
-                </li>
-              </ul>
-            </div>
           </div>
-          <div className="pt-8 border-t border-border text-center text-sm text-muted-foreground">
-            <p>© 2025 MiMi Tech Ai UG (haftungsbeschränkt). Alle Rechte vorbehalten.</p>
-            <p className="mt-2">
-              MiMiCheck – Entwickelt mit ❤️ für EU AI Act & ISO Konformität | LCP &lt; 2.5s | A11y AA & SOTA 2025 konform
-            </p>
+
+          {/* Bottom Bar */}
+          <div className="py-6 px-4 border-t border-slate-800">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+              <p>
+                © 2025 MiMi Tech Ai UG. Alle Rechte vorbehalten.
+              </p>
+              
+              {/* Trust Badges */}
+              <div className="flex flex-wrap justify-center gap-4 text-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  DSGVO-konform
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  ISO zertifiziert
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  EU AI Act
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
