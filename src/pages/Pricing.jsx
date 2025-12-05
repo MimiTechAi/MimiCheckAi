@@ -28,10 +28,11 @@ const pricingPlans = [
         title: 'Staatshilfen+',
         subtitle: 'Die beste Wahl für die meisten Nutzer',
         price: '€14.99',
+        priceId: 'price_1SacLbGX9ckbY2L6ejmsITKD',
         features: [
-            'Unbegrenzte Förderprüfungen',
-            'Unbegrenzte Nebenkostenprüfungen',
-            'Priority KI-Assistent',
+            '50 Förderprüfungen pro Monat',
+            '10 Nebenkostenprüfungen pro Monat',
+            'Priority KI-Assistent (100 Fragen/Tag)',
             'PDF-Reports & Musterbriefe',
             'Automatische Antragsassistenz',
             'Widerspruchs-Wizard'
@@ -43,10 +44,11 @@ const pricingPlans = [
         title: 'Haushalt-Optimierer',
         subtitle: 'Für Familien und Power-User',
         price: '€29.99',
+        priceId: 'price_1SacN7GX9ckbY2L68BctYrGk',
         features: [
             'Alle Features von Premium',
             'Familienmitglieder verwalten (bis 4 Profile)',
-            'Rechtliche Erstberatung (1x / Monat)',
+            'Rechtliche Erstberatung (1x/Monat)',
             'Steueroptimierungs-KI',
             'Persönlicher KI-Agent für komplexe Fälle',
             'WhatsApp & Telefon-Support'
@@ -82,7 +84,8 @@ export default function Pricing() {
 
     const handleSelectPlan = async (planId) => {
         if (!user) {
-            await User.login();
+            // Redirect to login page
+            navigate(createPageUrl('Auth'));
             return;
         }
 

@@ -1,48 +1,66 @@
-// src/api/functions.js - Robuste Functions mit Fallback
-import { mimitech } from './mimitechClient';
+// src/api/functions.js - Supabase Edge Functions
+import { supabase } from './supabaseClient';
 
-// Check if functions are available
-const functions = mimitech?.functions || {};
+/**
+ * Helper to call Supabase Edge Functions with auth
+ */
+async function invokeFunction(functionName, body = {}) {
+  try {
+    // Get current session to ensure we have a valid auth token
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      console.error(`No valid session for ${functionName}:`, sessionError);
+      throw new Error('Bitte melden Sie sich erneut an');
+    }
 
-// Mock functions for local development
-const mockFunction = (name) => async (...args) => {
-  console.warn(`[Mock] ${name} called with:`, args);
-  return { success: true, mock: true, function: name };
+    console.log(`Calling ${functionName} with session:`, session?.user?.email);
+
+    // Use supabase.functions.invoke with proper auth
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body,
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (error) {
+      console.error(`Error calling ${functionName}:`, error);
+      throw error;
+    }
+
+    return { data, error: null };
+  } catch (err) {
+    console.error(`Exception calling ${functionName}:`, err);
+    return { data: null, error: err.message };
+  }
+}
+
+/**
+ * Stripe Checkout Session
+ */
+export const createStripeCheckoutSession = async ({ planId, successUrl, cancelUrl }) => {
+  return invokeFunction('create-stripe-checkout', {
+    planId,
+    successUrl,
+    cancelUrl
+  });
 };
 
-export const validateStripeSetup = functions.validateStripeSetup || mockFunction('validateStripeSetup');
-
-export const createStripeCheckoutSession = functions.createStripeCheckoutSession || (async (plan) => {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-  const res = await fetch(`${apiBase}/api/billing/checkout`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ plan }),
-    credentials: "include"
+/**
+ * Stripe Customer Portal Session
+ */
+export const createCustomerPortalSession = async ({ returnUrl }) => {
+  return invokeFunction('create-portal-session', {
+    returnUrl
   });
-  if (!res.ok) throw new Error("Checkout failed");
-  return res.json();
-});
+};
 
-export const createCustomerPortalSession = functions.createCustomerPortalSession || (async () => {
-  const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-  const res = await fetch(`${apiBase}/api/billing/portal`, {
-    method: "GET",
-    credentials: "include"
-  });
-  if (!res.ok) throw new Error("Portal failed");
-  return res.json();
-});
-
-export const stripeWebhookHandler = functions.stripeWebhookHandler || mockFunction('stripeWebhookHandler');
-
-export const autoSetupStripe = functions.autoSetupStripe || mockFunction('autoSetupStripe');
-
-export const exportUserData = functions.exportUserData || mockFunction('exportUserData');
-
-export const deleteUserAccount = functions.deleteUserAccount || mockFunction('deleteUserAccount');
-
-export const fillPdfForm = functions.fillPdfForm || mockFunction('fillPdfForm');
-
-export const analyzePdfFields = functions.analyzePdfFields || mockFunction('analyzePdfFields');
+/**
+ * Validate Stripe Setup
+ */
+export const validateStripeSetup = async () => {
+  return invokeFunction('validate-stripe-setup', {});
+};
 
