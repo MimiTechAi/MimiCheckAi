@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import Stripe from "https://esm.sh/stripe@14.14.0"
+import { serve } from "std/http/server.ts"
+import Stripe from "stripe"
 import { corsHeaders } from "../_shared/cors.ts"
 import { createSupabaseClient } from "../_shared/supabaseClient.ts"
 
-serve(async (req) => {
+serve(async (req: Request) => {
     // Handle CORS
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders })
