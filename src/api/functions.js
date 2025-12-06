@@ -9,19 +9,23 @@ async function invokeFunction(functionName, body = {}) {
   try {
     // Get current session to ensure we have a valid auth token
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+
     if (sessionError || !session) {
       console.error(`No valid session for ${functionName}:`, sessionError);
       throw new Error('Bitte melden Sie sich erneut an');
     }
 
-    console.log(`Calling ${functionName} with user:`, session?.user?.email);
+    if (!session?.access_token) {
+      console.error('Session found but no access_token available');
+      throw new Error('Sitzung ungültig. Bitte neu anmelden.');
+    }
 
     // CRITICAL: With verify_jwt: true, we MUST manually pass the Authorization header
     const { data, error } = await supabase.functions.invoke(functionName, {
       body,
       headers: {
-        Authorization: `Bearer ${session.access_token}`
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json'
       }
     });
 
