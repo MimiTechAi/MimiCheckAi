@@ -19,7 +19,7 @@ export default function Auth() {
     try {
       if (isLogin) {
         // Login
-        console.log('🔐 Auth: Attempting login for', email);
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -30,16 +30,16 @@ export default function Auth() {
           throw error;
         }
 
-        console.log('✅ Auth: Login successful, session:', data.session ? 'EXISTS' : 'MISSING');
+
 
         if (data.session) {
           // Warte kurz damit Session persistiert wird
           await new Promise(resolve => setTimeout(resolve, 300));
-          
+
           // Verifiziere Session
           const { data: verifyData } = await supabase.auth.getSession();
-          console.log('🔍 Auth: Session verification:', verifyData?.session ? 'OK' : 'FAILED');
-          
+
+
           // Verwende window.location für harten Redirect (zuverlässiger als navigate)
           window.location.href = '/profilseite';
         }

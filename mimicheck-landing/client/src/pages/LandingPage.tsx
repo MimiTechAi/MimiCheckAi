@@ -46,12 +46,108 @@ export default function LandingPage() {
         imageAlt="Erfolgreiche Förderung genehmigt"
       />
 
+      {/* Wie es funktioniert - 3 Steps */}
+      <section className="py-32 px-4 bg-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(16,185,129,0.15),transparent_70%)]" />
+        
+        <div className="container max-w-6xl mx-auto relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-400 to-teal-600 bg-clip-text text-transparent">
+              So einfach geht's
+            </h2>
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+              In nur 3 Schritten zu deiner Förderung
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {/* Step 1 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="relative"
+            >
+              <div className="absolute -top-6 -left-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-emerald-500/50">
+                1
+              </div>
+              <div className="pt-12 pl-12">
+                <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+                  <Upload className="w-10 h-10 text-emerald-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Dokumente hochladen
+                </h3>
+                <p className="text-slate-400 leading-relaxed">
+                  Lade deine Belege und Nachweise hoch. Drag & Drop oder Datei auswählen – fertig in Sekunden.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="absolute -top-6 -left-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-teal-500/50">
+                2
+              </div>
+              <div className="pt-12 pl-12">
+                <div className="w-20 h-20 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-6">
+                  <Sparkles className="w-10 h-10 text-teal-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  KI analysiert
+                </h3>
+                <p className="text-slate-400 leading-relaxed">
+                  Unsere KI durchsucht tausende Förderprogramme und findet die passenden für dich. Vollautomatisch.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative"
+            >
+              <div className="absolute -top-6 -left-6 w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-3xl font-bold text-white shadow-2xl shadow-cyan-500/50">
+                3
+              </div>
+              <div className="pt-12 pl-12">
+                <div className="w-20 h-20 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-6">
+                  <CheckCircle2 className="w-10 h-10 text-cyan-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Antrag einreichen
+                </h3>
+                <p className="text-slate-400 leading-relaxed">
+                  Prüfe die vorbereiteten Anträge und reiche sie digital ein. Status-Tracking inklusive.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Quote Slide 1 */}
       <QuoteSlide
         quote="Endlich verstehe ich, welche Förderungen mir zustehen. MiMiCheck hat mir geholfen, über 2.000€ Wohngeld zu beantragen – einfach und schnell!"
         author="Sarah M."
         role="Alleinerziehende Mutter, Berlin"
-        bgColor="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10"
+        bgColor="bg-gradient-to-br from-emerald-500/10 to-teal-500/10"
       />
 
       {/* Quote Slide 2 */}
@@ -59,7 +155,7 @@ export default function LandingPage() {
         quote="Die KI hat alle meine Belege analysiert und mir gezeigt, dass ich Anspruch auf Kindergeldzuschlag habe. Das hätte ich alleine nie herausgefunden."
         author="Michael K."
         role="Vater von 3 Kindern, München"
-        bgColor="bg-gradient-to-br from-blue-500/10 to-purple-500/10"
+        bgColor="bg-gradient-to-br from-teal-500/10 to-cyan-500/10"
       />
 
       {/* Förderungen Section - SOTA 2025 mit konsistenten Farben */}

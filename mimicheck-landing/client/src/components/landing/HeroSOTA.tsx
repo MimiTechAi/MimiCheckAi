@@ -223,22 +223,57 @@ export default function HeroSOTA() {
           {/* Subheadline mit Typewriter */}
           <TypingSubheadline />
 
-          {/* CTA Button - Scrollt zur Anmeldung */}
-          <div className="flex justify-center mb-16">
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Button
               asChild
               size="lg"
-              className="text-lg px-8 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/50"
+              className="text-lg px-10 py-7 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-2xl shadow-emerald-500/50 hover:shadow-emerald-500/70 transition-all duration-300 group"
             >
-              <a href="#auth" onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('auth')?.scrollIntoView({ behavior: 'smooth' });
-              }}>
+              <a href="/auth">
                 Jetzt kostenlos starten
-                <span className="ml-2">→</span>
+                <span className="ml-2 inline-block group-hover:translate-x-1 transition-transform">→</span>
+              </a>
+            </Button>
+            
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-lg px-10 py-7 border-2 border-emerald-500/50 hover:border-emerald-500 hover:bg-emerald-500/10 text-white transition-all duration-300"
+            >
+              <a href="#features">
+                Mehr erfahren
               </a>
             </Button>
           </div>
+
+          {/* Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+            className="flex flex-wrap justify-center gap-6 mb-16 text-sm text-slate-400"
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>Keine Kreditkarte nötig</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>In 3 Minuten startklar</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span>DSGVO-konform</span>
+            </div>
+          </motion.div>
 
           {/* Premium 3D Flow Diagram */}
           <motion.div

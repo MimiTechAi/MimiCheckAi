@@ -48,15 +48,22 @@ serve(async (req) => {
             validationResult.message = 'Einige Stripe Secrets fehlen.'
         } else {
             try {
+                const isLiveKey = STRIPE_SECRET_KEY.startsWith('sk_live_');
+                if (!isLiveKey) {
+                    validationResult.message += ' ⚠️ WARNUNG: Verwendet Test-Key (sk_test_). Für Production sk_live_ verwenden!';
+                } else {
+                    validationResult.message += ' ✅ Live-Key erkannt.';
+                }
+
                 const testResponse = await fetch('https://api.stripe.com/v1/customers?limit=1', {
                     headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
                 })
 
                 if (!testResponse.ok) {
                     validationResult.success = false
-                    validationResult.message = 'Stripe API Key ungültig.'
+                    validationResult.message += ' ❌ Stripe API Key ungültig (Auth fehlgeschlagen).';
                 } else {
-                    validationResult.message = '✅ Stripe vollständig konfiguriert!'
+                    validationResult.message += ' ✅ Stripe Verbindung erfolgreich!';
                 }
             } catch (error) {
                 validationResult.success = false
