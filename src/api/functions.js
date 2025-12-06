@@ -20,8 +20,12 @@ async function invokeFunction(functionName, body = {}) {
       throw new Error('Sitzung ungültig. Bitte neu anmelden.');
     }
 
+    const functionNameV3 = functionName === 'create-stripe-checkout' ? 'create-stripe-checkout-v3' : functionName;
+    console.log(`Calling ${functionNameV3} with user:`, session?.user?.email);
+    console.log('Token present:', !!session.access_token);
+
     // Let supabase-js handle the Authorization header automatically
-    const { data, error } = await supabase.functions.invoke(functionName, {
+    const { data, error } = await supabase.functions.invoke(functionNameV3, {
       body,
       headers: {
         'Content-Type': 'application/json'
