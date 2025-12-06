@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient';
 
 /**
  * Helper to call Supabase Edge Functions with auth
+ * CRITICAL: When verify_jwt is enabled in Edge Functions, we MUST pass the Authorization header
  */
 async function invokeFunction(functionName, body = {}) {
   try {
@@ -14,14 +15,13 @@ async function invokeFunction(functionName, body = {}) {
       throw new Error('Bitte melden Sie sich erneut an');
     }
 
-    console.log(`Calling ${functionName} with session:`, session?.user?.email);
+    console.log(`Calling ${functionName} with user:`, session?.user?.email);
 
-    // Use supabase.functions.invoke with proper auth
+    // CRITICAL: With verify_jwt: true, we MUST manually pass the Authorization header
     const { data, error } = await supabase.functions.invoke(functionName, {
       body,
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${session.access_token}`
       }
     });
 

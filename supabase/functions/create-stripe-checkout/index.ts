@@ -14,12 +14,16 @@ serve(async (req) => {
 
     try {
         // Get the authorization header
-        const authHeader = req.headers.get('Authorization')
-        
+        // DEBUG: Log Environment and Header Details
+        console.log('DEBUG: Request received');
+        console.log('DEBUG: Auth Header Present:', !!authHeader);
+        console.log('DEBUG: SUPABASE_URL Present:', !!Deno.env.get('SUPABASE_URL'));
+        console.log('DEBUG: SUPABASE_ANON_KEY Present:', !!Deno.env.get('SUPABASE_ANON_KEY'));
+
         if (!authHeader) {
             console.error('No Authorization header provided')
             return new Response(
-                JSON.stringify({ error: 'No authorization header' }),
+                JSON.stringify({ error: 'No authorization header', debug: 'Missing Auth Header' }),
                 { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
@@ -33,9 +37,9 @@ serve(async (req) => {
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
 
         if (userError) {
-            console.error('Auth error:', userError)
+            console.error('Auth error details:', JSON.stringify(userError, null, 2))
             return new Response(
-                JSON.stringify({ error: 'Authentication failed', details: userError.message }),
+                JSON.stringify({ error: 'Authentication failed', details: userError.message, debug_code: userError.status }),
                 { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }

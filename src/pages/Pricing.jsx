@@ -105,8 +105,12 @@ export default function Pricing() {
                 cancelUrl: `${window.location.origin}${createPageUrl('Pricing')}?payment=cancelled`
             });
 
+            if (response.error) {
+                throw new Error(response.error);
+            }
+
             if (!response.data) {
-                throw new Error('Keine Antwort vom Server erhalten');
+                throw new Error('Keine Antwort vom Server erhalten (Empty Data)');
             }
 
             const data = response.data;
@@ -228,7 +232,7 @@ export default function Pricing() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
                     {pricingPlans.map(plan => (
-                        <PricingCard 
+                        <PricingCard
                             key={plan.id}
                             plan={plan}
                             onSelect={handleSelectPlan}
