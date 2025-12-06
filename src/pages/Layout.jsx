@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell.jsx";
 import AIChatAssistant from "@/components/ui/AIChatAssistant";
+import { Button } from "@/components/ui/button";
 
 import {
     DropdownMenu,
@@ -47,7 +48,7 @@ export default function Layout({ children }) {
                     setUser(profile);
                     return;
                 }
-                
+
                 // Fallback: Auth-User direkt verwenden
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (authUser) {
@@ -70,9 +71,9 @@ export default function Layout({ children }) {
                 } catch { /* ignore */ }
             }
         };
-        
+
         loadUser();
-        
+
         // Auth State Listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_OUT') {
@@ -81,13 +82,13 @@ export default function Layout({ children }) {
                 loadUser();
             }
         });
-        
+
         return () => subscription?.unsubscribe();
     }, []);
 
     const handleLogout = useCallback(async () => {
-        try { 
-            await supabase.auth.signOut(); 
+        try {
+            await supabase.auth.signOut();
             // Clear localStorage
             localStorage.removeItem('sb-yjjauvmjyhlxcoumwqlj-auth-token');
         } catch { }
@@ -104,58 +105,180 @@ export default function Layout({ children }) {
         { name: t('layout.nav.contact', 'Kontakt'), icon: HelpCircle, page: 'Contact' },
     ];
 
-    const currentPath = location.pathname;
+    const currentPath = location.pathname.toLowerCase();
 
+    // PUBLIC ROUTES - No Sidebar, just Navbar + Footer
+    const isPublicRoute = (
+        currentPath === '/' ||
+        currentPath === '/landing' ||
+        currentPath === '/impressum' ||
+        currentPath === '/datenschutz' ||
+        currentPath === '/agb' ||
+        currentPath === '/contact' ||
+        currentPath === '/pricing' ||
+        currentPath === '/hilfe'
+    );
+
+    // ============================================================
+    // PUBLIC LAYOUT
+    // ============================================================
+    if (isPublicRoute) {
+        return (
+            <div className="min-h-screen bg-slate-950 font-sans flex flex-col selection:bg-emerald-500/30">
+                {/* Public Navbar */}
+                <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
+                    <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+                        {/* Logo */}
+                        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            <img src="/logo.png" alt="MiMiCheck Logo" className="h-8 w-auto" />
+                            <span className="text-xl font-bold text-white tracking-tight hidden sm:block">
+                                MiMi<span className="text-emerald-400">Check</span>
+                            </span>
+                        </Link>
+
+                        {/* Navigation */}
+                        <nav className="hidden md:flex items-center gap-6">
+                            <Link to="/" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Start</Link>
+                            <Link to="/pricing" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Preise</Link>
+                            <Link to="/contact" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">Kontakt</Link>
+                        </nav>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-4">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="flex items-center gap-2 text-xs font-medium text-slate-400 hover:text-white uppercase transition-colors p-2 rounded hover:bg-white/5">
+                                        <Globe className="w-4 h-4" />
+                                        {i18n.language}
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-slate-900 border-white/10 text-slate-200" align="end">
+                                    {[
+                                        { code: 'de', label: 'Deutsch' },
+                                        { code: 'en', label: 'English' },
+                                        { code: 'tr', label: 'Türkçe' },
+                                    ].map((lang) => (
+                                        <DropdownMenuItem
+                                            key={lang.code}
+                                            onClick={() => i18n.changeLanguage(lang.code)}
+                                            className="cursor-pointer"
+                                        >
+                                            <span className="uppercase font-bold text-xs w-6 text-slate-500">{lang.code}</span>
+                                            <span>{lang.label}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {user ? (
+                                <Link to={createPageUrl('profilseite')}>
+                                    <Button variant="outline" className="border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 hidden sm:flex">
+                                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                                        Zum Dashboard
+                                    </Button>
+                                </Link>
+                            ) : (
+                                <Link to="/auth">
+                                    <Button className="bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white shadow-lg shadow-blue-500/20 border-0">
+                                        Anmelden
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1">
+                    {children}
+                </main>
+
+                <footer className="border-t border-white/5 bg-slate-900/50 pt-16 pb-8">
+                    <div className="container mx-auto px-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                            <div className="col-span-2">
+                                <Link to="/" className="flex items-center gap-2 mb-4">
+                                    <img src="/logo.png" alt="MiMiCheck Logo" className="h-6 w-auto" />
+                                    <span className="text-lg font-bold text-white tracking-tight">
+                                        MiMi<span className="text-emerald-400">Check</span>
+                                    </span>
+                                </Link>
+                                <p className="text-slate-400 text-sm max-w-sm">
+                                    {t('layout.subtitle', 'Dein digitaler Antragshelfer')}
+                                </p>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-white mb-4">Rechtliches</h4>
+                                <ul className="space-y-2 text-sm text-slate-400">
+                                    <li><Link to="/impressum" className="hover:text-emerald-400 transition-colors">Impressum</Link></li>
+                                    <li><Link to="/datenschutz" className="hover:text-emerald-400 transition-colors">Datenschutz</Link></li>
+                                    <li><Link to="/agb" className="hover:text-emerald-400 transition-colors">AGB</Link></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-white mb-4">Hilfe</h4>
+                                <ul className="space-y-2 text-sm text-slate-400">
+                                    <li><Link to="/kontakt" className="hover:text-emerald-400 transition-colors">Kontakt</Link></li>
+                                    <li><Link to="/hilfe" className="hover:text-emerald-400 transition-colors">FAQ</Link></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="border-t border-white/5 pt-8 text-center text-slate-500 text-sm">
+                            <p>{t('layout.footer', '© 2025 MiMiCheck. Made with ❤️ in DACH.')}</p>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        );
+    }
+
+    // ============================================================
+    // APP LAYOUT (Sidebar + Dashboard)
+    // ============================================================
     return (
         <div className="min-h-screen bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
             {/* SIDEBAR - Dark Theme */}
             <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
                 }`}>
-                {/* Logo Area - Klick führt zur Landing Page */}
+                {/* Logo Area */}
                 <div className="p-8">
                     <div className="flex items-center justify-between mb-1">
-                        <a 
-                            href={import.meta.env.VITE_LANDING_URL || 'http://localhost:3000/landing'}
-                            className="text-2xl font-heading font-bold text-white tracking-tight hover:opacity-80 transition-opacity cursor-pointer"
+                        <Link
+                            to="/"
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                         >
-                            MiMi<span className="text-emerald-400">Check</span>
-                        </a>
+                            <img src="/logo.png" alt="MiMiCheck Logo" className="h-8 w-auto" />
+                            <span className="text-xl font-bold text-white tracking-tight">
+                                MiMi<span className="text-emerald-400">Check</span>
+                            </span>
+                        </Link>
                         <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-slate-400 hover:text-white">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
-                    <a 
-                        href={import.meta.env.VITE_LANDING_URL || 'http://localhost:3000/landing'}
-                        className="text-sm text-slate-400 font-medium hover:text-slate-300 transition-colors cursor-pointer"
-                    >
-                        {t('layout.subtitle', 'Dein digitaler Antragshelfer')}
-                    </a>
                 </div>
 
                 {/* Navigation */}
                 <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
                     {navItems.map((item) => {
-                        const isActive = currentPath === createPageUrl(item.page);
+                        const isActive = currentPath === createPageUrl(item.page).toLowerCase();
                         return (
                             <Link
                                 key={item.name}
                                 to={createPageUrl(item.page)}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative ${
-                                    isActive
+                                className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative ${isActive
                                         ? 'bg-emerald-500/10 text-emerald-400 font-semibold shadow-[0_0_20px_rgba(16,185,129,0.1)] border border-emerald-500/20'
                                         : item.highlight
                                             ? 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-400 hover:from-purple-500/20 hover:to-pink-500/20 font-semibold border border-purple-500/30 animate-pulse'
                                             : 'text-slate-400 hover:bg-white/5 hover:text-white font-medium border border-transparent'
-                                }`}
+                                    }`}
                             >
-                                <item.icon className={`w-5 h-5 ${
-                                    isActive 
-                                        ? 'text-emerald-400' 
-                                        : item.highlight 
-                                            ? 'text-purple-400' 
+                                <item.icon className={`w-5 h-5 ${isActive
+                                        ? 'text-emerald-400'
+                                        : item.highlight
+                                            ? 'text-purple-400'
                                             : 'text-slate-500 group-hover:text-slate-300'
-                                }`} />
+                                    }`} />
                                 <span>{item.name}</span>
                                 {item.highlight && (
                                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -191,14 +314,6 @@ export default function Layout({ children }) {
                                         {t('layout.profile.edit', 'Profil bearbeiten')}
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem asChild className="focus:bg-white/5 focus:text-white cursor-pointer">
-                                    <Link to={createPageUrl('Pricing')}>
-                                        <CreditCard className="w-4 h-4 mr-2" />
-                                        {user?.subscription_tier === 'free' 
-                                            ? t('layout.profile.upgrade', 'Upgrade zu Premium') 
-                                            : t('layout.profile.manageSubscription', 'Abo verwalten')}
-                                    </Link>
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-white/10" />
                                 <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer">
                                     <LogOut className="w-4 h-4 mr-2" />
@@ -208,7 +323,7 @@ export default function Layout({ children }) {
                         </DropdownMenu>
                     ) : null}
 
-                    {/* KI Lotse Button - immer sichtbar */}
+                    {/* KI Lotse Button */}
                     <div className="p-3 mt-2">
                         <button
                             onClick={() => setIsAIChatOpen(true)}
@@ -232,12 +347,6 @@ export default function Layout({ children }) {
                                     { code: 'de', label: 'Deutsch' },
                                     { code: 'en', label: 'English' },
                                     { code: 'tr', label: 'Türkçe' },
-                                    { code: 'es', label: 'Español' },
-                                    { code: 'pt', label: 'Português' },
-                                    { code: 'it', label: 'Italiano' },
-                                    { code: 'pl', label: 'Polski' },
-                                    { code: 'ru', label: 'Русский' },
-                                    { code: 'ar', label: 'العربية' }
                                 ].map((lang) => (
                                     <DropdownMenuItem
                                         key={lang.code}
@@ -250,9 +359,6 @@ export default function Layout({ children }) {
                                 ))}
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <div className="flex gap-2">
-                            <Link to={createPageUrl('Impressum')} className="text-xs text-slate-500 hover:text-slate-300 transition-colors">{t('layout.nav.impressum', 'Impressum')}</Link>
-                        </div>
                         <NotificationBell />
                     </div>
                 </div>

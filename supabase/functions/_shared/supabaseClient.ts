@@ -8,6 +8,9 @@ export const createSupabaseClient = (req: Request) => {
             global: {
                 headers: { Authorization: req.headers.get('Authorization')! },
             },
+            auth: {
+                persistSession: false
+            }
         }
     )
 }

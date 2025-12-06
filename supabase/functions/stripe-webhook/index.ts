@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
-import Stripe from "https://esm.sh/stripe@14.14.0"
+import { createClient } from "@supabase/supabase-js"
+import Stripe from "stripe"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -55,7 +55,7 @@ serve(async (req) => {
 
                     // Get subscription details
                     const subscription = await stripe.subscriptions.retrieve(session.subscription)
-                    
+
                     // Update user_profiles
                     const { error: profileError } = await supabaseAdmin
                         .from('users')
@@ -71,7 +71,7 @@ serve(async (req) => {
                     if (profileError) console.error('Error updating profile:', profileError)
 
                     // Update auth metadata
-                    await supabaseAdmin.auth.updateUserById(userId, {
+                    await supabaseAdmin.auth.admin.updateUserById(userId, {
                         user_metadata: { subscription_tier: planId }
                     })
                 }
@@ -112,7 +112,7 @@ serve(async (req) => {
                         })
                         .eq('auth_id', userId)
 
-                    await supabaseAdmin.auth.updateUserById(userId, {
+                    await supabaseAdmin.auth.admin.updateUserById(userId, {
                         user_metadata: { subscription_tier: 'free' }
                     })
                 }

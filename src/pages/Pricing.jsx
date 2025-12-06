@@ -1,20 +1,22 @@
-
 import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
-import PricingCard from '@/components/ui/PricingCard';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, Zap, Crown, Shield, Star, Rocket } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { createStripeCheckoutSession } from '@/api/functions';
-import { createCustomerPortalSession } from '@/api/functions';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { createStripeCheckoutSession, createCustomerPortalSession } from '@/api/functions';
+import { useTranslation } from 'react-i18next';
 
 const pricingPlans = [
     {
         id: 'free',
         title: 'Basis-Check',
-        subtitle: 'Für den gelegentlichen Überblick',
+        subtitle: 'Für den Einstieg',
         price: '€0',
+        icon: Shield,
+        color: 'slate',
         features: [
             '1x Förderprüfung (alle 3 Monate)',
             '1x Nebenkostenprüfung (alle 6 Monate)',
@@ -26,9 +28,11 @@ const pricingPlans = [
     {
         id: 'premium',
         title: 'Staatshilfen+',
-        subtitle: 'Die beste Wahl für die meisten Nutzer',
+        subtitle: 'Alles was du brauchst',
         price: '€14.99',
         priceId: 'price_1SacLbGX9ckbY2L6ejmsITKD',
+        icon: Crown,
+        color: 'emerald',
         features: [
             '50 Förderprüfungen pro Monat',
             '10 Nebenkostenprüfungen pro Monat',
@@ -42,9 +46,11 @@ const pricingPlans = [
     {
         id: 'pro',
         title: 'Haushalt-Optimierer',
-        subtitle: 'Für Familien und Power-User',
+        subtitle: 'Maximale Power',
         price: '€29.99',
         priceId: 'price_1SacN7GX9ckbY2L68BctYrGk',
+        icon: Rocket,
+        color: 'purple',
         features: [
             'Alle Features von Premium',
             'Familienmitglieder verwalten (bis 4 Profile)',
@@ -58,6 +64,7 @@ const pricingPlans = [
 ];
 
 export default function Pricing() {
+    const { t } = useTranslation();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -72,7 +79,6 @@ export default function Pricing() {
             setIsLoading(false);
         }).catch(() => setIsLoading(false));
 
-        // Check for payment status in URL
         const paymentStatus = searchParams.get('payment');
         if (paymentStatus === 'success') {
             setError(null);
@@ -84,7 +90,6 @@ export default function Pricing() {
 
     const handleSelectPlan = async (planId) => {
         if (!user) {
-            // Redirect to login page
             navigate(createPageUrl('Auth'));
             return;
         }
@@ -98,37 +103,21 @@ export default function Pricing() {
         setError(null);
 
         try {
-            // FIXED: Direct function import with automatic auth
             const response = await createStripeCheckoutSession({
                 planId,
                 successUrl: `${window.location.origin}${createPageUrl('Pricing')}?payment=success`,
                 cancelUrl: `${window.location.origin}${createPageUrl('Pricing')}?payment=cancelled`
             });
 
-            if (response.error) {
-                throw new Error(response.error);
+            if (response.error || !response.data?.checkoutUrl) {
+                throw new Error(response.error || 'Fehler beim Laden der Checkout-URL');
             }
 
-            if (!response.data) {
-                throw new Error('Keine Antwort vom Server erhalten (Empty Data)');
-            }
-
-            const data = response.data;
-
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            if (!data.checkoutUrl) {
-                throw new Error('Keine Checkout URL erhalten');
-            }
-
-            // Redirect to Stripe Checkout
-            window.location.href = data.checkoutUrl;
+            window.location.href = response.data.checkoutUrl;
 
         } catch (error) {
-            console.error('Error creating checkout session:', error);
-            setError(`Fehler beim Starten der Zahlung: ${error.message}. Bitte versuchen Sie es erneut.`);
+            console.error('Checkout Error:', error);
+            setError(`Fehler: ${error.message}`);
             setIsProcessing(false);
         }
     };
@@ -141,139 +130,142 @@ export default function Pricing() {
 
         setIsProcessing(true);
         setError(null);
-        setShowPortalSetupGuide(false); // Reset guide visibility on new attempt
+        setShowPortalSetupGuide(false);
 
         try {
-            // FIXED: Direct function import
-            const response = await createCustomerPortalSession({
-                returnUrl: `${window.location.origin}${createPageUrl('Pricing')}`
-            });
+            const response = await createCustomerPortalSession({ returnUrl: window.location.href });
 
-            if (!response.data) {
-                throw new Error('Keine Antwort vom Server erhalten');
-            }
-
-            const data = response.data;
-
-            if (data.error === 'STRIPE_CUSTOMER_PORTAL_NOT_CONFIGURED') {
+            if (response.data?.error === 'STRIPE_CUSTOMER_PORTAL_NOT_CONFIGURED') {
                 setShowPortalSetupGuide(true);
-                setError(data.message);
-                setIsProcessing(false);
-                return;
+                throw new Error(response.data.message);
             }
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (!response.data?.portalUrl) throw new Error('Keine Portal URL erhalten');
 
-            if (!data.portalUrl) {
-                throw new Error('Keine Portal URL erhalten');
-            }
-
-            window.location.href = data.portalUrl;
+            window.location.href = response.data.portalUrl;
 
         } catch (error) {
-            console.error('Error creating portal session:', error);
-            setError(`Fehler beim Öffnen der Abo-Verwaltung: ${error.message}`);
+            console.error('Portal Error:', error);
+            setError(`Fehler: ${error.message}`);
             setIsProcessing(false);
         }
     };
 
     if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-screen">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            </div>
-        );
+        return <div className="flex justify-center items-center h-screen bg-slate-950"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
     }
 
     return (
-        <div className="py-12 sm:py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white humanistic-serif">
-                        Der perfekte Plan für Sie
-                    </h1>
-                    <p className="mt-4 text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-                        Wählen Sie den Plan, der am besten zu Ihren Bedürfnissen passt und maximieren Sie Ihre Ansprüche und Ersparnisse.
-                    </p>
+        <div className="min-h-screen bg-slate-950 text-white pb-20">
+            {/* Hero Header */}
+            <div className="relative h-[40vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-slate-950 to-emerald-900/20" />
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-slate-950 to-slate-950" />
                 </div>
 
+                <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-6 backdrop-blur-md">
+                        <Zap className="w-4 h-4" />
+                        Flexible Tarife für jeden Bedarf
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 mt-2">
+                        Investiere in deine <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-blue-400">Rechte</span>
+                    </h1>
+                    <p className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                        Wähle den passenden Plan und hole das Maximum aus deinen Ansprüchen heraus.
+                    </p>
+                </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-6 -mt-20 relative z-20">
                 {error && (
-                    <Alert variant="destructive" className="mb-8 max-w-2xl mx-auto">
-                        <AlertCircle className="h-4 w-4" />
+                    <Alert variant="destructive" className="mb-8 bg-red-900/20 border-red-500/50 text-red-200">
+                        <AlertCircle className="h-4 h-4" />
                         <AlertDescription>{error}</AlertDescription>
                     </Alert>
                 )}
 
-                {/* Customer Portal Setup Guide */}
-                {showPortalSetupGuide && (
-                    <Alert className="mb-8 max-w-2xl mx-auto bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                        <AlertCircle className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-800 dark:text-blue-300">
-                            <strong>📋 Stripe Customer Portal aktivieren:</strong><br />
-                            <ol className="list-decimal ml-5 mt-2 space-y-1">
-                                <li>Öffnen Sie: <a href="https://dashboard.stripe.com/settings/billing/portal" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Stripe Customer Portal Settings</a></li>
-                                <li>Klicken Sie auf <strong>"Activate test link"</strong> (Test-Modus) oder <strong>"Activate"</strong> (Live-Modus)</li>
-                                <li>Speichern Sie die Einstellungen</li>
-                                <li>Fertig! Versuchen Sie es dann erneut.</li>
-                            </ol>
-                        </AlertDescription>
-                    </Alert>
-                )}
-
                 {searchParams.get('payment') === 'success' && (
-                    <Alert className="mb-8 max-w-2xl mx-auto bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                        <AlertDescription className="text-green-800 dark:text-green-300">
-                            ✅ Zahlung erfolgreich! Ihr Abonnement wurde aktiviert. Sie werden zum Dashboard weitergeleitet...
-                        </AlertDescription>
+                    <Alert className="mb-8 bg-emerald-900/20 border-emerald-500/50 text-emerald-300">
+                        <CheckCircle className="h-4 h-4" />
+                        <AlertDescription>Zahlung erfolgreich! Willkommen an Bord.</AlertDescription>
                     </Alert>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
-                    {pricingPlans.map(plan => (
-                        <PricingCard
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {pricingPlans.map((plan) => (
+                        <Card
                             key={plan.id}
-                            plan={plan}
-                            onSelect={handleSelectPlan}
-                            isCurrentPlan={user?.subscription_tier === plan.id}
-                            isLoading={isProcessing}
-                        />
+                            className={`relative border transition-all duration-300 backdrop-blur-xl group overflow-hidden ${plan.recommended
+                                    ? 'bg-slate-900/60 border-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.1)] scale-105 z-10'
+                                    : 'bg-slate-900/40 border-white/5 hover:border-white/20 hover:bg-slate-900/60'
+                                }`}
+                        >
+                            {plan.recommended && (
+                                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-400 to-blue-500 shadow-[0_0_20px_rgba(16,185,129,0.4)]" />
+                            )}
+
+                            <CardContent className="p-8">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className={`p-3 rounded-xl bg-${plan.color}-500/10 text-${plan.color}-400`}>
+                                        <plan.icon className="w-6 h-6" />
+                                    </div>
+                                    {plan.recommended && (
+                                        <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider border border-emerald-500/20 shadow-sm">
+                                            Empfohlen
+                                        </span>
+                                    )}
+                                </div>
+
+                                <h3 className="text-xl font-bold text-white mb-2">{plan.title}</h3>
+                                <p className="text-slate-400 text-sm h-10">{plan.subtitle}</p>
+
+                                <div className="my-8">
+                                    <span className="text-4xl font-bold text-white tracking-tight">{plan.price}</span>
+                                    {plan.id !== 'free' && <span className="text-slate-500 ml-2">/ Monat</span>}
+                                </div>
+
+                                <ul className="space-y-4 mb-8">
+                                    {plan.features.map((feature, idx) => (
+                                        <li key={idx} className="flex items-start gap-3 text-sm text-slate-300">
+                                            <CheckCircle className={`w-5 h-5 shrink-0 ${plan.recommended ? 'text-emerald-400' : 'text-slate-500'}`} />
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <Button
+                                    onClick={() => handleSelectPlan(plan.id)}
+                                    disabled={isProcessing || user?.subscription_tier === plan.id}
+                                    className={`w-full py-6 font-semibold rounded-xl transition-all ${plan.recommended
+                                            ? 'bg-gradient-to-r from-emerald-500 to-blue-600 hover:from-emerald-400 hover:to-blue-500 text-white shadow-lg shadow-emerald-500/20 border-0'
+                                            : user?.subscription_tier === plan.id
+                                                ? 'bg-white/10 text-slate-400 cursor-not-allowed border border-white/5'
+                                                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+                                        }`}
+                                >
+                                    {isProcessing ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : user?.subscription_tier === plan.id ? (
+                                        'Dein aktueller Plan'
+                                    ) : (
+                                        plan.id === 'free' ? 'Zu Basic wechseln' : 'Jetzt starten'
+                                    )}
+                                </Button>
+                            </CardContent>
+                        </Card>
                     ))}
                 </div>
 
-                {user && user.subscription_tier !== 'free' && (
-                    <div className="mt-12 text-center">
-                        <button
-                            onClick={handleManageSubscription}
-                            disabled={isProcessing}
-                            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                        >
-                            Abonnement verwalten (Kündigung, Zahlungsmethode ändern, etc.)
-                        </button>
-                    </div>
-                )}
-
-                <div className="mt-16 text-center">
-                    <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-600 dark:text-slate-400">
-                        <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Sichere Zahlung mit Stripe
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Jederzeit kündbar
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            DSGVO-konform
-                        </div>
+                <div className="mt-16 text-center border-t border-white/5 pt-12">
+                    <p className="text-slate-500 mb-6">Wir akzeptieren</p>
+                    <div className="flex justify-center gap-6 opacity-50 grayscale hover:grayscale-0 transition-all duration-300">
+                        {/* Simple placeholder icons/text for payment methods */}
+                        <span className="font-bold text-xl text-white">VISA</span>
+                        <span className="font-bold text-xl text-white">Mastercard</span>
+                        <span className="font-bold text-xl text-white">PayPal</span>
+                        <span className="font-bold text-xl text-white">Apple Pay</span>
                     </div>
                 </div>
             </div>

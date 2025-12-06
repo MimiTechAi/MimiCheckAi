@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
-import Stripe from "https://esm.sh/stripe@14.14.0"
+import { createClient } from "@supabase/supabase-js"
+import Stripe from "stripe"
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -26,7 +26,10 @@ serve(async (req: Request) => {
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-            { global: { headers: { Authorization: authHeader } } }
+            {
+                global: { headers: { Authorization: authHeader } },
+                auth: { persistSession: false }
+            }
         )
 
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
