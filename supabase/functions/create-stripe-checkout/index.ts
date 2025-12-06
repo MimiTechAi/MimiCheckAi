@@ -20,6 +20,9 @@ serve(async (req: Request) => {
             throw new Error('No authorization header provided')
         }
 
+        // DEBUG: Was kommt an? (Nur erste Zeichen loggen für Sicherheit)
+        console.log(`Auth Header received: ${authHeader.substring(0, 15)}...`)
+
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_ANON_KEY') ?? '',

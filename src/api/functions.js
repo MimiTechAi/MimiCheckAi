@@ -15,20 +15,24 @@ async function invokeFunction(functionName, body = {}) {
       throw new Error('Bitte melden Sie sich erneut an');
     }
 
-    if (!session?.access_token) {
-      console.error('Session found but no access_token available');
-      throw new Error('Sitzung ungültig. Bitte neu anmelden.');
+    // 1. Hole explizit die Session (bereits oben geschehen, hier nur Token extrahieren)
+    const token = session?.access_token;
+
+    console.log(`Invoking ${functionName} with token:`, token ? 'User Token Present' : 'No User Token (Anon?)');
+
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    // 2. Erzwinge den Authorization Header, falls ein User eingeloggt ist
+    // Supabase macht das meist automatisch, aber wir gehen auf Nummer sicher.
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
-
-
-
-    // Let supabase-js handle the Authorization header automatically
     const { data, error } = await supabase.functions.invoke(functionName, {
       body,
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: headers // Hier übergeben wir unsere expliziten Header
     });
 
     if (error) {
