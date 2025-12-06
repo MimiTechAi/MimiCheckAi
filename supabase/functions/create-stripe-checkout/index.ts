@@ -1,7 +1,11 @@
-import { serve } from "std/http/server.ts"
-import Stripe from "stripe"
-import { corsHeaders } from "../_shared/cors.ts"
-import { createSupabaseClient } from "../_shared/supabaseClient.ts"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
+import Stripe from "https://esm.sh/stripe@14.14.0"
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req: Request) => {
     // Handle CORS
@@ -16,7 +20,12 @@ serve(async (req: Request) => {
             throw new Error('No authorization header provided')
         }
 
-        const supabaseClient = createSupabaseClient(req)
+        const supabaseClient = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+            { global: { headers: { Authorization: authHeader } } }
+        )
+
         const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
 
         if (userError || !user) {
@@ -112,10 +121,11 @@ serve(async (req: Request) => {
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Stripe Checkout Error:', error)
+        // CRITICAL: Return the actual error message to the client for clear debugging
         return new Response(
-            JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+            JSON.stringify({ error: `Server Error: ${error.message || error}`, stack: error.stack }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }

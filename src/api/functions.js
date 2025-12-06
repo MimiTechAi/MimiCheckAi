@@ -32,8 +32,22 @@ async function invokeFunction(functionName, body = {}) {
     });
 
     if (error) {
-      console.error(`Error calling ${functionName}:`, error);
-      throw error;
+      console.error('❌ Function Invocation Error:', error);
+
+      // Versuche, den Body der Antwort zu lesen, falls vorhanden
+      if (error instanceof Error && 'context' in error) {
+        // @ts-ignore
+        const body = await error.context.json().catch(() => 'No Body');
+        console.error('❌ Error Body from Server:', body);
+
+        // Wenn der Server einen spezifischen Fehlertext gesendet hat, nutzen wir den
+        if (body && body.error) {
+          return { error: `Server Error: ${body.error} (Details: ${body.details || ''})` };
+        }
+      }
+
+      console.error('Full Error Object:', JSON.stringify(error, null, 2));
+      return { error: error.message || 'Unknown function error' };
     }
 
     return { data, error: null };
