@@ -35,37 +35,42 @@ async function invokeFunction(functionName, body = {}) {
       'Content-Type': 'application/json'
     };
 
-    // 2. Erzwinge den Authorization Header
-    // Supabase macht das meist automatisch, aber wir gehen auf Nummer sicher.
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
+    // 2. RAW FETCH IMPLEMENTATION (Bypass Supabase Client Magic)
+    // Wir bauen den Request manuell, um sicherzustellen, dass NUR unser User-Token gesendet wird.
 
-    const { data, error } = await supabase.functions.invoke(functionName, {
-      body,
-      headers: headers // Hier übergeben wir unsere expliziten Header
-    });
+    // Project ID aus der URL raten oder hardcoden (Fallback für Production)
+    const PROJECT_REF = 'yjjauvmjyhlxcoumwqlj';
+    const FUNCTION_URL = `https://${PROJECT_REF}.supabase.co/functions/v1/${functionName}`;
 
-    if (error) {
-      console.error('❌ Function Invocation Error:', error);
+    console.log(`Executing RAW FETCH to ${FUNCTION_URL}`);
 
-      // Versuche, den Body der Antwort zu lesen, falls vorhanden
-      if (error instanceof Error && 'context' in error) {
-        // @ts-ignore
-        const body = await error.context.json().catch(() => 'No Body');
-        console.error('❌ Error Body from Server:', body);
+    try {
+      const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Exakter Token
+        },
+        body: JSON.stringify(body)
+      });
 
-        // Wenn der Server einen spezifischen Fehlertext gesendet hat, nutzen wir den
-        if (body && body.error) {
-          return { error: `Server Error: ${body.error} (Details: ${body.details || ''})` };
-        }
+      // Parse Response
+      const responseData = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        console.error('❌ Server Error Response:', responseData);
+        return {
+          error: responseData?.error || `Server Error ${response.status}: ${response.statusText}`,
+          details: responseData?.details
+        };
       }
 
-      console.error('Full Error Object:', JSON.stringify(error, null, 2));
-      return { error: error.message || 'Unknown function error' };
-    }
+      return { data: responseData, error: null };
 
-    return { data, error: null };
+    } catch (fetchError) {
+      console.error('❌ Network/Fetch Error:', fetchError);
+      return { error: fetchError.message || 'Network request failed' };
+    }
   } catch (err) {
     console.error(`Exception calling ${functionName}:`, err);
     return { data: null, error: err.message };
