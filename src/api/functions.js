@@ -8,22 +8,18 @@ import { supabase } from './supabaseClient';
 async function invokeFunction(functionName, body = {}) {
   try {
     // Get current session to ensure we have a valid auth token
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !initialSession) {
-      console.error(`No valid session for ${functionName}:`, sessionError);
-      throw new Error('Bitte melden Sie sich erneut an');
-    }
-
-    // 1. Hole explizit die Session
-    let { data: { session } } = await supabase.auth.getSession();
+    let { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     // Fallback: Wenn keine Session, versuche Refresh
     if (!session?.access_token) {
       console.log('⚠️ No active session found, attempting refresh...');
       const refreshResult = await supabase.auth.refreshSession();
-      session = refreshResult.data.session;
+      if (refreshResult.data.session) {
+        session = refreshResult.data.session;
+      } else if (sessionError && refreshResult.error) {
+        console.error(`No valid session for ${functionName}:`, sessionError);
+        throw new Error('Bitte melden Sie sich erneut an');
+      }
     }
 
     const token = session?.access_token;
