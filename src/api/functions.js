@@ -20,11 +20,10 @@ async function invokeFunction(functionName, body = {}) {
       throw new Error('Sitzung ungültig. Bitte neu anmelden.');
     }
 
-    // CRITICAL: With verify_jwt: true, we MUST manually pass the Authorization header
+    // Let supabase-js handle the Authorization header automatically
     const { data, error } = await supabase.functions.invoke(functionName, {
       body,
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
         'Content-Type': 'application/json'
       }
     });
