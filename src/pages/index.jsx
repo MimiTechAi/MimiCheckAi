@@ -24,7 +24,9 @@ import Assistent from "./Assistent";
 import Antraege from "./Antraege";
 import AnspruchsAnalyse from "./AnspruchsAnalyse";
 import Home from './Home.jsx';
+import HomeV2 from './HomeV2.jsx';
 import Auth from './Auth.jsx';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 // ============================================================
 // LAZY LOADED - Selten genutzte Seiten
@@ -40,11 +42,14 @@ const AntraegeFinden = lazy(() => import("./AntraegeFinden"));
 const WebAssistent = lazy(() => import("./WebAssistent"));
 
 // Legal Pages (selten genutzt)
+const Hilfe = lazy(() => import("./Hilfe"));
+const Pricing = lazy(() => import("./Pricing"));
 const Impressum = lazy(() => import("./Impressum"));
 const Datenschutz = lazy(() => import("./Datenschutz"));
 const AGB = lazy(() => import("./AGB"));
-const Hilfe = lazy(() => import("./Hilfe"));
-const Pricing = lazy(() => import("./Pricing"));
+
+// External Redirect Component
+import ExternalRedirect from '@/components/core/ExternalRedirect';
 
 // Admin/Setup Pages (sehr selten genutzt)
 const Implementierungsplan = lazy(() => import("./Implementierungsplan"));
@@ -68,7 +73,6 @@ import Contact from './Contact.jsx';
 import Reports from './Reports.jsx';
 import ProtectedRoute from '@/routes/ProtectedRoute.jsx';
 import AuthBridge from './AuthBridge.jsx';
-import LandingStatic from './LandingStatic.jsx';
 
 const PAGES = {
 
@@ -153,6 +157,7 @@ function PagesContent() {
     const navigate = useNavigate();
     const currentPage = _getCurrentPage(location.pathname);
     const { user } = useUserProfile();
+    const newHomeEnabled = useFeatureFlag('NEW_HOME_DASHBOARD');
 
     React.useEffect(() => {
         const seen = localStorage.getItem('seenOnboarding');
@@ -197,7 +202,7 @@ function PagesContent() {
             <Suspense fallback={<LoadingFallback />}>
             <Routes>
                 {/* Root Route zeigt Home - KEIN Redirect zu Port 3000! */}
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={newHomeEnabled ? <HomeV2 /> : <Home />} />
                 {/* Landing Page Redirect (nur wenn explizit aufgerufen) */}
                 <Route path="/landing" element={<LandingPage />} />
                 
@@ -232,14 +237,15 @@ function PagesContent() {
 
                 <Route path="/ProductionReadiness" element={<ProtectedRoute><ProductionReadiness /></ProtectedRoute>} />
 
-                <Route path="/Impressum" element={<Impressum />} />
-                <Route path="/impressum" element={<Impressum />} />
+                {/* Legal Pages - Redirect to Landing Page */}
+                <Route path="/Impressum" element={<ExternalRedirect to="https://www.mimitechai.com/impressum" />} />
+                <Route path="/impressum" element={<ExternalRedirect to="https://www.mimitechai.com/impressum" />} />
 
-                <Route path="/Datenschutz" element={<Datenschutz />} />
-                <Route path="/datenschutz" element={<Datenschutz />} />
+                <Route path="/Datenschutz" element={<ExternalRedirect to="https://www.mimitechai.com/datenschutz" />} />
+                <Route path="/datenschutz" element={<ExternalRedirect to="https://www.mimitechai.com/datenschutz" />} />
 
-                <Route path="/AGB" element={<AGB />} />
-                <Route path="/agb" element={<AGB />} />
+                <Route path="/AGB" element={<ExternalRedirect to="https://www.mimitechai.com/agb" />} />
+                <Route path="/agb" element={<ExternalRedirect to="https://www.mimitechai.com/agb" />} />
 
                 <Route path="/Hilfe" element={<Hilfe />} />
                 <Route path="/hilfe" element={<Hilfe />} />
