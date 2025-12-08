@@ -6,7 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
 import CustomCursor from "./components/CustomCursor";
-import LandingPage from "./pages/LandingPage";
+import LandingPagePremium from "./pages/LandingPagePremium";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -28,10 +28,10 @@ function InnerRouter() {
         transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         <Switch location={location}>
-          {/* Landing Page as root */}
-          <Route path="/" component={LandingPage} />
-          <Route path="/landingpage" component={LandingPage} />
-          <Route path="/index.html" component={LandingPage} />
+          {/* Landing Page - Premium 2025 Edition */}
+          <Route path="/" component={LandingPagePremium} />
+          <Route path="/landingpage" component={LandingPagePremium} />
+          <Route path="/index.html" component={LandingPagePremium} />
           
           {/* Auth & Contact */}
           <Route path="/auth" component={Auth} />
