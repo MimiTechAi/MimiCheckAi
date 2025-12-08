@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
- * Spotlight Effect - Following Mouse
+ * Spotlight Effect - SUPER VISIBLE VERSION
  * Inspired by: Vercel, Raycast, Arc Browser
- * 
- * Creates a beautiful spotlight that follows the mouse cursor
  */
 export default function SpotlightEffect() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -31,30 +29,41 @@ export default function SpotlightEffect() {
 
   return (
     <div
-      className="fixed inset-0 -z-10 pointer-events-none transition-opacity duration-300"
+      className="fixed inset-0 -z-10 pointer-events-none transition-opacity duration-500"
       style={{
         opacity: isVisible ? 1 : 0,
       }}
     >
-      {/* Main Spotlight */}
+      {/* Main Spotlight - MUCH MORE VISIBLE */}
       <div
-        className="absolute w-[600px] h-[600px] rounded-full transition-all duration-200 ease-out"
+        className="absolute w-[800px] h-[800px] rounded-full transition-all duration-150 ease-out"
         style={{
-          left: mousePosition.x - 300,
-          top: mousePosition.y - 300,
-          background: 'radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)',
-          filter: 'blur(60px)',
+          left: mousePosition.x - 400,
+          top: mousePosition.y - 400,
+          background: 'radial-gradient(circle, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 40%, transparent 70%)',
+          filter: 'blur(40px)',
         }}
       />
 
-      {/* Secondary Glow */}
+      {/* Secondary Glow - Teal */}
       <div
-        className="absolute w-[400px] h-[400px] rounded-full transition-all duration-300 ease-out"
+        className="absolute w-[500px] h-[500px] rounded-full transition-all duration-200 ease-out"
         style={{
-          left: mousePosition.x - 200,
-          top: mousePosition.y - 200,
-          background: 'radial-gradient(circle, rgba(20,184,166,0.06) 0%, transparent 70%)',
-          filter: 'blur(40px)',
+          left: mousePosition.x - 250,
+          top: mousePosition.y - 250,
+          background: 'radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 60%)',
+          filter: 'blur(30px)',
+        }}
+      />
+
+      {/* Inner Glow - Bright */}
+      <div
+        className="absolute w-[200px] h-[200px] rounded-full transition-all duration-100 ease-out"
+        style={{
+          left: mousePosition.x - 100,
+          top: mousePosition.y - 100,
+          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+          filter: 'blur(20px)',
         }}
       />
     </div>
