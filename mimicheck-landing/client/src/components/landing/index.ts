@@ -12,6 +12,7 @@
 // Core Premium Components
 export { default as CustomCursor } from './CustomCursor';
 export { default as MorphingBlob } from './MorphingBlob';
+export { default as GradientMeshBackground } from './GradientMeshBackground';
 export { default as HeroUltraPremium } from './HeroUltraPremium';
 
 // Text Animations

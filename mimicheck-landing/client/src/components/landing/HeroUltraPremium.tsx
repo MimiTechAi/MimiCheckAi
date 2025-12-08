@@ -4,7 +4,7 @@
  */
 
 import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles, Shield, Zap } from 'lucide-react';
 import { SplitText, WordReveal } from './TextReveal';
@@ -22,10 +22,9 @@ interface MagneticButtonProps {
 function MagneticButton({ children, className = '', ...props }: MagneticButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const prefersReducedMotion = useReducedMotion();
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (prefersReducedMotion || !buttonRef.current) return;
+    if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
@@ -69,27 +68,7 @@ function FloatingBadge() {
   );
 }
 
-// Optimized CSS-only Animated Orbs
-function AnimatedOrbs() {
-  const prefersReducedMotion = useReducedMotion();
-  
-  if (prefersReducedMotion) {
-    return (
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-teal-500/10" />
-    );
-  }
 
-  return (
-    <>
-      <div 
-        className="absolute top-1/4 left-1/4 w-[300px] sm:w-[400px] lg:w-[500px] h-[300px] sm:h-[400px] lg:h-[500px] rounded-full pointer-events-none animate-blob hero-orb-primary"
-      />
-      <div 
-        className="absolute bottom-1/4 right-1/4 w-[250px] sm:w-[350px] lg:w-[400px] h-[250px] sm:h-[350px] lg:h-[400px] rounded-full pointer-events-none animate-blob animation-delay-2000 hero-orb-secondary"
-      />
-    </>
-  );
-}
 
 // Trust Indicators
 function TrustIndicators() {
@@ -206,24 +185,22 @@ function DashboardPreview() {
 
 export default function HeroUltraPremium() {
   const heroRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
   
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ['start start', 'end start'],
   });
 
-  const y = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : 100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, prefersReducedMotion ? 1 : 0]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
     <section
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-slate-950 pt-16 sm:pt-20"
     >
-      {/* Background */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:60px_60px]" />
-      <AnimatedOrbs />
+      {/* Subtle grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(16,185,129,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,185,129,0.02)_1px,transparent_1px)] bg-[size:40px_40px] sm:bg-[size:60px_60px]" />
 
       {/* Main Content */}
       <motion.div 
@@ -237,43 +214,28 @@ export default function HeroUltraPremium() {
 
             {/* Main Headline */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[0.95] mb-4 sm:mb-6">
-              {prefersReducedMotion ? (
-                <>
-                  <span className="block text-white">Förderungen</span>
-                  <span className="block mt-1 sm:mt-2 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                    automatisiert.
-                  </span>
-                </>
-              ) : (
-                <>
-                  <SplitText
-                    text="Förderungen"
-                    className="block"
-                    lineClassName="text-white"
-                    delay={0.3}
-                  />
-                  <SplitText
-                    text="automatisiert."
-                    className="block mt-1 sm:mt-2"
-                    lineClassName="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent"
-                    delay={0.5}
-                  />
-                </>
-              )}
+              <SplitText
+                text="Förderungen"
+                className="block"
+                lineClassName="text-white"
+                delay={0.3}
+              />
+              <SplitText
+                text="automatisiert."
+                className="block mt-1 sm:mt-2"
+                lineClassName="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent"
+                delay={0.5}
+              />
             </h1>
 
             {/* Subheadline */}
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-400 max-w-xl mx-auto lg:mx-0 mb-6 sm:mb-8 leading-relaxed">
-              {prefersReducedMotion ? (
-                "Spare Zeit und Nerven mit intelligenter Antragsautomatisierung. KI-gestützt, sicher und DSGVO-konform."
-              ) : (
-                <WordReveal
-                  text="Spare Zeit und Nerven mit intelligenter Antragsautomatisierung. KI-gestützt, sicher und DSGVO-konform."
-                  delay={0.7}
-                  highlightWords={['KI-gestützt', 'sicher', 'DSGVO-konform']}
-                  highlightClassName="text-emerald-400 font-medium"
-                />
-              )}
+              <WordReveal
+                text="Spare Zeit und Nerven mit intelligenter Antragsautomatisierung. KI-gestützt, sicher und DSGVO-konform."
+                delay={0.7}
+                highlightWords={['KI-gestützt', 'sicher', 'DSGVO-konform']}
+                highlightClassName="text-emerald-400 font-medium"
+              />
             </p>
 
             {/* CTA Buttons */}
@@ -345,7 +307,7 @@ export default function HeroUltraPremium() {
         transition={{ delay: 1.5 }}
       >
         <motion.div
-          animate={prefersReducedMotion ? {} : { y: [0, 8, 0] }}
+          animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="w-5 h-8 sm:w-6 sm:h-10 rounded-full border-2 border-slate-600 flex items-start justify-center p-1.5 sm:p-2"
         >
