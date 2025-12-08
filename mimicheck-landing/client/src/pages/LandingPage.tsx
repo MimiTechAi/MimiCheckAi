@@ -8,18 +8,19 @@ import ScrollStory from '@/components/landing/ScrollStory';
 import QuoteSlide from '@/components/landing/QuoteSlide';
 import CTAEnhanced from '@/components/landing/CTAEnhanced';
 import CookieBanner from '@/components/CookieBanner';
-import AnimatedBackground from '@/components/landing/AnimatedBackground';
-import FloatingOrbs from '@/components/landing/FloatingOrbs';
-import SpotlightEffect from '@/components/landing/SpotlightEffect';
+import { lazy, Suspense } from 'react';
+
+// Lazy load WebGL for better initial load
+const WebGLBackground = lazy(() => import('@/components/landing/WebGLBackground'));
 
 export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
-      {/* Ultra-Modern Animated Backgrounds - GLOBAL */}
-      <AnimatedBackground />
-      <FloatingOrbs />
-      <SpotlightEffect />
+      {/* WebGL Background - GPU Accelerated */}
+      <Suspense fallback={<div className="fixed inset-0 -z-10 bg-slate-950" />}>
+        <WebGLBackground />
+      </Suspense>
       
       <div id="main-content" />
       <Navbar />
