@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
+import LandingFramer from "./pages/LandingFramer";
 import LandingPagePremium from "./pages/LandingPagePremium";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
@@ -24,30 +25,62 @@ function InnerRouter() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <Switch location={location}>
-          {/* Landing Page - Premium 2025 Edition */}
-          <Route path="/" component={LandingPagePremium} />
-          <Route path="/landingpage" component={LandingPagePremium} />
-          <Route path="/index.html" component={LandingPagePremium} />
-          
+          {/* Landing Page - Framer-Style Premium Edition (Requirement: 1.4) */}
+          <Route path="/" component={LandingFramer} />
+          <Route path="/landingpage" component={LandingFramer} />
+          <Route path="/index.html" component={LandingFramer} />
+
+          {/* Legacy Landing Page - Premium 2025 Edition */}
+          <Route path="/landing-legacy" component={LandingPagePremium} />
+
           {/* Auth & Contact */}
           <Route path="/auth" component={Auth} />
           <Route path="/contact" component={Contact} />
-          
+
           {/* Dashboard (Protected) */}
           <Route path="/dashboard" component={SupabaseDashboard} />
           <Route path="/dashboard-old" component={Dashboard} />
-          
+
+          {/* About & Blog pages */}
+          <Route
+            path="/about"
+            component={() => (
+              <PagePlaceholder
+                title="Über uns"
+                description="Erfahre mehr über MimiCheck AI und unser Team."
+              />
+            )}
+          />
+          <Route
+            path="/blog"
+            component={() => (
+              <PagePlaceholder
+                title="Blog"
+                description="Neuigkeiten und Tipps rund um Förderanträge."
+              />
+            )}
+          />
+
           {/* Legal pages */}
           <Route path="/impressum" component={Impressum} />
           <Route path="/datenschutz" component={Datenschutz} />
           <Route path="/agb" component={AGB} />
-          <Route path="/barrierefreiheit" component={() => <LegalPlaceholder title="Barrierefreiheit" />} />
-          <Route path="/hilfe" component={() => <LegalPlaceholder title="Hilfe & FAQ" />} />
-          <Route path="/ki-transparenz" component={() => <LegalPlaceholder title="KI-Transparenz" />} />
-          
+          <Route
+            path="/barrierefreiheit"
+            component={() => <PagePlaceholder title="Barrierefreiheit" />}
+          />
+          <Route
+            path="/hilfe"
+            component={() => <PagePlaceholder title="Hilfe & FAQ" />}
+          />
+          <Route
+            path="/ki-transparenz"
+            component={() => <PagePlaceholder title="KI-Transparenz" />}
+          />
+
           {/* 404 */}
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
@@ -58,7 +91,9 @@ function InnerRouter() {
 }
 
 function Router() {
-  const rawBase = (import.meta as any).env?.BASE_URL || "/";
+  const rawBase =
+    (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ??
+    "/";
   const base = String(rawBase).replace(/\/$/, "");
   return (
     <BaseRouter base={base}>
@@ -67,14 +102,25 @@ function Router() {
   );
 }
 
-// Placeholder component for legal pages
-function LegalPlaceholder({ title }: { title: string }) {
+// Placeholder component for pages under construction
+function PagePlaceholder({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">{title}</h1>
-        <p className="text-muted-foreground mb-8">Diese Seite wird in Kürze verfügbar sein.</p>
-        <a href="/" className="text-primary hover:underline">
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="text-center px-4">
+        <h1 className="text-4xl font-bold mb-4 text-white">{title}</h1>
+        <p className="text-gray-400 mb-8 max-w-md mx-auto">
+          {description || "Diese Seite wird in Kürze verfügbar sein."}
+        </p>
+        <a
+          href="/"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+        >
           Zurück zur Startseite
         </a>
       </div>
@@ -86,10 +132,7 @@ function App() {
   return (
     <ErrorBoundary>
       <SupabaseAuthProvider>
-        <ThemeProvider
-          defaultTheme="light"
-          switchable
-        >
+        <ThemeProvider defaultTheme="light" switchable>
           <TooltipProvider>
             <Toaster />
             <Router />

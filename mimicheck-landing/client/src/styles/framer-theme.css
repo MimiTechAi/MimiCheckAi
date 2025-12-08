@@ -1,0 +1,801 @@
+/* ============================================
+   FRAMER-STYLE THEME - MimiCheck AI Landing Page
+   Premium Dark Theme with Violet/Emerald Accents
+   ============================================ */
+
+/* ============================================
+   CSS CUSTOM PROPERTIES - Design Tokens
+   Requirements: 1.1, 1.2, 1.3
+   ============================================ */
+
+:root {
+  /* Primary Background Colors */
+  --framer-bg: #0a0a0a;
+  --framer-bg-card: #111111;
+  --framer-bg-elevated: #1a1a1a;
+  --framer-bg-hover: #1f1f1f;
+
+  /* Accent Colors - Violet (Primary) */
+  --framer-violet: #8b5cf6;
+  --framer-violet-light: #a78bfa;
+  --framer-violet-dark: #7c3aed;
+  --framer-violet-glow: rgba(139, 92, 246, 0.4);
+  --framer-violet-subtle: rgba(139, 92, 246, 0.1);
+
+  /* Accent Colors - Emerald (Secondary) */
+  --framer-emerald: #10b981;
+  --framer-emerald-light: #34d399;
+  --framer-emerald-dark: #059669;
+  --framer-emerald-glow: rgba(16, 185, 129, 0.3);
+  --framer-emerald-subtle: rgba(16, 185, 129, 0.1);
+
+  /* Text Colors */
+  --framer-text-primary: #ffffff;
+  --framer-text-secondary: #a1a1aa;
+  --framer-text-muted: #71717a;
+  --framer-text-subtle: #52525b;
+
+  /* Border Colors */
+  --framer-border: rgba(255, 255, 255, 0.1);
+  --framer-border-hover: rgba(139, 92, 246, 0.3);
+  --framer-border-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Gradient Colors */
+  --framer-gradient-violet: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  --framer-gradient-emerald: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --framer-gradient-mixed: linear-gradient(135deg, #8b5cf6 0%, #10b981 100%);
+
+  /* Shadow Colors */
+  --framer-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --framer-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --framer-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --framer-shadow-glow-violet: 0 0 40px rgba(139, 92, 246, 0.3);
+  --framer-shadow-glow-emerald: 0 0 40px rgba(16, 185, 129, 0.3);
+
+  /* Animation Timing */
+  --framer-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --framer-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --framer-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   Requirements: 1.1, 2.6, 2.7, 3.3
+   ============================================ */
+
+/* Glow Pulse Animation - For GlowOrb component */
+@keyframes framer-glow-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Float Particle Animation - For floating dots around orb */
+@keyframes framer-float-particle {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-80px) translateX(30px) scale(1.2);
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+}
+
+/* Marquee Scroll Animation - For trust logos */
+@keyframes framer-marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Fade Up Animation - For scroll reveals */
+@keyframes framer-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In Animation */
+@keyframes framer-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Scale In Animation */
+@keyframes framer-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shimmer Animation - For loading states and highlights */
+@keyframes framer-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Subtle Float Animation - For cards and elements */
+@keyframes framer-subtle-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Border Glow Animation */
+@keyframes framer-border-glow {
+  0%,
+  100% {
+    border-color: var(--framer-border);
+    box-shadow: none;
+  }
+  50% {
+    border-color: var(--framer-border-hover);
+    box-shadow: var(--framer-shadow-glow-violet);
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Background Utilities */
+.framer-bg {
+  background-color: var(--framer-bg);
+}
+
+.framer-bg-card {
+  background-color: var(--framer-bg-card);
+}
+
+.framer-bg-elevated {
+  background-color: var(--framer-bg-elevated);
+}
+
+/* Text Utilities */
+.framer-text-primary {
+  color: var(--framer-text-primary);
+}
+
+.framer-text-secondary {
+  color: var(--framer-text-secondary);
+}
+
+.framer-text-muted {
+  color: var(--framer-text-muted);
+}
+
+/* Gradient Text */
+.framer-text-gradient-violet {
+  background: var(--framer-gradient-violet);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.framer-text-gradient-mixed {
+  background: var(--framer-gradient-mixed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Border Utilities */
+.framer-border {
+  border-color: var(--framer-border);
+}
+
+.framer-border-hover:hover {
+  border-color: var(--framer-border-hover);
+}
+
+/* Animation Utilities */
+.framer-animate-glow-pulse {
+  animation: framer-glow-pulse 4s ease-in-out infinite;
+}
+
+.framer-animate-float-particle {
+  animation: framer-float-particle 8s ease-in-out infinite;
+}
+
+.framer-animate-marquee {
+  animation: framer-marquee-scroll 30s linear infinite;
+}
+
+.framer-animate-fade-up {
+  animation: framer-fade-up 0.6s var(--framer-ease-out) forwards;
+}
+
+.framer-animate-fade-in {
+  animation: framer-fade-in 0.4s var(--framer-ease-out) forwards;
+}
+
+.framer-animate-scale-in {
+  animation: framer-scale-in 0.5s var(--framer-ease-out) forwards;
+}
+
+.framer-animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--framer-violet-subtle) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: framer-shimmer 3s ease-in-out infinite;
+}
+
+.framer-animate-subtle-float {
+  animation: framer-subtle-float 3s ease-in-out infinite;
+}
+
+/* Stagger Animation Delays */
+.framer-delay-100 {
+  animation-delay: 100ms;
+}
+.framer-delay-200 {
+  animation-delay: 200ms;
+}
+.framer-delay-300 {
+  animation-delay: 300ms;
+}
+.framer-delay-400 {
+  animation-delay: 400ms;
+}
+.framer-delay-500 {
+  animation-delay: 500ms;
+}
+.framer-delay-600 {
+  animation-delay: 600ms;
+}
+.framer-delay-700 {
+  animation-delay: 700ms;
+}
+.framer-delay-800 {
+  animation-delay: 800ms;
+}
+
+/* ============================================
+   GLOW ORB STYLES
+   Requirements: 2.1, 2.6
+   ============================================ */
+
+.framer-glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    var(--framer-violet) 0%,
+    var(--framer-violet-glow) 30%,
+    transparent 70%
+  );
+  filter: blur(100px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.framer-glow-orb-emerald {
+  background: radial-gradient(
+    circle at center,
+    var(--framer-emerald) 0%,
+    var(--framer-emerald-glow) 30%,
+    transparent 70%
+  );
+}
+
+.framer-glow-orb-mixed {
+  background: radial-gradient(
+    circle at center,
+    var(--framer-violet) 0%,
+    var(--framer-emerald-glow) 50%,
+    transparent 70%
+  );
+}
+
+/* ============================================
+   FLOATING PARTICLES
+   Requirements: 2.7
+   ============================================ */
+
+.framer-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--framer-violet-light);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.framer-particle-emerald {
+  background: var(--framer-emerald-light);
+}
+
+/* ============================================
+   CARD STYLES
+   Requirements: 5.7, 5.8, 6.8, 6.9
+   ============================================ */
+
+.framer-card {
+  background: var(--framer-bg-card);
+  border: 1px solid var(--framer-border);
+  border-radius: 16px;
+  transition: all 0.3s var(--framer-ease-out);
+}
+
+.framer-card:hover {
+  border-color: var(--framer-border-hover);
+  transform: translateY(-4px);
+  box-shadow: var(--framer-shadow-glow-violet);
+}
+
+.framer-card-elevated {
+  background: var(--framer-bg-elevated);
+  box-shadow: var(--framer-shadow-md);
+}
+
+/* ============================================
+   BUTTON STYLES
+   Requirements: 2.5, 7.3
+   ============================================ */
+
+.framer-btn-primary {
+  background: var(--framer-violet);
+  color: var(--framer-text-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s var(--framer-ease-out);
+  border: none;
+  cursor: pointer;
+}
+
+.framer-btn-primary:hover {
+  background: var(--framer-violet-light);
+  transform: translateY(-2px);
+  box-shadow: var(--framer-shadow-glow-violet);
+}
+
+.framer-btn-secondary {
+  background: transparent;
+  color: var(--framer-text-primary);
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  border: 1px solid var(--framer-border);
+  transition: all 0.2s var(--framer-ease-out);
+  cursor: pointer;
+}
+
+.framer-btn-secondary:hover {
+  border-color: var(--framer-border-hover);
+  background: var(--framer-violet-subtle);
+}
+
+/* ============================================
+   BADGE STYLES
+   Requirements: 2.2, 4.1, 5.5, 6.1
+   ============================================ */
+
+.framer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--framer-violet-subtle);
+  border: 1px solid var(--framer-border);
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--framer-violet-light);
+}
+
+.framer-badge-emerald {
+  background: var(--framer-emerald-subtle);
+  color: var(--framer-emerald-light);
+}
+
+/* ============================================
+   TAG/PILL STYLES
+   Requirements: 5.6
+   ============================================ */
+
+.framer-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: var(--framer-bg-elevated);
+  border: 1px solid var(--framer-border);
+  border-radius: 9999px;
+  font-size: 13px;
+  color: var(--framer-text-secondary);
+  transition: all 0.2s var(--framer-ease-out);
+}
+
+.framer-tag:hover {
+  border-color: var(--framer-border-hover);
+  color: var(--framer-text-primary);
+}
+
+/* ============================================
+   NAVIGATION STYLES
+   Requirements: 7.1, 7.2, 7.3, 7.4, 7.5
+   ============================================ */
+
+.framer-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  padding: 16px 0;
+  transition: all 0.3s var(--framer-ease-out);
+}
+
+.framer-nav-transparent {
+  background: transparent;
+}
+
+.framer-nav-solid {
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--framer-border);
+}
+
+.framer-nav-link {
+  color: var(--framer-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.2s var(--framer-ease-out);
+  text-decoration: none;
+}
+
+.framer-nav-link:hover {
+  color: var(--framer-text-primary);
+}
+
+/* ============================================
+   MARQUEE STYLES
+   Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
+   ============================================ */
+
+.framer-marquee-container {
+  overflow: hidden;
+  width: 100%;
+}
+
+.framer-marquee-track {
+  display: flex;
+  gap: 48px;
+  width: max-content;
+}
+
+.framer-marquee-logo {
+  filter: grayscale(100%);
+  opacity: 0.5;
+  transition: all 0.3s var(--framer-ease-out);
+}
+
+.framer-marquee-logo:hover {
+  filter: grayscale(0%);
+  opacity: 1;
+}
+
+/* ============================================
+   UI MOCKUP STYLES
+   Requirements: 5.7, 5.8
+   ============================================ */
+
+.framer-mockup {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s var(--framer-ease-out);
+}
+
+.framer-mockup:hover {
+  border-color: var(--framer-border-hover);
+  transform: scale(1.02);
+  box-shadow: var(--framer-shadow-glow-violet);
+}
+
+.framer-mockup-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.framer-mockup-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.framer-mockup-dot-red {
+  background: #ef4444;
+}
+.framer-mockup-dot-yellow {
+  background: #eab308;
+}
+.framer-mockup-dot-green {
+  background: #22c55e;
+}
+
+/* ============================================
+   SECTION SPACING
+   Requirements: 1.4, 1.5
+   ============================================ */
+
+.framer-section {
+  padding: 120px 0;
+}
+
+.framer-section-sm {
+  padding: 80px 0;
+}
+
+.framer-section-lg {
+  padding: 160px 0;
+}
+
+/* ============================================
+   TYPOGRAPHY ENHANCEMENTS
+   Requirements: 1.3
+   ============================================ */
+
+.framer-heading-xl {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--framer-text-primary);
+}
+
+.framer-heading-lg {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--framer-text-primary);
+}
+
+.framer-heading-md {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--framer-text-primary);
+}
+
+.framer-body-lg {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: var(--framer-text-secondary);
+}
+
+.framer-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--framer-text-secondary);
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   Requirements: 9.1, 9.5, 9.6
+   ============================================ */
+
+/* Tablet adjustments (768px - 1023px) - Requirement 9.1 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .framer-section {
+    padding: 100px 0;
+  }
+
+  .framer-section-lg {
+    padding: 120px 0;
+  }
+
+  .framer-section-sm {
+    padding: 60px 0;
+  }
+
+  /* Adjust grid gaps for tablet */
+  .framer-card {
+    padding: 20px;
+  }
+
+  /* Slightly reduce glow for tablet performance */
+  .framer-glow-orb {
+    filter: blur(80px);
+    opacity: 0.55;
+  }
+
+  /* Typography adjustments for tablet */
+  .framer-heading-xl {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .framer-heading-lg {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  }
+
+  .framer-heading-md {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+}
+
+/* Mobile adjustments (< 768px) - Requirements 9.1, 9.5 */
+@media (max-width: 767px) {
+  .framer-section {
+    padding: 60px 0;
+  }
+
+  .framer-section-lg {
+    padding: 80px 0;
+  }
+
+  .framer-section-sm {
+    padding: 40px 0;
+  }
+
+  /* Reduce glow intensity on mobile for performance - Requirement 9.6 */
+  .framer-glow-orb {
+    filter: blur(50px);
+    opacity: 0.4;
+  }
+
+  /* Disable hover transforms on mobile */
+  .framer-card:hover {
+    transform: none;
+  }
+
+  .framer-mockup:hover {
+    transform: none;
+  }
+
+  /* Typography adjustments for mobile - Requirement 9.5 */
+  .framer-heading-xl {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .framer-heading-lg {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+  }
+
+  .framer-heading-md {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+  }
+
+  .framer-body-lg {
+    font-size: 1rem;
+  }
+
+  /* Full-width buttons on mobile */
+  .framer-btn-primary,
+  .framer-btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Reduce card padding on mobile */
+  .framer-card {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  /* Reduce badge size on mobile */
+  .framer-badge {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* Reduce tag size on mobile */
+  .framer-tag {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   Requirements: 8.5
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .framer-animate-glow-pulse,
+  .framer-animate-float-particle,
+  .framer-animate-marquee,
+  .framer-animate-fade-up,
+  .framer-animate-fade-in,
+  .framer-animate-scale-in,
+  .framer-animate-shimmer,
+  .framer-animate-subtle-float {
+    animation: none !important;
+  }
+
+  .framer-card:hover,
+  .framer-btn-primary:hover,
+  .framer-mockup:hover {
+    transform: none !important;
+  }
+
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   ADDITIONAL REDUCED MOTION SUPPORT
+   Requirements: 8.5
+   
+   JavaScript-controlled reduced motion class
+   for programmatic animation control
+   ============================================ */
+
+body.reduce-motion,
+body.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+body.reduce-motion .framer-glow-orb {
+  animation: none !important;
+  opacity: 0.4;
+}
+
+body.reduce-motion .framer-particle {
+  display: none;
+}
+
+body.reduce-motion .framer-marquee-track {
+  animation: none !important;
+}
+
+body.reduce-motion .framer-card:hover,
+body.reduce-motion .framer-btn-primary:hover,
+body.reduce-motion .framer-mockup:hover {
+  transform: none !important;
+}

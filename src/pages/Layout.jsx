@@ -91,13 +91,15 @@ export default function Layout({ children }) {
             await supabase.auth.signOut();
             // Clear localStorage
             localStorage.removeItem('sb-yjjauvmjyhlxcoumwqlj-auth-token');
-        } catch { }
+        } catch (error) {
+            console.warn('Logout error:', error);
+        }
         setUser(null);
         window.location.href = '/';
     }, []);
 
     const navItems = [
-        { name: t('layout.nav.profil', 'Profil'), icon: UserIcon, page: 'profilseite', external: true },
+        { name: t('layout.nav.dashboard', 'Dashboard'), icon: LayoutDashboard, page: 'profilseite' },
         { name: t('layout.nav.upload', 'Upload'), icon: UploadIcon, page: 'Upload' },
         { name: t('abrechnungen.title', 'Abrechnungen'), icon: FileText, page: 'Abrechnungen' },
         { name: t('layout.nav.antraege', 'Anträge'), icon: FileCheck, page: 'Antraege' },
@@ -293,29 +295,55 @@ export default function Layout({ children }) {
                     {user ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left border border-transparent hover:border-white/5">
-                                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm border border-emerald-500/30">
+                                <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors text-left border border-transparent hover:border-white/5 group">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm border border-emerald-500/30 group-hover:border-emerald-400/50 transition-colors">
                                         {user.full_name?.charAt(0) || 'U'}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-white truncate">{user.full_name || 'Benutzer'}</p>
                                         <p className="text-xs text-slate-400 truncate">{user.email}</p>
                                     </div>
-                                    <Settings className="w-4 h-4 text-slate-500 group-hover:text-slate-300" />
+                                    <Settings className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-56 bg-slate-900 border-white/10 text-slate-200" align="end">
-                                <DropdownMenuItem asChild className="focus:bg-white/5 focus:text-white cursor-pointer">
-                                    <Link to={createPageUrl('Lebenslagen')}>
-                                        <UserIcon className="w-4 h-4 mr-2" />
-                                        {t('layout.profile.edit', 'Profil bearbeiten')}
-                                    </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-white/10" />
-                                <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer">
-                                    <LogOut className="w-4 h-4 mr-2" />
-                                    {t('layout.profile.logout', 'Abmelden')}
-                                </DropdownMenuItem>
+                            <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-xl border-white/10 text-slate-200 shadow-xl shadow-black/20" align="end" side="top" sideOffset={8}>
+                                {/* User Info Header */}
+                                <div className="px-3 py-3 border-b border-white/5">
+                                    <p className="text-sm font-semibold text-white">{user.full_name || 'Benutzer'}</p>
+                                    <p className="text-xs text-slate-400">{user.email}</p>
+                                </div>
+                                
+                                {/* Account Actions */}
+                                <div className="py-1">
+                                    <DropdownMenuItem asChild className="focus:bg-emerald-500/10 focus:text-emerald-400 cursor-pointer">
+                                        <Link to={createPageUrl('Lebenslagen')} className="flex items-center">
+                                            <UserIcon className="w-4 h-4 mr-3 text-slate-400" />
+                                            <div>
+                                                <p className="text-sm">{t('layout.profile.data', 'Meine Daten')}</p>
+                                                <p className="text-xs text-slate-500">Persönliche Angaben verwalten</p>
+                                            </div>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild className="focus:bg-emerald-500/10 focus:text-emerald-400 cursor-pointer">
+                                        <Link to={createPageUrl('Pricing')} className="flex items-center">
+                                            <CreditCard className="w-4 h-4 mr-3 text-slate-400" />
+                                            <div>
+                                                <p className="text-sm">{t('layout.profile.subscription', 'Abo & Zahlung')}</p>
+                                                <p className="text-xs text-slate-500">Abonnement verwalten</p>
+                                            </div>
+                                        </Link>
+                                    </DropdownMenuItem>
+                                </div>
+                                
+                                <DropdownMenuSeparator className="bg-white/5" />
+                                
+                                {/* Logout */}
+                                <div className="py-1">
+                                    <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer">
+                                        <LogOut className="w-4 h-4 mr-3" />
+                                        {t('layout.profile.logout', 'Abmelden')}
+                                    </DropdownMenuItem>
+                                </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : null}

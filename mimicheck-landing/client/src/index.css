@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles/framer-theme.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -94,7 +95,7 @@
   --muted: oklch(0.274 0.006 286.033);
   --muted-foreground: oklch(0.705 0.015 286.067);
   --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
+  --accent-foreground: oklch(0.92 0.005 65);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
@@ -108,7 +109,7 @@
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.85 0.005 65);
   --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.488 0.243 264.376);
 }
@@ -117,12 +118,12 @@
   * {
     @apply border-border;
   }
-  
+
   /* Enhanced focus styles for accessibility */
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
-  
+
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -132,13 +133,23 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     font-optical-sizing: auto;
   }
-  
+
   /* Variable Font Support */
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', 'Inter', sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Space Grotesk", "Inter", sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
@@ -206,16 +217,17 @@
 @layer utilities {
   /* Grid background pattern for decorative elements */
   .bg-grid-white\/10 {
-    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
     background-size: 24px 24px;
   }
-  
+
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
-  
+
   /* Respect reduced motion preference */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -231,7 +243,8 @@
 
 /* Premium Animations for FlowDiagram3D */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0) scale(1);
     opacity: 0.6;
   }
@@ -242,7 +255,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
@@ -252,10 +266,10 @@
   }
 }
 
-
 /* Premium Landing Page Animations */
 @keyframes blob {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   25% {
@@ -288,12 +302,20 @@
 
 /* Animated orbs for hero section */
 .hero-orb-primary {
-  background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(16, 185, 129, 0.12) 0%,
+    transparent 70%
+  );
   filter: blur(40px);
 }
 
 .hero-orb-secondary {
-  background: radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(20, 184, 166, 0.1) 0%,
+    transparent 70%
+  );
   filter: blur(40px);
 }
 
@@ -341,8 +363,9 @@
   height: 60vmax;
   top: -10%;
   left: -10%;
-  background: radial-gradient(circle at center, 
-    rgba(16, 185, 129, 0.5) 0%, 
+  background: radial-gradient(
+    circle at center,
+    rgba(16, 185, 129, 0.5) 0%,
     rgba(16, 185, 129, 0.3) 30%,
     rgba(16, 185, 129, 0.1) 50%,
     transparent 70%
@@ -356,8 +379,9 @@
   height: 50vmax;
   top: 20%;
   right: -15%;
-  background: radial-gradient(circle at center, 
-    rgba(20, 184, 166, 0.45) 0%, 
+  background: radial-gradient(
+    circle at center,
+    rgba(20, 184, 166, 0.45) 0%,
     rgba(20, 184, 166, 0.25) 30%,
     rgba(20, 184, 166, 0.08) 50%,
     transparent 70%
@@ -372,8 +396,9 @@
   height: 55vmax;
   bottom: -20%;
   left: 20%;
-  background: radial-gradient(circle at center, 
-    rgba(6, 182, 212, 0.4) 0%, 
+  background: radial-gradient(
+    circle at center,
+    rgba(6, 182, 212, 0.4) 0%,
     rgba(6, 182, 212, 0.2) 30%,
     rgba(6, 182, 212, 0.05) 50%,
     transparent 70%
@@ -388,8 +413,9 @@
   height: 40vmax;
   top: 40%;
   left: 30%;
-  background: radial-gradient(circle at center, 
-    rgba(139, 92, 246, 0.3) 0%, 
+  background: radial-gradient(
+    circle at center,
+    rgba(139, 92, 246, 0.3) 0%,
     rgba(139, 92, 246, 0.15) 30%,
     rgba(139, 92, 246, 0.05) 50%,
     transparent 70%
@@ -404,8 +430,9 @@
   height: 45vmax;
   top: -5%;
   right: 20%;
-  background: radial-gradient(circle at center, 
-    rgba(52, 211, 153, 0.35) 0%, 
+  background: radial-gradient(
+    circle at center,
+    rgba(52, 211, 153, 0.35) 0%,
     rgba(52, 211, 153, 0.15) 30%,
     transparent 60%
   );
@@ -415,7 +442,8 @@
 
 /* Smooth, organic floating animations */
 @keyframes blob-float-1 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1) rotate(0deg);
   }
   25% {
@@ -430,7 +458,8 @@
 }
 
 @keyframes blob-float-2 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1) rotate(0deg);
   }
   33% {
@@ -442,7 +471,8 @@
 }
 
 @keyframes blob-float-3 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1) rotate(0deg);
   }
   25% {
@@ -457,7 +487,8 @@
 }
 
 @keyframes blob-float-4 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   50% {
@@ -466,7 +497,8 @@
 }
 
 @keyframes blob-float-5 {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1) rotate(0deg);
   }
   33% {
@@ -490,12 +522,27 @@
     filter: blur(80px);
     opacity: 0.7;
   }
-  
-  .gradient-blob-1 { width: 80vmax; height: 80vmax; }
-  .gradient-blob-2 { width: 70vmax; height: 70vmax; }
-  .gradient-blob-3 { width: 75vmax; height: 75vmax; }
-  .gradient-blob-4 { width: 60vmax; height: 60vmax; }
-  .gradient-blob-5 { width: 65vmax; height: 65vmax; }
+
+  .gradient-blob-1 {
+    width: 80vmax;
+    height: 80vmax;
+  }
+  .gradient-blob-2 {
+    width: 70vmax;
+    height: 70vmax;
+  }
+  .gradient-blob-3 {
+    width: 75vmax;
+    height: 75vmax;
+  }
+  .gradient-blob-4 {
+    width: 60vmax;
+    height: 60vmax;
+  }
+  .gradient-blob-5 {
+    width: 65vmax;
+    height: 65vmax;
+  }
 }
 
 /* Reduce animation complexity on low-power devices */
@@ -516,45 +563,87 @@
    ============================================ */
 
 @keyframes orb-float-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(8%, 5%) scale(1.1); }
-  50% { transform: translate(3%, 12%) scale(0.95); }
-  75% { transform: translate(-5%, 8%) scale(1.05); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(8%, 5%) scale(1.1);
+  }
+  50% {
+    transform: translate(3%, 12%) scale(0.95);
+  }
+  75% {
+    transform: translate(-5%, 8%) scale(1.05);
+  }
 }
 
 @keyframes orb-float-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-12%, 8%) scale(1.08); }
-  66% { transform: translate(-6%, -6%) scale(0.92); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-12%, 8%) scale(1.08);
+  }
+  66% {
+    transform: translate(-6%, -6%) scale(0.92);
+  }
 }
 
 @keyframes orb-float-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(10%, -8%) scale(1.05); }
-  50% { transform: translate(-6%, -12%) scale(1.1); }
-  75% { transform: translate(4%, -4%) scale(0.95); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(10%, -8%) scale(1.05);
+  }
+  50% {
+    transform: translate(-6%, -12%) scale(1.1);
+  }
+  75% {
+    transform: translate(4%, -4%) scale(0.95);
+  }
 }
 
 @keyframes orb-float-4 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(12%, 12%) scale(1.15); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(12%, 12%) scale(1.15);
+  }
 }
 
 @keyframes orb-float-5 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(-8%, 6%) scale(1.1); }
-  66% { transform: translate(6%, 10%) scale(0.9); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-8%, 6%) scale(1.1);
+  }
+  66% {
+    transform: translate(6%, 10%) scale(0.9);
+  }
 }
 
 @keyframes float-particle {
-  0%, 100% { 
-    transform: translateY(0) translateX(0); 
+  0%,
+  100% {
+    transform: translateY(0) translateX(0);
     opacity: 0;
   }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  50% { 
-    transform: translateY(-100px) translateX(20px); 
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-100px) translateX(20px);
   }
 }
 
@@ -588,8 +677,13 @@
 
 /* Glowing line animation for section dividers */
 @keyframes glow-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .animate-glow-pulse {
@@ -598,15 +692,19 @@
 
 /* Shimmer effect for cards */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .animate-shimmer {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(16,185,129,0.1) 50%,
+    rgba(16, 185, 129, 0.1) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
