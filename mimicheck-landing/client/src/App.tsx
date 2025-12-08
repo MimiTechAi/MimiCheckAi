@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
-import CustomCursor from "./components/CustomCursor";
 import LandingPagePremium from "./pages/LandingPagePremium";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
@@ -92,7 +91,6 @@ function App() {
           switchable
         >
           <TooltipProvider>
-            <CustomCursor />
             <Toaster />
             <Router />
           </TooltipProvider>
