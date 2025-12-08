@@ -17,6 +17,7 @@ import {
   FeaturesShowcase,
   ProcessSection,
   FramerFooter,
+  GlobalBackground,
 } from "@/components/framer";
 
 // Import framer theme styles
@@ -214,9 +215,12 @@ export default function LandingFramer() {
   return (
     <AnimationContext.Provider value={animationContext}>
       <div
-        className="min-h-screen bg-[var(--framer-bg)] text-[var(--framer-text-primary)]"
+        className="min-h-screen bg-[#050505] text-[var(--framer-text-primary)] relative"
         id="main-content"
       >
+        {/* Global Animated Background - spans entire page */}
+        <GlobalBackground />
+
         {/* Navigation - Fixed at top (Requirement: 7.1-7.6) */}
         <FramerNavbar />
 

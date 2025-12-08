@@ -1,11 +1,71 @@
 /**
- * FramerHero Component - Clean Framer-Style Hero
- * Minimalistisch, lesbar, premium - wie XTRACT Template
+ * FramerHero Component - Premium Hero with Writer Effect
+ * Top-Experten Design Level
  */
 
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
+
+// Writer Effect Hook - Typewriter animation
+function useWriterEffect(
+  words: string[],
+  typingSpeed: number = 100,
+  deletingSpeed: number = 50,
+  pauseDuration: number = 2000
+) {
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentText, setCurrentText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const animate = useCallback(() => {
+    const currentWord = words[currentWordIndex];
+
+    if (!isDeleting) {
+      // Typing
+      if (currentText.length < currentWord.length) {
+        return setTimeout(() => {
+          setCurrentText(currentWord.slice(0, currentText.length + 1));
+        }, typingSpeed);
+      } else {
+        // Pause before deleting
+        return setTimeout(() => {
+          setIsDeleting(true);
+        }, pauseDuration);
+      }
+    } else {
+      // Deleting
+      if (currentText.length > 0) {
+        return setTimeout(() => {
+          setCurrentText(currentText.slice(0, -1));
+        }, deletingSpeed);
+      } else {
+        // Move to next word
+        setIsDeleting(false);
+        setCurrentWordIndex(prev => (prev + 1) % words.length);
+        return undefined;
+      }
+    }
+  }, [
+    currentText,
+    currentWordIndex,
+    isDeleting,
+    words,
+    typingSpeed,
+    deletingSpeed,
+    pauseDuration,
+  ]);
+
+  useEffect(() => {
+    const timeout = animate();
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [animate]);
+
+  return currentText;
+}
 
 export interface FramerHeroProps {
   className?: string;
@@ -14,11 +74,21 @@ export interface FramerHeroProps {
 export default function FramerHero({ className = "" }: FramerHeroProps) {
   const prefersReducedMotion = useReducedMotion();
 
+  // Words for the writer effect - passend für Förderanträge
+  const rotatingWords = [
+    "Geld",
+    "Wohngeld",
+    "BAföG",
+    "Kindergeld",
+    "Förderung",
+  ];
+  const typedWord = useWriterEffect(rotatingWords, 120, 80, 2500);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+      transition: { staggerChildren: 0.12, delayChildren: 0.3 },
     },
   };
 
@@ -33,50 +103,11 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
 
   return (
     <section
-      className={`relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a0a0a] ${className}`}
+      className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
     >
-      {/* Subtle Glow Orb - Behind text, not interfering */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/3 pointer-events-none">
-        <div
-          className="w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full opacity-40"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.1) 40%, transparent 70%)",
-            filter: "blur(80px)",
-          }}
-        />
-      </div>
-
-      {/* Subtle particles/dots */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 20 }, (_, i) => i).map(i => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-white/20"
-            style={{
-              left: `${(i * 5) % 100}%`,
-              top: `${(i * 7) % 100}%`,
-            }}
-            animate={
-              prefersReducedMotion
-                ? {}
-                : {
-                    opacity: [0.1, 0.4, 0.1],
-                    scale: [1, 1.2, 1],
-                  }
-            }
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: i * 0.2,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Content */}
+      {/* Content - sits above global background */}
       <motion.div
-        className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-4xl"
+        className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-5xl pt-20"
         variants={prefersReducedMotion ? undefined : containerVariants}
         initial="hidden"
         animate="visible"
@@ -84,49 +115,69 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
         {/* Badge */}
         <motion.div
           variants={prefersReducedMotion ? undefined : itemVariants}
-          className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full bg-violet-500/10 border border-violet-500/20"
+          className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm"
         >
-          <span className="text-xs font-semibold text-violet-400 uppercase tracking-wider">
-            Neu
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
-          <span className="w-px h-3 bg-white/20" />
-          <span className="text-sm text-white/70">
-            Automatische Förder-Erkennung
+          <span className="text-sm text-white/80">
+            <span className="text-emerald-400 font-semibold">
+              50+ Förderungen
+            </span>{" "}
+            automatisch prüfen
           </span>
         </motion.div>
 
-        {/* Headline - Clean, readable, large */}
-        <motion.h1
+        {/* Headline with Writer Effect */}
+        <motion.div
           variants={prefersReducedMotion ? undefined : itemVariants}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight text-white mb-6"
+          className="mb-6"
         >
-          Intelligente Förderanträge
-          <br />
-          <span className="text-white">für moderne Menschen.</span>
-        </motion.h1>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+            <span className="text-white">Hol dir dein</span>
+            <br />
+            <span className="relative inline-block min-w-[200px] sm:min-w-[280px] md:min-w-[350px]">
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
+                {prefersReducedMotion ? "Geld" : typedWord}
+              </span>
+              {!prefersReducedMotion && (
+                <motion.span
+                  className="inline-block w-[3px] h-[0.9em] bg-emerald-400 ml-1 align-middle"
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                />
+              )}
+            </span>
+            <br />
+            <span className="text-white">zurück.</span>
+          </h1>
+        </motion.div>
 
         {/* Subtitle */}
         <motion.p
           variants={prefersReducedMotion ? undefined : itemVariants}
           className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          MimiCheck AI bringt KI-Automatisierung zu deinen Fingerspitzen &
-          vereinfacht Anträge.
+          Finde in{" "}
+          <span className="text-emerald-400 font-medium">3 Minuten</span>{" "}
+          heraus, welche Förderungen dir zustehen –
+          <span className="text-white/70"> KI-gestützt & 100% kostenlos.</span>
         </motion.p>
 
         {/* CTA Buttons */}
         <motion.div
           variants={prefersReducedMotion ? undefined : itemVariants}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
           <Button
             asChild
             size="lg"
-            className="group bg-violet-600 hover:bg-violet-500 text-white px-8 py-6 text-base font-semibold rounded-xl transition-all duration-300"
+            className="group w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-8 py-6 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-0.5"
           >
             <a href="/auth" className="flex items-center gap-2">
-              Jetzt starten
-              <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              Jetzt Förderung prüfen
+              <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           </Button>
 
@@ -134,15 +185,76 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
             asChild
             size="lg"
             variant="outline"
-            className="px-8 py-6 text-base font-semibold rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 transition-all duration-300"
+            className="w-full sm:w-auto px-8 py-6 text-base font-semibold rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-sm transition-all duration-300"
           >
-            <a href="#services">Services ansehen</a>
+            <a href="#so-funktionierts">So funktioniert's</a>
           </Button>
+        </motion.div>
+
+        {/* Stats Row */}
+        <motion.div
+          variants={prefersReducedMotion ? undefined : itemVariants}
+          className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto"
+        >
+          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+            <p className="text-2xl sm:text-3xl font-bold text-white">847€</p>
+            <p className="text-xs sm:text-sm text-white/40 mt-1">
+              Ø Ersparnis/Jahr
+            </p>
+          </div>
+          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+            <p className="text-2xl sm:text-3xl font-bold text-emerald-400">3</p>
+            <p className="text-xs sm:text-sm text-white/40 mt-1">Minuten</p>
+          </div>
+          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+            <p className="text-2xl sm:text-3xl font-bold text-white">98%</p>
+            <p className="text-xs sm:text-sm text-white/40 mt-1">
+              Erfolgsquote
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Trust Indicators */}
+        <motion.div
+          variants={prefersReducedMotion ? undefined : itemVariants}
+          className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/40"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400">★★★★★</span>
+            <span>4.9/5 Bewertung</span>
+          </div>
+          <span className="hidden sm:inline text-white/20">•</span>
+          <span>DSGVO konform</span>
+          <span className="hidden sm:inline text-white/20">•</span>
+          <span className="text-emerald-400/80">Made in Germany</span>
         </motion.div>
       </motion.div>
 
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2.5 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+      >
+        <motion.div
+          animate={prefersReducedMotion ? {} : { y: [0, 8, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="flex flex-col items-center gap-2 text-white/20"
+        >
+          <div className="w-5 h-8 rounded-full border border-white/20 flex justify-center pt-1.5">
+            <motion.div
+              animate={
+                prefersReducedMotion
+                  ? {}
+                  : { y: [0, 10, 0], opacity: [1, 0, 1] }
+              }
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-1 h-1 rounded-full bg-white/40"
+            />
+          </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

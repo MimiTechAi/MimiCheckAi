@@ -7,6 +7,7 @@
 
 // Background Effects
 export { default as GlowOrb, type GlowOrbProps } from "./GlowOrb";
+export { default as GlobalBackground } from "./GlobalBackground";
 
 // Navigation
 export {
