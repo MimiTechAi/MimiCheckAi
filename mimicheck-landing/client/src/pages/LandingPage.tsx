@@ -8,11 +8,19 @@ import ScrollStory from '@/components/landing/ScrollStory';
 import QuoteSlide from '@/components/landing/QuoteSlide';
 import CTAEnhanced from '@/components/landing/CTAEnhanced';
 import CookieBanner from '@/components/CookieBanner';
+import AnimatedBackground from '@/components/landing/AnimatedBackground';
+import FloatingOrbs from '@/components/landing/FloatingOrbs';
+import SpotlightEffect from '@/components/landing/SpotlightEffect';
 
 export default function LandingPage() {
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Ultra-Modern Animated Backgrounds */}
+      <AnimatedBackground />
+      <FloatingOrbs />
+      <SpotlightEffect />
+      
       <div id="main-content" />
       <Navbar />
 
@@ -423,9 +431,11 @@ export default function LandingPage() {
               {/* Brand Column */}
               <div className="md:col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/50">
-                    <CheckCircle className="w-7 h-7 text-white" />
-                  </div>
+                  <img 
+                    src="/mimicheck-logo-medium.png" 
+                    alt="MiMiCheck Logo" 
+                    className="h-12 w-auto object-contain"
+                  />
                   <h3 className="text-2xl font-bold text-white">MiMiCheck</h3>
                 </div>
                 <p className="text-slate-400 mb-6 leading-relaxed max-w-md">

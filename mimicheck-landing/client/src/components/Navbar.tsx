@@ -38,11 +38,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo - MiMiCheck AI */}
           <a href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-shadow">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+            <img 
+              src="/mimicheck-logo-nav.png" 
+              alt="MiMiCheck Logo" 
+              className="h-10 w-auto object-contain"
+            />
             <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-600 bg-clip-text text-transparent">
               MiMiCheck
             </span>
