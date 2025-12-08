@@ -16,13 +16,12 @@ export {
 } from "./FramerNavbar";
 
 // Hero Section
-export { default as FramerHero, type FramerHeroProps } from "./FramerHero";
+export { default as FramerHero } from "./FramerHero";
 
 // Trust Section
 export {
   default as TrustMarquee,
   type TrustMarqueeProps,
-  type TrustLogo,
 } from "./TrustMarquee";
 
 // Services Section

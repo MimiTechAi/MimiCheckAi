@@ -19,7 +19,12 @@ export type FileContent = {
   type: "file_url";
   file_url: {
     url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
+    mime_type?:
+      | "audio/mpeg"
+      | "audio/wav"
+      | "application/pdf"
+      | "audio/mp4"
+      | "video/mp4";
   };
 };
 
@@ -155,11 +160,12 @@ const normalizeMessage = (message: Message) => {
   const contentParts = ensureArray(message.content).map(normalizeContentPart);
 
   // If there's only text content, collapse to a single string for compatibility
-  if (contentParts.length === 1 && contentParts[0].type === "text") {
+  const firstPart = contentParts[0];
+  if (contentParts.length === 1 && firstPart?.type === "text") {
     return {
       role,
       name,
-      content: contentParts[0].text,
+      content: firstPart.text,
     };
   }
 
@@ -193,9 +199,14 @@ const normalizeToolChoice = (
       );
     }
 
+    const firstTool = tools[0];
+    if (!firstTool) {
+      throw new Error("No tool available");
+    }
+
     return {
       type: "function",
-      function: { name: tools[0].function.name },
+      function: { name: firstTool.function.name },
     };
   }
 
@@ -296,10 +307,10 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
+  payload.max_tokens = 32768;
   payload.thinking = {
-    "budget_tokens": 128
-  }
+    budget_tokens: 128,
+  };
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,

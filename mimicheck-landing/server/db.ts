@@ -1,7 +1,14 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { applications, documents, InsertApplication, InsertDocument, InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import {
+  applications,
+  documents,
+  InsertApplication,
+  InsertDocument,
+  InsertUser,
+  users,
+} from "../drizzle/schema";
+import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -56,8 +63,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = user.role;
       updateSet.role = user.role;
     } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
+      values.role = "admin";
+      updateSet.role = "admin";
     }
 
     if (!values.lastSignedIn) {
@@ -84,7 +91,11 @@ export async function getUserByOpenId(openId: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
 }
@@ -94,8 +105,10 @@ export async function getUserByOpenId(openId: string) {
 export async function getUserApplications(userId: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return db.select().from(applications)
+
+  return db
+    .select()
+    .from(applications)
     .where(eq(applications.userId, userId))
     .orderBy(desc(applications.createdAt));
 }
@@ -103,14 +116,17 @@ export async function getUserApplications(userId: number) {
 export async function getApplicationById(id: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  
-  const result = await db.select().from(applications)
+
+  const result = await db
+    .select()
+    .from(applications)
     .where(eq(applications.id, id))
     .limit(1);
-  
+
   // Security: Only return if user owns the application
-  if (result.length > 0 && result[0].userId === userId) {
-    return result[0];
+  const app = result[0];
+  if (app?.userId === userId) {
+    return app;
   }
   return undefined;
 }
@@ -118,20 +134,25 @@ export async function getApplicationById(id: number, userId: number) {
 export async function createApplication(data: InsertApplication) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const result = await db.insert(applications).values(data);
   return result;
 }
 
-export async function updateApplication(id: number, userId: number, data: Partial<InsertApplication>) {
+export async function updateApplication(
+  id: number,
+  userId: number,
+  data: Partial<InsertApplication>
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Security: Only update if user owns the application
   const app = await getApplicationById(id, userId);
   if (!app) throw new Error("Application not found or access denied");
-  
-  await db.update(applications)
+
+  await db
+    .update(applications)
     .set({ ...data, updatedAt: new Date() })
     .where(eq(applications.id, id));
 }
@@ -139,21 +160,26 @@ export async function updateApplication(id: number, userId: number, data: Partia
 export async function deleteApplication(id: number, userId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   // Security: Only delete if user owns the application
   const app = await getApplicationById(id, userId);
   if (!app) throw new Error("Application not found or access denied");
-  
+
   await db.delete(applications).where(eq(applications.id, id));
 }
 
 // === Document Queries ===
 
-export async function getApplicationDocuments(applicationId: number, userId: number) {
+export async function getApplicationDocuments(
+  applicationId: number,
+  _userId: number
+) {
   const db = await getDb();
   if (!db) return [];
-  
-  return db.select().from(documents)
+
+  return db
+    .select()
+    .from(documents)
     .where(eq(documents.applicationId, applicationId))
     .orderBy(desc(documents.uploadedAt));
 }
@@ -161,7 +187,7 @@ export async function getApplicationDocuments(applicationId: number, userId: num
 export async function createDocument(data: InsertDocument) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   const result = await db.insert(documents).values(data);
   return result;
 }

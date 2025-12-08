@@ -115,7 +115,7 @@ function PagePlaceholder({
       <div className="text-center px-4">
         <h1 className="text-4xl font-bold mb-4 text-white">{title}</h1>
         <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          {description || "Diese Seite wird in Kürze verfügbar sein."}
+          {description ?? "Diese Seite wird in Kürze verfügbar sein."}
         </p>
         <a
           href="/"

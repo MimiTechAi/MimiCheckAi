@@ -195,7 +195,7 @@
     - Ensure all CTAs and navigation links work correctly
     - _Requirements: 7.2_
 
-- [ ] 14. Final Checkpoint - Make sure all tests are passing
+- [x] 14. Final Checkpoint - Make sure all tests are passing
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ]* 15. Write integration tests

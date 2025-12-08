@@ -1,11 +1,19 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from "react";
 
-const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 export function useTextScramble(text: string, trigger: boolean = false) {
   const [displayText, setDisplayText] = useState(text);
   const frameRef = useRef(0);
-  const queueRef = useRef<Array<{ from: string; to: string; start: number; end: number; char: string }>>([]);
+  const queueRef = useRef<
+    Array<{
+      from: string;
+      to: string;
+      start: number;
+      end: number;
+      char: string;
+    }>
+  >([]);
 
   useEffect(() => {
     if (!trigger) return;
@@ -17,8 +25,8 @@ export function useTextScramble(text: string, trigger: boolean = false) {
     // Build queue with smoother timing
     queue.length = 0;
     for (let i = 0; i < length; i++) {
-      const from = oldText[i] || '';
-      const to = text[i] || '';
+      const from = oldText[i] || "";
+      const to = text[i] || "";
       const start = Math.floor(i * 3); // Sequential start
       const end = start + 40 + Math.floor(Math.random() * 40); // Medium duration (40-80 frames)
       const char = to; // Pre-assign target char
@@ -28,11 +36,13 @@ export function useTextScramble(text: string, trigger: boolean = false) {
     // Animate with smoother transitions
     let frame = 0;
     const update = () => {
-      let output = '';
+      let output = "";
       let complete = 0;
 
       for (let i = 0; i < queue.length; i++) {
-        const { from, to, start, end, char } = queue[i];
+        const item = queue[i];
+        if (!item) continue;
+        const { from, to, start, end, char } = item;
 
         if (frame >= end) {
           complete++;
@@ -40,7 +50,7 @@ export function useTextScramble(text: string, trigger: boolean = false) {
         } else if (frame >= start) {
           // Only 15% chance of random char (was 50%)
           if (!to) {
-            output += '';
+            output += "";
           } else if (Math.random() < 0.15) {
             output += CHARS[Math.floor(Math.random() * CHARS.length)];
           } else {

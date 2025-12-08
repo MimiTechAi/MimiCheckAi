@@ -1,10 +1,16 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Plus, FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle } from "lucide-react";
 import { Link } from "wouter";
 
 const statusColors = {
@@ -33,9 +39,12 @@ const typeLabels = {
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
-  const { data: applications, isLoading } = trpc.applications.list.useQuery(undefined, {
-    enabled: !!user,
-  });
+  const { data: applications, isLoading } = trpc.applications.list.useQuery(
+    undefined,
+    {
+      enabled: !!user,
+    }
+  );
 
   if (authLoading || isLoading) {
     return (
@@ -53,7 +62,9 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Meine Förderanträge</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Meine Förderanträge
+            </h1>
             <p className="text-muted-foreground mt-2">
               Verwalte deine Anträge für Wohngeld, Kindergeld, BAföG und mehr
             </p>
@@ -74,24 +85,29 @@ export default function Dashboard() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{applications?.length || 0}</div>
+              <div className="text-2xl font-bold">
+                {applications?.length || 0}
+              </div>
               <p className="text-xs text-muted-foreground">Alle Anträge</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Bearbeitung</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                In Bearbeitung
+              </CardTitle>
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {applications?.filter(a => a.status === "processing").length || 0}
+                {applications?.filter(a => a.status === "processing").length ||
+                  0}
               </div>
               <p className="text-xs text-muted-foreground">Werden geprüft</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Bewilligt</CardTitle>
@@ -104,17 +120,21 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground">Erfolgreich</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Geschätzte Förderung</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Geschätzte Förderung
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
                 {(applications
                   ?.filter(a => a.estimatedAmount)
-                  .reduce((sum, a) => sum + (a.estimatedAmount || 0), 0) || 0) / 100}€
+                  .reduce((sum, a) => sum + (a.estimatedAmount || 0), 0) || 0) /
+                  100}
+                €
               </div>
               <p className="text-xs text-muted-foreground">Pro Monat</p>
             </CardContent>
@@ -124,14 +144,17 @@ export default function Dashboard() {
         {/* Applications List */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Alle Anträge</h2>
-          
+
           {!applications || applications.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Noch keine Anträge</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  Noch keine Anträge
+                </h3>
                 <p className="text-muted-foreground mb-4 text-center max-w-md">
-                  Erstelle deinen ersten Förderantrag und lass die KI dir helfen, alle Felder korrekt auszufüllen.
+                  Erstelle deinen ersten Förderantrag und lass die KI dir
+                  helfen, alle Felder korrekt auszufüllen.
                 </p>
                 <Link href="/dashboard/new">
                   <Button>
@@ -143,7 +166,7 @@ export default function Dashboard() {
             </Card>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {applications.map((app) => (
+              {applications.map(app => (
                 <Link key={app.id} href={`/dashboard/application/${app.id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <CardHeader>
@@ -151,11 +174,11 @@ export default function Dashboard() {
                         <div className="space-y-1 flex-1">
                           <CardTitle className="text-lg">{app.title}</CardTitle>
                           <CardDescription>
-                            {typeLabels[app.type as keyof typeof typeLabels]}
+                            {typeLabels[app.type]}
                           </CardDescription>
                         </div>
-                        <Badge className={statusColors[app.status as keyof typeof statusColors]}>
-                          {statusLabels[app.status as keyof typeof statusLabels]}
+                        <Badge className={statusColors[app.status]}>
+                          {statusLabels[app.status]}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -167,14 +190,17 @@ export default function Dashboard() {
                       )}
                       {app.estimatedAmount && (
                         <div className="flex items-center gap-2 text-sm">
-                          <span className="text-muted-foreground">Geschätzt:</span>
+                          <span className="text-muted-foreground">
+                            Geschätzt:
+                          </span>
                           <span className="font-semibold text-emerald-600">
                             {app.estimatedAmount / 100}€/Monat
                           </span>
                         </div>
                       )}
                       <div className="text-xs text-muted-foreground mt-3">
-                        Erstellt: {new Date(app.createdAt).toLocaleDateString("de-DE")}
+                        Erstellt:{" "}
+                        {new Date(app.createdAt).toLocaleDateString("de-DE")}
                       </div>
                     </CardContent>
                   </Card>
