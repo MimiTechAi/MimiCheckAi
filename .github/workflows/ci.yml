@@ -1,139 +1,187 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [main]
-
-env:
-  NODE_VERSION: '20'
+    branches:
+      - main
+      - develop
 
 jobs:
-  # 1. Lint & Type Check
-  lint:
-    name: 🔍 Lint
+  lint-and-test-core-app:
+    name: Lint & Test - Core App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run ESLint
         run: npm run lint
-        continue-on-error: true  # Warnungen erlauben
 
-  # 2. Tests
-  test:
-    name: 🧪 Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run Tests
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
         run: npm run test:run
-        continue-on-error: true  # Tests noch in Entwicklung
 
-  # 3. Build
-  build:
-    name: 🏗️ Build
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/coverage-final.json
+          flags: core-app
+          name: core-app-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  lint-and-test-landing-page:
+    name: Lint & Test - Landing Page
     runs-on: ubuntu-latest
-    needs: [lint]
+    defaults:
+      run:
+        working-directory: mimicheck-landing
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm exec eslint .
+
+      - name: Run TypeScript type check
+        run: pnpm run check
+
+      - name: Run Prettier check
+        run: pnpm exec prettier --check .
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Run tests with coverage
+        run: pnpm run test:coverage
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./mimicheck-landing/coverage/coverage-final.json
+          flags: landing-page
+          name: landing-page-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  build-core-app:
+    name: Build - Core App
+    runs-on: ubuntu-latest
+    needs: lint-and-test-core-app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
-      - name: Build
+
+      - name: Build application
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-          retention-days: 7
 
-  # 4. Deploy Preview (PRs)
-  deploy-preview:
-    name: 🚀 Deploy Preview
-    runs-on: ubuntu-latest
-    needs: [build]
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-      
-      # Hier kann Netlify, Vercel oder anderer Provider konfiguriert werden
-      - name: Deploy to Preview
-        run: echo "Preview deployment would go here"
+      - name: Check build size
+        run: |
+          echo "Build completed successfully"
+          du -sh dist/
 
-  # 5. Deploy Production (main branch)
-  deploy-production:
-    name: 🚀 Deploy Production
+  build-landing-page:
+    name: Build - Landing Page
     runs-on: ubuntu-latest
-    needs: [build, test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: https://mimicheck.de
+    needs: lint-and-test-landing-page
+    defaults:
+      run:
+        working-directory: mimicheck-landing
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-      
-      # Hier kann Netlify, Vercel oder anderer Provider konfiguriert werden
-      - name: Deploy to Production
-        run: echo "Production deployment would go here"
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  # Security Scan
-  security:
-    name: 🔒 Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-      
-      - name: Audit dependencies
-        run: npm audit --production
-        continue-on-error: true
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Check build size
+        run: |
+          echo "Build completed successfully"
+          du -sh dist/

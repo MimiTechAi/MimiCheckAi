@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Note: jest-axe will be imported in tests that need it
+// to avoid loading issues
+
 // Mock Canvas API (für DashboardAnimation etc.)
 class MockCanvasRenderingContext2D {
   clearRect = vi.fn();
@@ -28,18 +31,20 @@ class MockCanvasRenderingContext2D {
 HTMLCanvasElement.prototype.getContext = vi.fn(() => new MockCanvasRenderingContext2D());
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
+// Allow any: Global mock requires any type
+globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-}));
+})) as any;
 
 // Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+// Allow any: Global mock requires any type
+globalThis.IntersectionObserver = vi.fn().mockImplementation(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),
   disconnect: vi.fn(),
-}));
+})) as any;
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -69,6 +74,7 @@ const localStorageMock = {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
 // Mock für Import.meta.env
+// Allow any: Global import.meta mock requires any type
 if (typeof import.meta.env === 'undefined') {
   (globalThis as any).import = {
     meta: {
@@ -154,6 +160,13 @@ vi.mock('@/api/mimitechClient', () => ({
     functions: {
       invoke: vi.fn().mockResolvedValue({ data: {}, error: null }),
     },
+    entities: {
+      Abrechnung: {},
+      Anspruchspruefung: {},
+      Foerderleistung: {},
+      Nutzer: {},
+      Dokument: {},
+    },
   },
   localClient: {
     auth: {
@@ -168,4 +181,14 @@ vi.mock('@/api/mimitechClient', () => ({
       single: vi.fn().mockResolvedValue({ data: null, error: null }),
     }),
   },
+}))
+
+// Mock entities
+vi.mock('@/api/entities', () => ({
+  Abrechnung: {},
+  Anspruchspruefung: {},
+  Foerderleistung: {},
+  Nutzer: {},
+  Dokument: {},
+  User: {},
 }))

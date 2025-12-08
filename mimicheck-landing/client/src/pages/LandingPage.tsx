@@ -466,6 +466,17 @@ export default function LandingPage() {
                       AGB
                     </a>
                   </li>
+                  <li>
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('cookie-consent');
+                        window.location.reload();
+                      }}
+                      className="text-slate-400 hover:text-emerald-400 transition-colors text-left"
+                    >
+                      Cookie-Einstellungen
+                    </button>
+                  </li>
                 </ul>
               </div>
 

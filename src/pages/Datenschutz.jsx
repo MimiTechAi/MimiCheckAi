@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Database, Bot, Lock, Eye, Trash2, FileCheck, Mail } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -68,8 +68,12 @@ export default function Datenschutz() {
 
                             <div className="space-y-6 text-slate-400">
                                 <div className="pl-4 border-l-2 border-white/10 group-hover:border-blue-500/30 transition-colors">
-                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.google.title', 'Google Auth')}</h4>
-                                    <p className="text-sm">{t('datenschutzPage.collection.google.text', 'Basis-Profildaten bei Login.')}</p>
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.cookies.title', 'Cookies')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.collection.cookies.text', 'Session-Cookies und Authentifizierungs-Cookies für die Anmeldung und Sitzungsverwaltung.')}</p>
+                                </div>
+                                <div className="pl-4 border-l-2 border-white/10 group-hover:border-blue-500/30 transition-colors">
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.google.title', 'Supabase Auth')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.collection.google.text', 'Authentifizierung und Nutzerverwaltung über Supabase.')}</p>
                                 </div>
                                 <div className="pl-4 border-l-2 border-white/10 group-hover:border-blue-500/30 transition-colors">
                                     <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.profile.title', 'Profildaten')}</h4>
@@ -78,6 +82,10 @@ export default function Datenschutz() {
                                 <div className="pl-4 border-l-2 border-white/10 group-hover:border-blue-500/30 transition-colors">
                                     <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.docs.title', 'Dokumente')}</h4>
                                     <p className="text-sm">{t('datenschutzPage.collection.docs.text', 'Hochgeladene PDF-Dokumente zur Analyse.')}</p>
+                                </div>
+                                <div className="pl-4 border-l-2 border-white/10 group-hover:border-blue-500/30 transition-colors">
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.collection.hosting.title', 'Vercel Hosting')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.collection.hosting.text', 'Server-Logs und technische Daten beim Besuch der Website.')}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -96,7 +104,11 @@ export default function Datenschutz() {
                             <div className="space-y-6 text-slate-400">
                                 <div className="pl-4 border-l-2 border-white/10 group-hover:border-purple-500/30 transition-colors">
                                     <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.ai.purpose.title', 'Zweck')}</h4>
-                                    <p className="text-sm">{t('datenschutzPage.ai.purpose.text', 'Analyse von Dokumenten auf Fehler.')}</p>
+                                    <p className="text-sm">{t('datenschutzPage.ai.purpose.text', 'KI-gestützte Analyse von Dokumenten mit OpenAI.')}</p>
+                                </div>
+                                <div className="pl-4 border-l-2 border-white/10 group-hover:border-purple-500/30 transition-colors">
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.ai.storage.title', 'Speicherung')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.ai.storage.text', 'Dokumente werden temporär auf AWS S3 gespeichert.')}</p>
                                 </div>
                                 <div className="pl-4 border-l-2 border-white/10 group-hover:border-purple-500/30 transition-colors">
                                     <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.ai.anon.title', 'Anonymisierung')}</h4>
@@ -111,14 +123,60 @@ export default function Datenschutz() {
                     </Card>
                 </div>
 
-                {/* Rights Secion */}
+                {/* Cookies Section */}
+                <Card className="bg-slate-900/40 border-white/5">
+                    <CardContent className="p-8">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Lock className="w-6 h-6 text-blue-400" />
+                            {t('datenschutzPage.cookies.title', 'Cookies und Tracking')}
+                        </h3>
+                        <div className="space-y-4 text-slate-400">
+                            <p>
+                                {t('datenschutzPage.cookies.intro', 'Unsere Website verwendet Cookies. Cookies sind kleine Textdateien, die auf Ihrem Endgerät gespeichert werden. Diese dienen dem Zweck der Funktionsfähigkeit und Sicherheit der Website. Der Zweck der Cookies ist die Bereitstellung einer sicheren und funktionsfähigen Anwendung.')}
+                            </p>
+                            <div className="grid md:grid-cols-2 gap-4 mt-4">
+                                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.cookies.session.title', 'Session-Cookies')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.cookies.session.text', 'Zweck: Verwaltung Ihrer Sitzung während des Besuchs.')}</p>
+                                </div>
+                                <div className="bg-white/5 p-4 rounded-lg border border-white/5">
+                                    <h4 className="font-semibold text-white mb-2">{t('datenschutzPage.cookies.auth.title', 'Authentifizierungs-Cookies')}</h4>
+                                    <p className="text-sm">{t('datenschutzPage.cookies.auth.text', 'Zweck: Verifizierung Ihrer Identität durch Supabase.')}</p>
+                                </div>
+                            </div>
+                            <p className="text-sm mt-4">
+                                {t('datenschutzPage.cookies.legal', 'Die Rechtsgrundlage für die Verwendung technisch notwendiger Cookies ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an der Funktionsfähigkeit der Website).')}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Contact Form Section */}
+                <Card className="bg-slate-900/40 border-white/5">
+                    <CardContent className="p-8">
+                        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                            <Mail className="w-6 h-6 text-emerald-400" />
+                            {t('datenschutzPage.contact.formTitle', 'Kontaktformular')}
+                        </h3>
+                        <div className="space-y-4 text-slate-400">
+                            <p>
+                                {t('datenschutzPage.contact.formText', 'Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben aus dem Anfrageformular inklusive der von Ihnen dort angegebenen Kontaktdaten zwecks Bearbeitung der Anfrage und für den Fall von Anschlussfragen bei uns gespeichert.')}
+                            </p>
+                            <p className="text-sm">
+                                {t('datenschutzPage.contact.formLegal', 'Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) oder Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse). Die Daten werden nach Bearbeitung Ihrer Anfrage gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten bestehen.')}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Rights Section */}
                 <Card className="bg-slate-900/40 border-white/5">
                     <CardContent className="p-8">
                         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                             <FileCheck className="w-6 h-6 text-emerald-400" />
                             {t('datenschutzPage.rights.title', 'Ihre Rechte')}
                         </h3>
-                        <div className="grid md:grid-cols-3 gap-6 text-sm">
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-sm">
                             <div className="bg-white/5 p-4 rounded-xl border border-white/5">
                                 <div className="flex items-center gap-2 mb-3 text-blue-400">
                                     <Eye className="w-4 h-4" />
@@ -126,6 +184,15 @@ export default function Datenschutz() {
                                 </div>
                                 <p className="text-slate-400">
                                     {t('datenschutzPage.rights.info.text', 'Sie haben jederzeit das Recht auf unentgeltliche Auskunft über Ihre gespeicherten Daten.')}
+                                </p>
+                            </div>
+                            <div className="bg-white/5 p-4 rounded-xl border border-white/5">
+                                <div className="flex items-center gap-2 mb-3 text-yellow-400">
+                                    <FileCheck className="w-4 h-4" />
+                                    <h4 className="font-bold uppercase">Berichtigung</h4>
+                                </div>
+                                <p className="text-slate-400">
+                                    {t('datenschutzPage.rights.correction.text', 'Sie haben das Recht auf Berichtigung unrichtiger oder unvollständiger Daten.')}
                                 </p>
                             </div>
                             <div className="bg-white/5 p-4 rounded-xl border border-white/5">
@@ -146,6 +213,11 @@ export default function Datenschutz() {
                                     {t('datenschutzPage.rights.revoke.text', 'Erteilte Einwilligungen können Sie jederzeit für die Zukunft widerrufen.')}
                                 </p>
                             </div>
+                        </div>
+                        <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                            <p className="text-slate-400 text-sm">
+                                {t('datenschutzPage.rights.dsgvo.text', 'Alle Rechte basieren auf der DSGVO (Datenschutz-Grundverordnung). Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter info@mimitechai.com')}
+                            </p>
                         </div>
                     </CardContent>
                 </Card>

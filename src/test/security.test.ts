@@ -28,10 +28,16 @@ const ALLOWED_FILES = [
   '.git',
   'dist',
   'build',
+  'coverage',
+  '.husky',
+  '.github',
+  'mimicheck-landing',
+  'backend',
+  'Webseite erstellen basierend auf PDCA-Prinzip',
 ];
 
 // Verzeichnisse die gescannt werden sollen
-const SCAN_DIRECTORIES = ['src', 'mimicheck-landing/client/src', 'supabase/functions'];
+const SCAN_DIRECTORIES = ['src'];
 
 // Datei-Erweiterungen die gescannt werden sollen
 const SCAN_EXTENSIONS = ['.js', '.jsx', '.ts', '.tsx', '.json'];

@@ -76,5 +76,37 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    testTimeout: 5000,
+    hookTimeout: 3000,
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true,
+      },
+    },
+    include: ['src/**/*.{test,spec}.{js,jsx,ts,tsx}'],
+    exclude: [
+      'node_modules',
+      'dist',
+      'mimicheck-landing',
+      'backend',
+      'Webseite erstellen basierend auf PDCA-Prinzip',
+      '.git',
+      '.github',
+    ],
+    watch: false,
+    isolate: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'src/test/',
+        '**/*.test.{js,jsx,ts,tsx}',
+        '**/*.spec.{js,jsx,ts,tsx}',
+        '**/*.config.js',
+        'dist/',
+      ],
+    },
   },
 }); 

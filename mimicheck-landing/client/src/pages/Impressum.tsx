@@ -37,7 +37,13 @@ export default function Impressum() {
             <p>
               <strong>Registereintrag:</strong><br />
               Registergericht: Amtsgericht Stuttgart<br />
+              Registernummer: HRB [wird nachgetragen]<br />
               Rechtsform: UG (haftungsbeschränkt)
+            </p>
+            
+            <p>
+              <strong>Umsatzsteuer-Identifikationsnummer:</strong><br />
+              [wird nachgetragen, falls vorhanden]
             </p>
 
             <p>

@@ -112,7 +112,177 @@ export default function Datenschutz() {
               Sie haben im Rahmen der geltenden gesetzlichen Bestimmungen jederzeit das Recht auf unentgeltliche Auskunft über Ihre gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger und den Zweck der Datenverarbeitung und ggf. ein Recht auf Berichtigung oder Löschung dieser Daten. Hierzu sowie zu weiteren Fragen zum Thema personenbezogene Daten können Sie sich jederzeit unter der im Impressum angegebenen Adresse an uns wenden.
             </p>
 
-            <h2>4. Datenerfassung auf dieser Website</h2>
+            <h2>4. Cookies und Tracking</h2>
+            
+            <h3>Cookies</h3>
+            <p>
+              Unsere Website verwendet Cookies. Cookies sind kleine Textdateien, die auf Ihrem Endgerät gespeichert werden und die Ihr Browser speichert. Cookies richten auf Ihrem Endgerät keinen Schaden an und enthalten keine Viren. Der Zweck der Cookies ist die Bereitstellung einer funktionsfähigen und sicheren Website.
+            </p>
+            <p>
+              Wir verwenden folgende Arten von Cookies:
+            </p>
+            <ul>
+              <li><strong>Technisch notwendige Cookies:</strong> Diese Cookies sind erforderlich für den Betrieb der Website und können nicht deaktiviert werden. Sie werden nur als Reaktion auf von Ihnen getätigte Aktionen gesetzt, wie z.B. das Setzen Ihrer Datenschutzeinstellungen, das Anmelden oder das Ausfüllen von Formularen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).</li>
+              <li><strong>Session-Cookies:</strong> Diese Cookies ermöglichen es uns, Ihre Sitzung zu verwalten und Sie während Ihres Besuchs auf unserer Website angemeldet zu halten. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).</li>
+              <li><strong>Authentifizierungs-Cookies:</strong> Diese Cookies werden von unserem Authentifizierungsdienst (Supabase) gesetzt, um Ihre Identität zu verifizieren. Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).</li>
+              <li><strong>Cookie-Consent-Cookie:</strong> Dieses Cookie speichert Ihre Einwilligung oder Ablehnung von optionalen Cookies (z.B. Analytics). Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse).</li>
+            </ul>
+            <p>
+              <strong>Cookie-Einwilligung:</strong> Beim ersten Besuch unserer Website erscheint ein Cookie-Banner, über das Sie Ihre Einwilligung für optionale Cookies (z.B. Analytics) erteilen oder ablehnen können. Technisch notwendige Cookies werden unabhängig von Ihrer Einwilligung gesetzt. Sie können Ihre Einwilligung jederzeit widerrufen, indem Sie Ihre Browser-Cookies löschen oder über das Cookie-Banner Ihre Einstellungen ändern.
+            </p>
+            <p>
+              Sie können Ihren Browser so einstellen, dass Sie über das Setzen von Cookies informiert werden und Cookies nur im Einzelfall erlauben, die Annahme von Cookies für bestimmte Fälle oder generell ausschließen sowie das automatische Löschen der Cookies beim Schließen des Browsers aktivieren. Bei der Deaktivierung von Cookies kann die Funktionalität dieser Website eingeschränkt sein.
+            </p>
+
+            <h2>5. Drittanbieter und externe Dienste</h2>
+            
+            <h3>Vercel (Hosting)</h3>
+            <p>
+              Diese Website wird auf Servern von Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA gehostet. Vercel ist unser Hosting-Anbieter und stellt die Infrastruktur für den Betrieb unserer Website bereit.
+            </p>
+            <p>
+              Beim Besuch unserer Website erfasst Vercel automatisch folgende Daten:
+            </p>
+            <ul>
+              <li>IP-Adresse</li>
+              <li>Datum und Uhrzeit des Zugriffs</li>
+              <li>Übertragene Datenmenge</li>
+              <li>Browser-Typ und -Version</li>
+              <li>Betriebssystem</li>
+              <li>Referrer URL</li>
+            </ul>
+            <p>
+              Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an sicherer und effizienter Bereitstellung unserer Website). Vercel ist nach dem EU-US Data Privacy Framework zertifiziert.
+            </p>
+            <p>
+              Weitere Informationen: <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Vercel Privacy Policy</a>
+            </p>
+
+            <h3>Supabase (Authentifizierung und Datenbank)</h3>
+            <p>
+              Wir nutzen Supabase Inc., 970 Toa Payoh North #07-04, Singapore 318992, für Authentifizierung und Datenbankdienste. Supabase verarbeitet folgende Daten:
+            </p>
+            <ul>
+              <li>E-Mail-Adresse (bei Registrierung)</li>
+              <li>Passwort (verschlüsselt)</li>
+              <li>Authentifizierungs-Tokens</li>
+              <li>Nutzerdaten und hochgeladene Dokumente</li>
+              <li>Metadaten (Zeitstempel, IP-Adressen)</li>
+            </ul>
+            <p>
+              Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an sicherer Authentifizierung).
+            </p>
+            <p>
+              Supabase speichert Daten in der EU (Frankfurt, Deutschland). Für Datenübertragungen außerhalb der EU werden Standard-Vertragsklauseln verwendet.
+            </p>
+            <p>
+              Weitere Informationen: <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Supabase Privacy Policy</a>
+            </p>
+
+            <h3>OpenAI (KI-Verarbeitung)</h3>
+            <p>
+              Für die KI-gestützte Dokumentenanalyse nutzen wir Dienste von OpenAI, L.L.C., 3180 18th Street, San Francisco, CA 94110, USA. OpenAI verarbeitet:
+            </p>
+            <ul>
+              <li>Hochgeladene Dokumente (temporär)</li>
+              <li>Extrahierte Textinformationen</li>
+              <li>Analyseergebnisse</li>
+            </ul>
+            <p>
+              Die Verarbeitung erfolgt auf Grundlage Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Sie können Ihre Einwilligung jederzeit widerrufen.
+            </p>
+            <p>
+              OpenAI ist nach dem EU-US Data Privacy Framework zertifiziert. Dokumente werden nicht für das Training von KI-Modellen verwendet (gemäß unserer Vereinbarung mit OpenAI).
+            </p>
+            <p>
+              Weitere Informationen: <a href="https://openai.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI Privacy Policy</a>
+            </p>
+
+            <h3>AWS S3 (Dokumentenspeicherung)</h3>
+            <p>
+              Hochgeladene Dokumente werden temporär auf Amazon Web Services (AWS) S3 gespeichert. AWS ist ein Dienst von Amazon Web Services, Inc., 410 Terry Avenue North, Seattle, WA 98109, USA.
+            </p>
+            <p>
+              Die Speicherung erfolgt in der EU-Region (Frankfurt). Die Verarbeitung erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung).
+            </p>
+            <p>
+              AWS ist nach dem EU-US Data Privacy Framework zertifiziert.
+            </p>
+            <p>
+              Weitere Informationen: <a href="https://aws.amazon.com/privacy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">AWS Privacy Policy</a>
+            </p>
+
+            <h3>Umami Analytics (Webanalyse)</h3>
+            <p>
+              Wir nutzen Umami, eine datenschutzfreundliche, selbst-gehostete Webanalyse-Software, um die Nutzung unserer Website zu verstehen und zu verbessern. Umami erfasst nur anonymisierte Nutzungsdaten und verwendet keine Cookies zur Verfolgung.
+            </p>
+            <p>
+              Folgende Daten werden erfasst:
+            </p>
+            <ul>
+              <li>Besuchte Seiten und Seitenaufrufe</li>
+              <li>Referrer (woher Besucher kommen)</li>
+              <li>Browser-Typ und Betriebssystem (anonymisiert)</li>
+              <li>Gerätetyp (Desktop, Tablet, Mobile)</li>
+              <li>Land (basierend auf anonymisierter IP-Adresse)</li>
+            </ul>
+            <p>
+              <strong>Wichtig:</strong> Umami speichert keine IP-Adressen, verwendet keine Cookies zur Verfolgung und erstellt keine Nutzerprofile. Die Daten werden ausschließlich in aggregierter Form verwendet.
+            </p>
+            <p>
+              Die Verarbeitung erfolgt nur mit Ihrer Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die Sie über unser Cookie-Banner erteilen können. Sie können Ihre Einwilligung jederzeit widerrufen, indem Sie Ihre Cookie-Einstellungen ändern.
+            </p>
+            <p>
+              Die Rechtsgrundlage für die Verwendung ist Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Ohne Ihre Einwilligung werden keine Analytics-Daten erfasst.
+            </p>
+
+            <h2>6. Datenaufbewahrung und Löschfristen</h2>
+            <p>
+              Wir speichern personenbezogene Daten nur so lange, wie es für den jeweiligen Zweck erforderlich ist oder gesetzliche Aufbewahrungsfristen bestehen:
+            </p>
+            <ul>
+              <li><strong>Nutzerkonto-Daten:</strong> Bis zur Löschung des Kontos durch den Nutzer oder 3 Jahre nach letzter Aktivität</li>
+              <li><strong>Hochgeladene Dokumente:</strong> 90 Tage nach Upload oder bis zur manuellen Löschung durch den Nutzer</li>
+              <li><strong>Verarbeitete Anträge:</strong> 10 Jahre (gesetzliche Aufbewahrungspflicht für steuerrelevante Dokumente)</li>
+              <li><strong>Kontaktformular-Daten:</strong> 6 Monate nach Bearbeitung der Anfrage</li>
+              <li><strong>Server-Logs:</strong> 30 Tage</li>
+              <li><strong>Backup-Daten:</strong> 90 Tage</li>
+            </ul>
+            <p>
+              Nach Ablauf der Aufbewahrungsfristen werden die Daten automatisch gelöscht, sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen.
+            </p>
+
+            <h2>7. Internationale Datenübertragungen</h2>
+            <p>
+              Einige unserer Dienstleister haben ihren Sitz außerhalb der Europäischen Union oder verarbeiten Daten außerhalb der EU. In diesen Fällen stellen wir sicher, dass ein angemessenes Datenschutzniveau gewährleistet ist durch:
+            </p>
+            <ul>
+              <li><strong>EU-US Data Privacy Framework:</strong> Vercel, OpenAI und AWS sind zertifiziert</li>
+              <li><strong>Standard-Vertragsklauseln (SCC):</strong> Mit allen Dienstleistern abgeschlossen</li>
+              <li><strong>Technische Maßnahmen:</strong> Ende-zu-Ende-Verschlüsselung, Pseudonymisierung</li>
+            </ul>
+            <p>
+              Sie haben das Recht, eine Kopie der Garantien für die Übermittlung Ihrer Daten in Drittländer anzufordern.
+            </p>
+
+            <h2>8. Datensicherheit</h2>
+            <p>
+              Wir setzen umfassende technische und organisatorische Maßnahmen ein, um Ihre Daten vor Verlust, Manipulation und unberechtigtem Zugriff zu schützen:
+            </p>
+            <ul>
+              <li><strong>Verschlüsselung:</strong> SSL/TLS-Verschlüsselung für alle Datenübertragungen</li>
+              <li><strong>Zugriffskontrolle:</strong> Strenge Zugriffsrechte und Authentifizierung</li>
+              <li><strong>Datenverschlüsselung:</strong> Verschlüsselung sensibler Daten in der Datenbank</li>
+              <li><strong>Regelmäßige Backups:</strong> Automatische Sicherungen mit Verschlüsselung</li>
+              <li><strong>Sicherheitsaudits:</strong> Regelmäßige Überprüfung unserer Systeme</li>
+              <li><strong>Mitarbeiterschulung:</strong> Regelmäßige Datenschutzschulungen</li>
+              <li><strong>Incident Response:</strong> Notfallplan für Datenschutzverletzungen</li>
+            </ul>
+            <p>
+              Trotz aller Sicherheitsmaßnahmen kann keine absolute Sicherheit garantiert werden. Wir empfehlen, auch eigene Sicherheitsmaßnahmen zu ergreifen (z.B. sichere Passwörter).
+            </p>
+
+            <h2>9. Datenerfassung auf dieser Website</h2>
             
             <h3>Kontaktformular</h3>
             <p>
@@ -125,7 +295,7 @@ export default function Datenschutz() {
               Die von Ihnen im Kontaktformular eingegebenen Daten verbleiben bei uns, bis Sie uns zur Löschung auffordern, Ihre Einwilligung zur Speicherung widerrufen oder der Zweck für die Datenspeicherung entfällt (z.B. nach abgeschlossener Bearbeitung Ihrer Anfrage). Zwingende gesetzliche Bestimmungen – insbesondere Aufbewahrungsfristen – bleiben unberührt.
             </p>
 
-            <h2>5. KI-Systeme und EU AI Act Konformität</h2>
+            <h2>10. KI-Systeme und EU AI Act Konformität</h2>
             
             <h3>Einsatz von KI-Systemen</h3>
             <p>
@@ -156,7 +326,7 @@ export default function Datenschutz() {
               Diese Daten werden ausschließlich zur Erfüllung des Vertragszwecks verwendet und nach Abschluss des Vorgangs gemäß gesetzlicher Aufbewahrungsfristen gelöscht.
             </p>
 
-            <h2>6. Ihre Rechte</h2>
+            <h2>11. Ihre Rechte</h2>
             <p>
               Sie haben folgende Rechte bezüglich Ihrer personenbezogenen Daten:
             </p>

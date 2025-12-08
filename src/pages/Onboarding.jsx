@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { useUserProfile } from '@/components/UserProfileContext.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, CheckCircle2, ArrowRight, ArrowLeft, User, Home, Shield } from 'lucide-react';
-import Scene3D from '@/components/3d/Scene3D';
+import Scene3D from '@/components/3d/Scene3DLazy';
 import { useTranslation, Trans } from 'react-i18next';
 
 export default function Onboarding() {

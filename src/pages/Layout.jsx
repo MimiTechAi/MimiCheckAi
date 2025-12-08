@@ -111,9 +111,6 @@ export default function Layout({ children }) {
     const isPublicRoute = (
         currentPath === '/' ||
         currentPath === '/landing' ||
-        currentPath === '/impressum' ||
-        currentPath === '/datenschutz' ||
-        currentPath === '/agb' ||
         currentPath === '/contact' ||
         currentPath === '/pricing' ||
         currentPath === '/hilfe'
@@ -382,8 +379,17 @@ export default function Layout({ children }) {
                     {children}
 
                     {/* Footer inside the dark area */}
-                    <footer className="py-8 px-6 border-t border-white/5 text-center text-slate-500 text-sm">
-                        <p>{t('layout.footer', '© 2025 MiMiCheck. Made with ❤️ in DACH.')}</p>
+                    <footer className="py-8 px-6 border-t border-white/5">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
+                            <p className="text-slate-500">{t('layout.footer', '© 2025 MiMiCheck. Made with ❤️ in DACH.')}</p>
+                            <div className="flex items-center gap-4 text-slate-400">
+                                <a href="https://www.mimitechai.com/impressum" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Impressum</a>
+                                <span className="text-slate-600">•</span>
+                                <a href="https://www.mimitechai.com/datenschutz" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">Datenschutz</a>
+                                <span className="text-slate-600">•</span>
+                                <a href="https://www.mimitechai.com/agb" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">AGB</a>
+                            </div>
+                        </div>
                     </footer>
                 </main>
             </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Building2, Mail, Phone, MapPin, Scale, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -58,7 +58,7 @@ export default function Impressum() {
                                     <div className="flex items-start gap-3">
                                         <MapPin className="w-5 h-5 text-slate-500 mt-1 shrink-0" />
                                         <p>
-                                            Lindenplatz 2<br />
+                                            Lindenplatz 23<br />
                                             75378 Bad Liebenzell<br />
                                             Deutschland
                                         </p>
@@ -152,7 +152,7 @@ export default function Impressum() {
                             <h4 className="text-white font-semibold mb-2">Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h4>
                             <p>
                                 Michael Bemler<br />
-                                Lindenplatz 2<br />
+                                Lindenplatz 23<br />
                                 75378 Bad Liebenzell
                             </p>
                         </div>
