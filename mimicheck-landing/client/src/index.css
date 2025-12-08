@@ -500,7 +500,115 @@
 
 /* Reduce animation complexity on low-power devices */
 @media (prefers-reduced-motion: reduce) {
-  .gradient-blob {
+  .gradient-blob,
+  .animate-orb-1,
+  .animate-orb-2,
+  .animate-orb-3,
+  .animate-orb-4,
+  .animate-orb-5,
+  .animate-float-particle {
     animation: none !important;
   }
+}
+
+/* ============================================
+   ANIMATED ORB KEYFRAMES - SOTA 2025
+   ============================================ */
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(8%, 5%) scale(1.1); }
+  50% { transform: translate(3%, 12%) scale(0.95); }
+  75% { transform: translate(-5%, 8%) scale(1.05); }
+}
+
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-12%, 8%) scale(1.08); }
+  66% { transform: translate(-6%, -6%) scale(0.92); }
+}
+
+@keyframes orb-float-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(10%, -8%) scale(1.05); }
+  50% { transform: translate(-6%, -12%) scale(1.1); }
+  75% { transform: translate(4%, -4%) scale(0.95); }
+}
+
+@keyframes orb-float-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(12%, 12%) scale(1.15); }
+}
+
+@keyframes orb-float-5 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-8%, 6%) scale(1.1); }
+  66% { transform: translate(6%, 10%) scale(0.9); }
+}
+
+@keyframes float-particle {
+  0%, 100% { 
+    transform: translateY(0) translateX(0); 
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  50% { 
+    transform: translateY(-100px) translateX(20px); 
+  }
+}
+
+.animate-orb-1 {
+  animation: orb-float-1 20s ease-in-out infinite;
+}
+
+.animate-orb-2 {
+  animation: orb-float-2 25s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+.animate-orb-3 {
+  animation: orb-float-3 22s ease-in-out infinite;
+  animation-delay: -10s;
+}
+
+.animate-orb-4 {
+  animation: orb-float-4 28s ease-in-out infinite;
+  animation-delay: -7s;
+}
+
+.animate-orb-5 {
+  animation: orb-float-5 18s ease-in-out infinite;
+  animation-delay: -3s;
+}
+
+.animate-float-particle {
+  animation: float-particle 20s ease-in-out infinite;
+}
+
+/* Glowing line animation for section dividers */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Shimmer effect for cards */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(16,185,129,0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
 }
