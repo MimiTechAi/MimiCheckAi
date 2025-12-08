@@ -1,7 +1,7 @@
 /**
- * Gradient Mesh Background - Lusion/Basement Studio Style
+ * Premium Gradient Mesh Background - Lusion/Stripe/Linear Style
  * 
- * Durchgehende, organische Animation die sich durch die ganze Seite zieht.
+ * Deutlich sichtbare, organische Animation die durch die ganze Seite fließt.
  * Performant durch CSS-only Animationen + GPU-Beschleunigung.
  */
 
@@ -29,68 +29,36 @@ export default function GradientMeshBackground() {
   if (prefersReducedMotion) {
     return (
       <div className="fixed inset-0 -z-10 bg-slate-950">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-slate-950 to-teal-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/20 via-slate-950 to-teal-600/20" />
       </div>
     );
   }
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-slate-950">
-      {/* Base gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.03),transparent_70%)]" />
-      
-      {/* Animated gradient orbs */}
-      <div className="gradient-mesh">
-        {/* Primary orb - Emerald */}
-        <div 
-          className="gradient-orb gradient-orb-1"
-          style={{
-            background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(16,185,129,0.05) 40%, transparent 70%)',
-          }}
-        />
+      {/* Animated Gradient Mesh Container */}
+      <div className="gradient-mesh-container">
+        {/* Primary Emerald Blob - Top Left */}
+        <div className="gradient-blob gradient-blob-1" />
         
-        {/* Secondary orb - Teal */}
-        <div 
-          className="gradient-orb gradient-orb-2"
-          style={{
-            background: 'radial-gradient(circle, rgba(20,184,166,0.12) 0%, rgba(20,184,166,0.04) 40%, transparent 70%)',
-          }}
-        />
+        {/* Secondary Teal Blob - Right */}
+        <div className="gradient-blob gradient-blob-2" />
         
-        {/* Tertiary orb - Cyan */}
-        <div 
-          className="gradient-orb gradient-orb-3"
-          style={{
-            background: 'radial-gradient(circle, rgba(6,182,212,0.1) 0%, rgba(6,182,212,0.03) 40%, transparent 70%)',
-          }}
-        />
+        {/* Tertiary Cyan Blob - Bottom */}
+        <div className="gradient-blob gradient-blob-3" />
         
-        {/* Accent orb - Purple hint */}
-        <div 
-          className="gradient-orb gradient-orb-4"
-          style={{
-            background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, rgba(139,92,246,0.02) 40%, transparent 70%)',
-          }}
-        />
+        {/* Accent Purple Blob - Center */}
+        <div className="gradient-blob gradient-blob-4" />
+        
+        {/* Extra Glow - Top */}
+        <div className="gradient-blob gradient-blob-5" />
       </div>
 
-      {/* Noise texture overlay for depth */}
-      <div 
-        className="absolute inset-0 opacity-[0.015]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Subtle grid pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.02]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                           linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '100px 100px',
-        }}
-      />
+      {/* Noise texture for depth */}
+      <div className="absolute inset-0 noise-overlay" />
+      
+      {/* Vignette effect */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(2,6,23,0.4)_70%,rgba(2,6,23,0.8)_100%)]" />
     </div>
   );
 }

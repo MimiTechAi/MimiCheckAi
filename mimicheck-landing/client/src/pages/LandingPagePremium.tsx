@@ -35,9 +35,9 @@ const LoadingFallback = () => (
 // Bento Grid Section
 function BentoSection() {
   return (
-    <section id="features" className="py-16 sm:py-24 lg:py-32 px-4 bg-slate-950 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(16,185,129,0.08),transparent_50%)]" />
+    <section id="features" className="py-16 sm:py-24 lg:py-32 px-4 relative overflow-hidden">
+      {/* Subtle overlay for contrast */}
+      <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px]" />
       
       <div className="container max-w-7xl mx-auto relative z-10">
         {/* Section Header */}
@@ -67,7 +67,9 @@ function BentoSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="sm:col-span-2 sm:row-span-2 group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 hover:border-emerald-500/40 transition-colors duration-300"
+            whileHover={{ scale: 1.02, y: -5 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="sm:col-span-2 sm:row-span-2 group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border border-emerald-500/30 hover:border-emerald-400/50 hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500"
           >
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
             <div className="relative z-10 h-full flex flex-col justify-end p-5 sm:p-6 lg:p-8">
@@ -88,9 +90,11 @@ function BentoSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/50 border border-slate-800 hover:border-teal-500/40 transition-colors duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-between"
+            whileHover={{ scale: 1.05, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-teal-400/50 hover:bg-slate-800/80 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-between"
           >
-            <Shield className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-teal-400" />
+            <Shield className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-teal-400 group-hover:scale-110 transition-transform duration-300" />
             <div>
               <h4 className="text-base sm:text-lg font-semibold text-white mb-0.5 sm:mb-1">DSGVO-konform</h4>
               <p className="text-xs sm:text-sm text-slate-400">100% Datenschutz</p>
@@ -102,9 +106,11 @@ function BentoSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/50 border border-slate-800 hover:border-cyan-500/40 transition-colors duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-between"
+            whileHover={{ scale: 1.05, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-cyan-400/50 hover:bg-slate-800/80 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-between"
           >
-            <Zap className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-cyan-400" />
+            <Zap className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-cyan-400 group-hover:scale-110 transition-transform duration-300" />
             <div>
               <h4 className="text-base sm:text-lg font-semibold text-white mb-0.5 sm:mb-1">Blitzschnell</h4>
               <p className="text-xs sm:text-sm text-slate-400">In 3 Minuten fertig</p>
@@ -116,7 +122,9 @@ function BentoSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="sm:col-span-2 group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/20 hover:border-teal-500/40 transition-colors duration-300 p-4 sm:p-5 lg:p-6 flex items-center gap-4 sm:gap-6"
+            whileHover={{ scale: 1.02, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="sm:col-span-2 group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-r from-teal-500/15 to-cyan-500/10 border border-teal-500/30 hover:border-teal-400/50 hover:shadow-xl hover:shadow-teal-500/15 transition-all duration-300 p-4 sm:p-5 lg:p-6 flex items-center gap-4 sm:gap-6"
           >
             <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-teal-500/20 flex items-center justify-center flex-shrink-0">
               <FileText className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-teal-400" />
@@ -132,7 +140,9 @@ function BentoSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="hidden lg:flex lg:row-span-2 group relative rounded-3xl overflow-hidden bg-gradient-to-b from-cyan-500/10 to-emerald-500/10 border border-cyan-500/20 hover:border-cyan-500/40 transition-colors duration-300 p-6 flex-col justify-between"
+            whileHover={{ scale: 1.03, y: -5 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="hidden lg:flex lg:row-span-2 group relative rounded-3xl overflow-hidden bg-gradient-to-b from-cyan-500/15 to-emerald-500/10 border border-cyan-500/30 hover:border-cyan-400/50 hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 p-6 flex-col justify-between"
           >
             <Users className="w-8 h-8 lg:w-10 lg:h-10 text-cyan-400" />
             <div>
@@ -147,9 +157,11 @@ function BentoSection() {
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-50px' }}
-            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/50 border border-slate-800 hover:border-emerald-500/40 transition-colors duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-center items-center text-center"
+            whileHover={{ scale: 1.05, y: -3 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            className="group relative rounded-2xl sm:rounded-3xl overflow-hidden bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-emerald-400/50 hover:bg-slate-800/80 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 p-4 sm:p-5 lg:p-6 flex flex-col justify-center items-center text-center"
           >
-            <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-emerald-400 mb-1 sm:mb-2" />
+            <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-emerald-400 mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300" />
             <div className="text-2xl sm:text-3xl font-bold text-white">847€</div>
             <p className="text-xs sm:text-sm text-slate-400">Ø Förderung/Jahr</p>
           </motion.div>
@@ -188,8 +200,8 @@ function TestimonialsSection() {
 
   return (
     <section className="py-16 sm:py-24 lg:py-32 px-4 relative overflow-hidden">
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" />
+      {/* Subtle overlay */}
+      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
       
       <div className="container max-w-6xl mx-auto relative z-10">
         <motion.div
@@ -276,9 +288,9 @@ function TestimonialsSection() {
 function FinalCTA() {
   return (
     <section className="py-16 sm:py-24 lg:py-32 px-4 relative overflow-hidden">
-      {/* Static gradient background - better performance */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_60%)]" />
+      {/* Glowing overlay for CTA emphasis */}
+      <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15),transparent_70%)]" />
 
       <div className="container max-w-4xl mx-auto relative z-10 text-center">
         <motion.div
