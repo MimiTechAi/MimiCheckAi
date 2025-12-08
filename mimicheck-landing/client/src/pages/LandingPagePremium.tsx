@@ -14,7 +14,7 @@
 import { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle, Sparkles, Shield, Zap, FileText, Users, TrendingUp, Star } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles, Shield, Zap, FileText, Users, TrendingUp, Star, Upload, Brain, Send, BadgeCheck, Clock, Euro, Award } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import CookieBanner from '@/components/CookieBanner';
 
@@ -171,6 +171,136 @@ function BentoSection() {
   );
 }
 
+// How it Works Section - Animated Steps
+function HowItWorksSection() {
+  const steps = [
+    {
+      number: '01',
+      icon: Upload,
+      title: 'Daten hochladen',
+      description: 'Lade deine Dokumente hoch oder beantworte ein paar einfache Fragen zu deiner Situation.',
+      color: 'emerald',
+    },
+    {
+      number: '02',
+      icon: Brain,
+      title: 'KI analysiert',
+      description: 'Unsere KI prüft über 1.000 Förderprogramme und findet alle passenden Optionen für dich.',
+      color: 'teal',
+    },
+    {
+      number: '03',
+      icon: Send,
+      title: 'Antrag absenden',
+      description: 'Mit einem Klick werden deine Anträge automatisch ausgefüllt und eingereicht.',
+      color: 'cyan',
+    },
+  ];
+
+  return (
+    <section className="py-16 sm:py-24 lg:py-32 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px]" />
+      
+      <div className="container max-w-6xl mx-auto relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12 sm:mb-20"
+        >
+          <span className="text-emerald-400 text-xs sm:text-sm font-medium uppercase tracking-widest mb-3 block">
+            So funktioniert's
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
+            In 3 Schritten zur Förderung
+          </h2>
+          <p className="text-slate-400 max-w-xl mx-auto">
+            Einfacher geht's nicht. Keine Bürokratie, keine Wartezeiten.
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15 }}
+              whileHover={{ y: -8 }}
+              className="group relative"
+            >
+              {/* Connector line */}
+              {i < steps.length - 1 && (
+                <div className="hidden md:block absolute top-16 left-[60%] w-[80%] h-[2px] bg-gradient-to-r from-emerald-500/50 to-transparent" />
+              )}
+              
+              <div className="relative p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-emerald-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/10">
+                {/* Step number */}
+                <div className="absolute -top-4 -right-2 text-6xl sm:text-7xl font-black text-slate-800/50 select-none">
+                  {step.number}
+                </div>
+                
+                {/* Icon */}
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-${step.color}-500/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                  <step.icon className={`w-7 h-7 sm:w-8 sm:h-8 text-${step.color}-400`} />
+                </div>
+                
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Stats Showcase Section
+function StatsShowcase() {
+  const stats = [
+    { value: '10.000+', label: 'Zufriedene Nutzer', icon: Users },
+    { value: '847€', label: 'Ø Förderung pro Jahr', icon: Euro },
+    { value: '98%', label: 'Erfolgsquote', icon: BadgeCheck },
+    { value: '<5 Min', label: 'Durchschnittliche Antragszeit', icon: Clock },
+  ];
+
+  return (
+    <section className="py-16 sm:py-20 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent" />
+      
+      <div className="container max-w-6xl mx-auto relative z-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {stats.map((stat, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+              className="group text-center p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl bg-slate-900/50 backdrop-blur-sm border border-slate-800 hover:border-emerald-500/30 transition-all duration-300"
+            >
+              <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-1">
+                {stat.value}
+              </div>
+              <div className="text-xs sm:text-sm text-slate-400">
+                {stat.label}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Testimonials Section - Echte Testimonials mit Fotos
 function TestimonialsSection() {
   const testimonials = [
@@ -229,7 +359,8 @@ function TestimonialsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ delay: i * 0.1 }}
-              className="group relative p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl bg-slate-950/80 border border-slate-800 hover:border-emerald-500/30 transition-all duration-300 hover:transform hover:-translate-y-1"
+              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-emerald-400/50 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500"
             >
               {/* Stars */}
               <div className="flex gap-1 mb-4">
@@ -278,6 +409,80 @@ function TestimonialsSection() {
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
             <span>4.9/5.0 Bewertung</span>
           </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// Förderungen Preview Section
+function FoerderungenPreview() {
+  const foerderungen = [
+    { name: 'Wohngeld', amount: 'bis 600€/Monat', icon: '🏠', color: 'emerald' },
+    { name: 'Kindergeld', amount: '250€/Kind', icon: '👶', color: 'teal' },
+    { name: 'BAföG', amount: 'bis 934€/Monat', icon: '🎓', color: 'cyan' },
+    { name: 'Elterngeld', amount: 'bis 1.800€/Monat', icon: '👨‍👩‍👧', color: 'emerald' },
+    { name: 'Bürgergeld', amount: '563€ + Miete', icon: '💼', color: 'teal' },
+    { name: 'Kinderzuschlag', amount: 'bis 292€/Kind', icon: '🧒', color: 'cyan' },
+  ];
+
+  return (
+    <section className="py-16 sm:py-24 lg:py-32 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-slate-950/30" />
+      
+      <div className="container max-w-6xl mx-auto relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12 sm:mb-16"
+        >
+          <span className="text-emerald-400 text-xs sm:text-sm font-medium uppercase tracking-widest mb-3 block">
+            Verfügbare Förderungen
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            Diese Förderungen warten auf dich
+          </h2>
+          <p className="text-slate-400 max-w-xl mx-auto">
+            Finde heraus, welche Förderungen dir zustehen – kostenlos und unverbindlich.
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+          {foerderungen.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+              whileHover={{ scale: 1.05, y: -5 }}
+              className="group p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-slate-900/70 backdrop-blur-sm border border-slate-700/50 hover:border-emerald-400/50 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 cursor-pointer"
+            >
+              <div className="text-3xl sm:text-4xl mb-3">{item.icon}</div>
+              <h4 className="text-base sm:text-lg font-semibold text-white mb-1">{item.name}</h4>
+              <p className="text-sm sm:text-base text-emerald-400 font-medium">{item.amount}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mt-8 sm:mt-12"
+        >
+          <Button
+            variant="outline"
+            size="lg"
+            className="border-emerald-500/30 hover:border-emerald-400 hover:bg-emerald-500/10 text-white"
+            asChild
+          >
+            <a href="/auth">
+              Alle Förderungen entdecken
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </a>
+          </Button>
         </motion.div>
       </div>
     </section>
@@ -338,31 +543,60 @@ function FinalCTA() {
 function PremiumFooter() {
   return (
     <footer className="relative bg-slate-950 border-t border-slate-800">
-      <div className="container py-10 sm:py-12 lg:py-16 px-4">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-8 sm:mb-12">
+      {/* Gradient accent */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent" />
+      
+      <div className="container py-12 sm:py-16 lg:py-20 px-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-8 sm:gap-10 lg:gap-12 mb-10 sm:mb-16">
           {/* Brand */}
-          <div className="col-span-2 sm:col-span-2 lg:col-span-2">
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <img src="/mimicheck-logo-medium.png" alt="MiMiCheck" className="h-8 sm:h-10 w-auto" />
-              <span className="text-lg sm:text-xl font-bold text-white">MiMiCheck</span>
+          <div className="col-span-2 lg:col-span-2">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+              <img src="/mimicheck-logo-medium.png" alt="MiMiCheck" className="h-9 sm:h-11 w-auto" />
+              <span className="text-xl sm:text-2xl font-bold text-white">MiMiCheck</span>
             </div>
-            <p className="text-sm sm:text-base text-slate-400 mb-3 sm:mb-4 max-w-md">
-              Dein digitaler Assistent für Förderanträge – sicher und DSGVO-konform.
+            <p className="text-sm sm:text-base text-slate-400 mb-5 max-w-sm leading-relaxed">
+              Dein digitaler Assistent für Förderanträge. KI-gestützt, sicher und 100% DSGVO-konform.
             </p>
+            
+            {/* Trust badges */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {['🇩🇪 Made in Germany', '🔒 DSGVO', '🤖 EU AI Act'].map((badge) => (
+                <span key={badge} className="px-3 py-1.5 rounded-full bg-slate-800/80 text-slate-300 text-xs font-medium">
+                  {badge}
+                </span>
+              ))}
+            </div>
+            
             <div className="text-xs sm:text-sm text-slate-500">
-              <p>MiMi Tech Ai UG (haftungsbeschränkt)</p>
+              <p className="font-medium text-slate-400">MiMi Tech Ai UG (haftungsbeschränkt)</p>
               <p>Lindenplatz 23, 75378 Bad Liebenzell</p>
+              <p className="mt-1">info@mimicheck.de</p>
             </div>
           </div>
 
-          {/* Links */}
+          {/* Förderungen */}
           <div>
-            <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Rechtliches</h4>
-            <ul className="space-y-2 text-xs sm:text-sm">
+            <h4 className="font-semibold text-white mb-4 text-sm sm:text-base">Förderungen</h4>
+            <ul className="space-y-2.5 text-xs sm:text-sm">
+              {['Wohngeld', 'Kindergeld', 'BAföG', 'Elterngeld', 'Bürgergeld'].map((item) => (
+                <li key={item}>
+                  <a href="/auth" className="text-slate-400 hover:text-emerald-400 transition-colors">
+                    {item}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Rechtliches */}
+          <div>
+            <h4 className="font-semibold text-white mb-4 text-sm sm:text-base">Rechtliches</h4>
+            <ul className="space-y-2.5 text-xs sm:text-sm">
               {[
                 { href: '/impressum', label: 'Impressum' },
                 { href: '/datenschutz', label: 'Datenschutz' },
                 { href: '/agb', label: 'AGB' },
+                { href: '/barrierefreiheit', label: 'Barrierefreiheit' },
               ].map((link) => (
                 <li key={link.href}>
                   <a href={link.href} className="text-slate-400 hover:text-emerald-400 transition-colors">
@@ -373,13 +607,15 @@ function PremiumFooter() {
             </ul>
           </div>
 
+          {/* Support */}
           <div>
-            <h4 className="font-semibold text-white mb-3 sm:mb-4 text-sm sm:text-base">Support</h4>
-            <ul className="space-y-2 text-xs sm:text-sm">
+            <h4 className="font-semibold text-white mb-4 text-sm sm:text-base">Support</h4>
+            <ul className="space-y-2.5 text-xs sm:text-sm">
               {[
                 { href: '/contact', label: 'Kontakt' },
+                { href: '/hilfe', label: 'Hilfe & FAQ' },
                 { href: '/auth', label: 'Anmelden' },
-                { href: '/#features', label: 'Förderungen' },
+                { href: '/ki-transparenz', label: 'KI-Transparenz' },
               ].map((link) => (
                 <li key={link.href}>
                   <a href={link.href} className="text-slate-400 hover:text-emerald-400 transition-colors">
@@ -392,14 +628,13 @@ function PremiumFooter() {
         </div>
 
         {/* Bottom */}
-        <div className="pt-6 sm:pt-8 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-xs sm:text-sm text-slate-500">
-          <p>© 2025 MiMi Tech Ai UG</p>
-          <div className="flex gap-2 sm:gap-4">
-            {['DSGVO', 'ISO', 'EU AI Act'].map((badge) => (
-              <span key={badge} className="px-2 sm:px-3 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] sm:text-xs">
-                {badge}
-              </span>
-            ))}
+        <div className="pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-slate-500">
+          <p>© 2025 MiMi Tech Ai UG. Alle Rechte vorbehalten.</p>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <Award className="w-4 h-4 text-emerald-500" />
+              <span>Trusted by 10.000+ users</span>
+            </span>
           </div>
         </div>
       </div>
@@ -437,11 +672,20 @@ export default function LandingPagePremium() {
       {/* Bento Grid Features */}
       <BentoSection />
 
+      {/* How it Works */}
+      <HowItWorksSection />
+
       {/* Big Statement Marquee */}
-      <MarqueeHeadline text="Förderungen automatisiert" className="bg-slate-900" />
+      <MarqueeHeadline text="Förderungen automatisiert" className="bg-slate-900/50" />
+
+      {/* Stats Section */}
+      <StatsShowcase />
 
       {/* Testimonials */}
       <TestimonialsSection />
+
+      {/* Förderungen Preview */}
+      <FoerderungenPreview />
 
       {/* Final CTA */}
       <FinalCTA />
