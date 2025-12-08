@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, Upload, Sparkles, CheckCircle } from 'lucide-
 import Navbar from '@/components/Navbar';
 
 import HeroSOTA from '@/components/landing/HeroSOTA';
+import HeroUltraModern from '@/components/landing/HeroUltraModern';
 import ScrollStory from '@/components/landing/ScrollStory';
 import QuoteSlide from '@/components/landing/QuoteSlide';
 import CTAEnhanced from '@/components/landing/CTAEnhanced';
@@ -16,16 +17,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
-      {/* Ultra-Modern Animated Backgrounds */}
-      <AnimatedBackground />
-      <FloatingOrbs />
-      <SpotlightEffect />
-      
       <div id="main-content" />
       <Navbar />
 
-      {/* Hero Section - SOTA 2025 */}
-      <HeroSOTA />
+      {/* Hero Section - ULTRA MODERN 2025 🔥 */}
+      <HeroUltraModern />
 
       {/* Scroll Story 1: Upload */}
       <ScrollStory
