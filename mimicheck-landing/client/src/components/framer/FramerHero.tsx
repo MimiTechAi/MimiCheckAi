@@ -6,7 +6,10 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+
+// Lazy load 3D component for performance
+const HeroSphere3D = lazy(() => import("./HeroSphere3D"));
 
 // Writer Effect Hook - Typewriter animation
 function useWriterEffect(
@@ -21,6 +24,8 @@ function useWriterEffect(
 
   const animate = useCallback(() => {
     const currentWord = words[currentWordIndex];
+    
+    if (!currentWord) return undefined;
 
     if (!isDeleting) {
       // Typing
@@ -97,7 +102,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as any },
     },
   };
 
@@ -105,6 +110,15 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
     <section
       className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
     >
+      {/* 3D Holographic Sphere - Background Element */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-60">
+          <Suspense fallback={<div className="w-full h-full" />}>
+            <HeroSphere3D prefersReducedMotion={prefersReducedMotion} />
+          </Suspense>
+        </div>
+      </div>
+
       {/* Content - sits above global background */}
       <motion.div
         className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-5xl pt-20"

@@ -18,6 +18,7 @@ export {
 
 // Hero Section
 export { default as FramerHero } from "./FramerHero";
+export { default as HeroSphere3D } from "./HeroSphere3D";
 
 // Trust Section
 export {
