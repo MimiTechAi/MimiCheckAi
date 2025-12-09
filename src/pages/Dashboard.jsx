@@ -29,6 +29,7 @@ import MagneticButton from "@/components/ui/MagneticButton";
 import FlowDiagram3D from "@/components/3d/FlowDiagram3D";
 import DashboardAnimation from "@/components/animations/DashboardAnimation";
 import SpotlightCard from "@/components/ui/SpotlightCard";
+import DashboardTabs from "@/components/dashboard/DashboardTabs";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -321,6 +322,19 @@ export default function Dashboard() {
                         </SpotlightCard>
                     </motion.div>
                 </div>
+            </section>
+
+            {/* Profile & Anträge Tabs - Integrated Experience */}
+            <section className="relative z-10 max-w-7xl mx-auto px-6 py-16">
+                <div className="mb-8">
+                    <h2 className="text-3xl font-bold text-white font-heading mb-2">
+                        {t('dashboard.tabs.title', 'Dein Förder-Cockpit')}
+                    </h2>
+                    <p className="text-slate-400">
+                        {t('dashboard.tabs.subtitle', 'Profil ausfüllen, AI-Analyse starten, passende Anträge finden.')}
+                    </p>
+                </div>
+                <DashboardTabs />
             </section>
 
             {/* Recent Activity - Upload Style */}

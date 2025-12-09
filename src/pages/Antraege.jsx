@@ -30,6 +30,17 @@ const CATEGORY_STYLES = {
     'health': { icon: Heart, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' }
 };
 
+// Map program names to categories
+const mapProgramToCategory = (programName) => {
+    const name = programName.toLowerCase();
+    if (name.includes('wohngeld') || name.includes('wohn') || name.includes('miete')) return 'housing';
+    if (name.includes('kindergeld') || name.includes('elterngeld') || name.includes('kind') || name.includes('familie')) return 'family';
+    if (name.includes('bafög') || name.includes('bildung') || name.includes('ausbildung') || name.includes('student')) return 'education';
+    if (name.includes('rente') || name.includes('pension') || name.includes('alter')) return 'retirement';
+    if (name.includes('pflege') || name.includes('kranken') || name.includes('gesundheit')) return 'health';
+    return 'social'; // Default: Bürgergeld, Sozialhilfe, etc.
+};
+
 export default function Antraege() {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -63,7 +74,30 @@ export default function Antraege() {
             });
 
             if (error) throw error;
-            setRecommendations(data);
+            
+            // Transform API response to expected format
+            if (data?.analysis?.eligiblePrograms) {
+                const transformedPrograms = data.analysis.eligiblePrograms.map(program => ({
+                    id: program.programName.toLowerCase().replace(/\s+/g, '-'),
+                    name: program.programName,
+                    category: mapProgramToCategory(program.programName),
+                    description: program.reasoning,
+                    confidence: program.eligibilityScore,
+                    estimatedAmount: `~${program.estimatedAmount}€`,
+                    processingTime: '1-3 Monate',
+                    downloadUrl: program.officialLink,
+                    requiredDocuments: program.requiredDocuments || [],
+                    nextSteps: program.nextSteps || []
+                }));
+                
+                setRecommendations({ 
+                    programs: transformedPrograms,
+                    totalBenefit: data.analysis.estimatedTotalMonthlyBenefit,
+                    recommendations: data.analysis.recommendations
+                });
+            } else {
+                throw new Error('Invalid response format');
+            }
         } catch (err) {
             console.error('Fehler beim Laden der Empfehlungen:', err);
             console.log('⚠️ Edge Function nicht verfügbar. Verwende Demo-Daten.');
