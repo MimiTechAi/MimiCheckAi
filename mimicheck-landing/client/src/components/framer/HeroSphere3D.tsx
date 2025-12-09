@@ -15,10 +15,39 @@
  * - Material: Single MeshDistortMaterial with emissive
  */
 
-import { useRef, useMemo, Suspense } from "react";
+import { useRef, useMemo, Suspense, Component, ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { MeshDistortMaterial, Sphere, Environment } from "@react-three/drei";
 import * as THREE from "three";
+
+/**
+ * Error Boundary for 3D Canvas
+ * Catches and handles WebGL/Three.js errors gracefully
+ */
+class Canvas3DErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; fallback: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  override componentDidCatch(error: Error, errorInfo: any) {
+    console.error("3D Canvas Error:", error, errorInfo);
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 interface AnimatedSphereProps {
   prefersReducedMotion: boolean | null;
@@ -193,21 +222,23 @@ export default function HeroSphere3D({
 
   return (
     <div className={`w-full h-full ${className}`}>
-      <Suspense fallback={<LoadingFallback />}>
-        <Canvas {...canvasSettings}>
-          {/* Lighting setup */}
-          <Lights />
-          
-          {/* Environment map for reflections (subtle) */}
-          <Environment preset="city" />
-          
-          {/* Main animated sphere */}
-          <AnimatedSphere prefersReducedMotion={prefersReducedMotion} />
-          
-          {/* Fog for depth (optional, very subtle) */}
-          <fog attach="fog" args={["#050505", 8, 15]} />
-        </Canvas>
-      </Suspense>
+      <Canvas3DErrorBoundary fallback={<LoadingFallback />}>
+        <Suspense fallback={<LoadingFallback />}>
+          <Canvas {...canvasSettings}>
+            {/* Lighting setup */}
+            <Lights />
+            
+            {/* Environment map for reflections (subtle) */}
+            <Environment preset="city" />
+            
+            {/* Main animated sphere */}
+            <AnimatedSphere prefersReducedMotion={prefersReducedMotion} />
+            
+            {/* Fog for depth (optional, very subtle) */}
+            <fog attach="fog" args={["#050505", 8, 15]} />
+          </Canvas>
+        </Suspense>
+      </Canvas3DErrorBoundary>
     </div>
   );
 }
