@@ -281,3 +281,106 @@ textarea:focus {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+}
+
+/* ============================================
+   RTL (Right-to-Left) Language Support
+   For Arabic, Hebrew, Persian, Urdu
+   ============================================ */
+
+/* Base RTL direction */
+html[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Flip flex directions for RTL */
+html.rtl .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Flip margins and paddings */
+html.rtl .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+html.rtl .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* Flip icons that indicate direction */
+html.rtl .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Sidebar adjustments for RTL */
+html.rtl aside {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+html.rtl aside.translate-x-full {
+  transform: translateX(100%);
+}
+
+html.rtl aside.-translate-x-full {
+  transform: translateX(0);
+}
+
+/* Dropdown menu alignment for RTL */
+html.rtl [data-radix-popper-content-wrapper] {
+  text-align: right;
+}
+
+/* Form inputs for RTL */
+html.rtl input,
+html.rtl textarea,
+html.rtl select {
+  text-align: right;
+}
+
+/* Navigation items for RTL */
+html.rtl nav a {
+  flex-direction: row-reverse;
+}
+
+/* Card content alignment for RTL */
+html.rtl .card-content {
+  text-align: right;
+}
+
+/* Progress bars for RTL (should go right to left) */
+html.rtl .progress-bar {
+  direction: rtl;
+}
+
+/* Tables for RTL */
+html.rtl table {
+  direction: rtl;
+}
+
+html.rtl th,
+html.rtl td {
+  text-align: right;
+}
+
+/* Breadcrumbs for RTL */
+html.rtl .breadcrumb {
+  flex-direction: row-reverse;
+}
+
+/* Notification badges position for RTL */
+html.rtl .notification-badge {
+  left: auto;
+  right: -0.25rem;
+}
+
+/* Scrollbar position for RTL */
+html.rtl ::-webkit-scrollbar {
+  direction: rtl;
+}

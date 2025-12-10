@@ -151,17 +151,24 @@ export default function Layout({ children }) {
                                         {i18n.language}
                                     </button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent className="bg-slate-900 border-white/10 text-slate-200" align="end">
+                                <DropdownMenuContent className="bg-slate-900 border-white/10 text-slate-200 max-h-[320px] overflow-y-auto" align="end">
                                     {[
-                                        { code: 'de', label: 'Deutsch' },
-                                        { code: 'en', label: 'English' },
-                                        { code: 'tr', label: 'Türkçe' },
+                                        { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+                                        { code: 'en', label: 'English', flag: '🇬🇧' },
+                                        { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+                                        { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+                                        { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+                                        { code: 'pl', label: 'Polski', flag: '🇵🇱' },
+                                        { code: 'es', label: 'Español', flag: '🇪🇸' },
+                                        { code: 'pt', label: 'Português', flag: '🇵🇹' },
+                                        { code: 'it', label: 'Italiano', flag: '🇮🇹' },
                                     ].map((lang) => (
                                         <DropdownMenuItem
                                             key={lang.code}
                                             onClick={() => i18n.changeLanguage(lang.code)}
-                                            className="cursor-pointer"
+                                            className={`cursor-pointer flex gap-3 ${i18n.language === lang.code ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-white/5'}`}
                                         >
+                                            <span className="text-base">{lang.flag}</span>
                                             <span className="uppercase font-bold text-xs w-6 text-slate-500">{lang.code}</span>
                                             <span>{lang.label}</span>
                                         </DropdownMenuItem>
@@ -367,17 +374,24 @@ export default function Layout({ children }) {
                                     {i18n.language}
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="bg-slate-900 border-white/10 text-slate-200 max-h-[300px] overflow-y-auto" align="start">
+                            <DropdownMenuContent className="bg-slate-900 border-white/10 text-slate-200 max-h-[320px] overflow-y-auto" align="start">
                                 {[
-                                    { code: 'de', label: 'Deutsch' },
-                                    { code: 'en', label: 'English' },
-                                    { code: 'tr', label: 'Türkçe' },
+                                    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+                                    { code: 'en', label: 'English', flag: '🇬🇧' },
+                                    { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+                                    { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+                                    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+                                    { code: 'pl', label: 'Polski', flag: '🇵🇱' },
+                                    { code: 'es', label: 'Español', flag: '🇪🇸' },
+                                    { code: 'pt', label: 'Português', flag: '🇵🇹' },
+                                    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
                                 ].map((lang) => (
                                     <DropdownMenuItem
                                         key={lang.code}
                                         onClick={() => i18n.changeLanguage(lang.code)}
                                         className={`cursor-pointer flex gap-3 ${i18n.language === lang.code ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-white/5'}`}
                                     >
+                                        <span className="text-base">{lang.flag}</span>
                                         <span className="uppercase font-bold text-xs w-6 text-slate-500">{lang.code}</span>
                                         <span>{lang.label}</span>
                                     </DropdownMenuItem>
