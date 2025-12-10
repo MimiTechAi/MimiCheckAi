@@ -279,18 +279,18 @@ export default function Lebenslagen() {
                 onCancel={() => navigate(createPageUrl('ProfilSeite'))}
             />
             <div className={`${showConsent ? 'opacity-20 blur-sm pointer-events-none' : ''}`}>
-                <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div className="flex items-start gap-3 mb-6 pt-12 lg:pt-0">
                     <Button
                         variant="outline"
                         size="icon"
                         onClick={() => navigate(createPageUrl("ProfilSeite"))}
-                        className="shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0 mt-1 sm:mt-0"
+                        className="shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0 h-10 w-10"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <div className="flex-1 min-w-0">
-                        <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-slate-800 dark:text-white truncate">{t('lebenslagenPage.title')}</h1>
-                        <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 mt-1 sm:mt-2 line-clamp-2">
+                        <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-slate-800 dark:text-white">{t('lebenslagenPage.title')}</h1>
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
                             {t('lebenslagenPage.subtitle')}
                         </p>
                     </div>
@@ -317,10 +317,11 @@ export default function Lebenslagen() {
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
-                        <div className="flex items-center gap-2 sm:gap-4 order-2 sm:order-1">
-                            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
+                    {/* Desktop Save Button */}
+                    <div className="hidden sm:flex justify-between items-center gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                                 {t('lebenslagenPage.autoSave')}
                             </span>
                         </div>
@@ -328,44 +329,54 @@ export default function Lebenslagen() {
                             type="submit" 
                             disabled={isSaving || saveSuccess} 
                             size="lg" 
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full sm:w-auto order-1 sm:order-2"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                         >
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {saveSuccess && <Check className="mr-2 h-4 w-4" />}
                             {isSaving ? t('lebenslagenPage.buttons.saving') : saveSuccess ? t('lebenslagenPage.buttons.saved') : t('lebenslagenPage.buttons.save')}
                         </Button>
                     </div>
+                    
+                    {/* Mobile: Auto-save indicator only */}
+                    <div className="sm:hidden flex items-center gap-2 mb-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                            {t('lebenslagenPage.autoSave')}
+                        </span>
+                    </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        {/* Mobile: Horizontal scroll tabs */}
-                        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-2 sm:pb-0">
-                            <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl min-w-max sm:min-w-0 gap-1">
-                                <TabsTrigger value="persoenlich" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                                    <span className="sm:hidden">👤</span>
-                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.personal')}</span>
-                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.personal')}</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="wohnen" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                                    <span className="sm:hidden">🏠</span>
-                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.living')}</span>
-                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.living')}</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="finanzen" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                                    <span className="sm:hidden">💰</span>
-                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.finance')}</span>
-                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.finance')}</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="behoerden" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                                    <span className="sm:hidden">🏛️</span>
-                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.authorities')}</span>
-                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.authorities')}</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="dsgvo" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
-                                    <span className="sm:hidden">🔒</span>
-                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.privacy')}</span>
-                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.privacy')}</span>
-                                </TabsTrigger>
-                            </TabsList>
+                        {/* Mobile: Horizontal scroll tabs - Sticky */}
+                        <div className="sticky top-0 z-40 -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 sm:pb-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg sm:bg-transparent sm:backdrop-blur-none">
+                            <div className="overflow-x-auto scrollbar-hide">
+                                <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl min-w-max sm:min-w-0 gap-1">
+                                    <TabsTrigger value="persoenlich" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">
+                                        <span className="text-base mr-1.5">👤</span>
+                                        <span className="hidden sm:inline">{t('lebenslagenPage.tabs.personal')}</span>
+                                        <span className="sm:hidden">{t('lebenslagenPage.tabs.personal')}</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="wohnen" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">
+                                        <span className="text-base mr-1.5">🏠</span>
+                                        <span className="hidden sm:inline">{t('lebenslagenPage.tabs.living')}</span>
+                                        <span className="sm:hidden">{t('lebenslagenPage.tabs.living')}</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="finanzen" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">
+                                        <span className="text-base mr-1.5">💰</span>
+                                        <span className="hidden sm:inline">{t('lebenslagenPage.tabs.finance')}</span>
+                                        <span className="sm:hidden">{t('lebenslagenPage.tabs.finance')}</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="behoerden" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">
+                                        <span className="text-base mr-1.5">🏛️</span>
+                                        <span className="hidden sm:inline">{t('lebenslagenPage.tabs.authorities')}</span>
+                                        <span className="sm:hidden">{t('lebenslagenPage.tabs.authorities')}</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="dsgvo" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">
+                                        <span className="text-base mr-1.5">🔒</span>
+                                        <span className="hidden sm:inline">{t('lebenslagenPage.tabs.privacy')}</span>
+                                        <span className="sm:hidden">{t('lebenslagenPage.tabs.privacy')}</span>
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
                         </div>
 
                         <TabsContent value="persoenlich" className="space-y-6 mt-8">
@@ -1111,10 +1122,24 @@ export default function Lebenslagen() {
                             </FormSection>
                         </TabsContent>
 
-                        <TabsContent value="dsgvo" className="space-y-6 mt-8">
+                        <TabsContent value="dsgvo" className="space-y-6 mt-8 pb-24 sm:pb-0">
                             <DsgvoActions />
                         </TabsContent>
                     </Tabs>
+                    
+                    {/* Mobile Floating Save Button */}
+                    <div className="sm:hidden fixed bottom-6 left-4 right-4 z-50">
+                        <Button 
+                            type="submit" 
+                            disabled={isSaving || saveSuccess} 
+                            size="lg" 
+                            className="w-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/30 rounded-2xl"
+                        >
+                            {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                            {saveSuccess && <Check className="mr-2 h-5 w-5" />}
+                            {isSaving ? t('lebenslagenPage.buttons.saving') : saveSuccess ? t('lebenslagenPage.buttons.saved') : t('lebenslagenPage.buttons.save')}
+                        </Button>
+                    </div>
                 </form>
             </div>
         </>

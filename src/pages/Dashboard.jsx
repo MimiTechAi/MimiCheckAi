@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { User } from "@/api/entities";
 import { Abrechnung } from "@/api/entities";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import LoadingState from "@/components/ui/LoadingState";
+// LoadingState removed - using inline loading
 import ErrorState from "@/components/ui/ErrorState";
 import TypingHeadline from "@/components/ui/TypingHeadline";
 import MagneticButton from "@/components/ui/MagneticButton";
@@ -58,7 +58,7 @@ export default function Dashboard() {
             );
             
             const currentUser = await Promise.race([userPromise, timeoutPromise]);
-            console.log('Dashboard: User loaded:', currentUser?.email || 'null');
+            
             setUser(currentUser);
 
             // Abrechnungen laden (mit Timeout)
@@ -188,22 +188,22 @@ export default function Dashboard() {
                 </Suspense>
             </div>
 
-            {/* Hero Section */}
-            <section ref={heroRef} className="relative pt-20 pb-32 overflow-hidden">
-                <div className="hero-content relative z-10 max-w-7xl mx-auto px-6 text-center">
+            {/* Hero Section - Mobile Optimized */}
+            <section ref={heroRef} className="relative pt-16 sm:pt-20 pb-16 sm:pb-32 overflow-hidden">
+                <div className="hero-content relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
                         {/* Pre-Headline Badge - Upload Style */}
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-6">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-4 sm:mb-6">
                             <ShieldCheck className="w-3 h-3" />
                             <span>{t('dashboard.hero.secure', 'Sicher & Verschlüsselt')}</span>
                         </div>
 
                         {/* Hero Headline with Typing Effect */}
-                        <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 font-heading">
+                        <h1 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter mb-4 sm:mb-6 font-heading">
                             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
                                 <TypingHeadline />
                             </span>
@@ -212,17 +212,18 @@ export default function Dashboard() {
                         </h1>
 
                         {/* Subheadline */}
-                        <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-8">
-                            {getGreeting()}{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}.<br />
+                        <p className="text-base sm:text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-6 sm:mb-8 px-2">
+                            {getGreeting()}{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}.<br className="hidden sm:block" />
+                            <span className="sm:hidden"> </span>
                             {t('dashboard.hero.subtitle', 'MiMiCheck analysiert Ihre Dokumente mit KI.')}
                         </p>
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                        {/* CTA Buttons - Mobile Stack */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 justify-center mb-8 sm:mb-16 px-2">
                             <MagneticButton
                                 onClick={() => navigate(createPageUrl("Upload"))}
                                 data-cursor-text={t('dashboard.hero.ctaUpload', 'Upload starten')}
-                                className="px-8 py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 transition-all duration-300"
+                                className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 transition-all duration-300 text-sm sm:text-base"
                             >
                                 <Plus className="w-5 h-5 mr-2 inline" />
                                 {t('dashboard.hero.ctaUpload', 'Neue Abrechnung')}
@@ -230,7 +231,7 @@ export default function Dashboard() {
                             <MagneticButton
                                 onClick={() => navigate(createPageUrl("Antraege"))}
                                 data-cursor-text={t('dashboard.hero.ctaAntraege', 'Anträge ansehen')}
-                                className="px-8 py-4 rounded-2xl font-semibold border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 text-white"
+                                className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 text-white text-sm sm:text-base"
                             >
                                 <FileText className="w-5 h-5 mr-2 inline" />
                                 {t('dashboard.hero.ctaAntraege', 'Meine Anträge')}
@@ -239,7 +240,7 @@ export default function Dashboard() {
                                 <MagneticButton
                                     onClick={() => navigate(createPageUrl("Pricing"))}
                                     data-cursor-text="Premium upgraden"
-                                    className="px-8 py-4 rounded-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 animate-pulse"
+                                    className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 animate-pulse text-sm sm:text-base"
                                 >
                                     <Sparkles className="w-5 h-5 mr-2 inline" />
                                     Premium upgraden
@@ -255,9 +256,9 @@ export default function Dashboard() {
                 <FlowDiagram3D />
             </section>
 
-            {/* Stats Grid with Spotlight Cards - Upload Style (Double Layer) */}
-            <section className="stats-grid relative z-10 max-w-7xl mx-auto px-6 py-16">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Stats Grid with Spotlight Cards - Mobile Optimized */}
+            <section className="stats-grid relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     {/* Quick Stats Cards */}
                     <motion.div className="stats-card">
                         <SpotlightCard className="h-full p-1 border-white/10 overflow-hidden" spotlightColor="rgba(59, 130, 246, 0.15)">
@@ -324,24 +325,24 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* Profile & Anträge Tabs - Integrated Experience */}
-            <section className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-white font-heading mb-2">
+            {/* Profile & Anträge Tabs - Mobile Optimized */}
+            <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+                <div className="mb-6 sm:mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-2">
                         {t('dashboard.tabs.title', 'Dein Förder-Cockpit')}
                     </h2>
-                    <p className="text-slate-400">
+                    <p className="text-sm sm:text-base text-slate-400">
                         {t('dashboard.tabs.subtitle', 'Profil ausfüllen, AI-Analyse starten, passende Anträge finden.')}
                     </p>
                 </div>
                 <DashboardTabs />
             </section>
 
-            {/* Recent Activity - Upload Style */}
-            <section className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold text-white font-heading">{t('dashboard.activity.title', 'Letzte Aktivitäten')}</h2>
-                    <Button variant="ghost" onClick={() => navigate(createPageUrl("Abrechnungen"))} className="text-slate-400 hover:text-white">
+            {/* Recent Activity - Mobile Optimized */}
+            <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading">{t('dashboard.activity.title', 'Letzte Aktivitäten')}</h2>
+                    <Button variant="ghost" onClick={() => navigate(createPageUrl("Abrechnungen"))} className="text-slate-400 hover:text-white w-full sm:w-auto justify-center sm:justify-start">
                         {t('dashboard.activity.viewAll', 'Alle anzeigen')} <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                 </div>

@@ -265,18 +265,18 @@ export default function ProfilSeite() {
   };
 
   return (
-    <div className="min-h-full bg-slate-950 text-white p-3 sm:p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-full bg-slate-950 text-white px-4 py-4 sm:p-6 pb-24 lg:pb-6">
+      <div className="max-w-6xl mx-auto pt-12 lg:pt-0">
         {/* Header */}
-        <div className="mb-4 sm:mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 mb-2">
             <Shield size={14} className="text-cyan-400" />
             <span className="text-[10px] sm:text-xs text-cyan-300">EU AI Act & DSGVO konform</span>
           </div>
-          <h1 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
             Mein Profil
           </h1>
-          <p className="text-white/60 text-xs sm:text-base mt-1 sm:mt-2">Einmal erfassen – alle Anträge ausfüllen.</p>
+          <p className="text-white/60 text-sm sm:text-base mt-2">Einmal erfassen – alle Anträge ausfüllen.</p>
         </div>
 
         {/* Save Message */}
@@ -287,12 +287,12 @@ export default function ProfilSeite() {
         )}
 
         {/* Progress Bar */}
-        <div className="mb-4 sm:mb-8 p-3 sm:p-4 rounded-xl bg-white/5 border border-white/10">
-          <div className="flex justify-between mb-2">
-            <span className="text-xs sm:text-sm text-white/60">Profil-Vollständigkeit</span>
-            <span className="text-xs sm:text-sm font-bold text-cyan-400">{profileCompleteness}%</span>
+        <div className="mb-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+          <div className="flex justify-between mb-3">
+            <span className="text-sm text-white/60">Profil-Vollständigkeit</span>
+            <span className="text-sm font-bold text-cyan-400">{profileCompleteness}%</span>
           </div>
-          <div className="h-1.5 sm:h-2 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <motion.div 
               className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500"
               initial={{ width: 0 }}
@@ -302,17 +302,17 @@ export default function ProfilSeite() {
           </div>
         </div>
 
-        {/* Mobile Section Selector */}
-        <div className="lg:hidden mb-4">
+        {/* Mobile Section Selector - Sticky */}
+        <div className="lg:hidden mb-6 sticky top-0 z-40 -mx-4 px-4 py-3 bg-slate-950/95 backdrop-blur-lg">
           <button
             onClick={() => setIsMobileNavOpen(true)}
-            className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl bg-gradient-to-r from-cyan-500/15 to-teal-500/10 border border-cyan-500/30"
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-cyan-500/15 to-teal-500/10 border border-cyan-500/30 active:scale-[0.98] transition-transform"
           >
             <div className="flex items-center gap-3">
-              <span className="text-lg">{currentSection?.emoji}</span>
-              <span className="font-medium text-sm sm:text-base">{currentSection?.label}</span>
+              <span className="text-2xl">{currentSection?.emoji}</span>
+              <span className="font-semibold text-base">{currentSection?.label}</span>
             </div>
-            <ChevronDown size={20} className="text-cyan-400" />
+            <ChevronDown size={24} className="text-cyan-400" />
           </button>
         </div>
 
@@ -364,7 +364,7 @@ export default function ProfilSeite() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block lg:col-span-1">
             <nav className="space-y-1 sticky top-4">
@@ -388,35 +388,72 @@ export default function ProfilSeite() {
 
           {/* Content Area */}
           <div className="lg:col-span-3">
-            <div className="p-4 sm:p-6 rounded-2xl bg-white/5 border border-white/10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center">
-                    <Icon size={16} className="text-white sm:hidden" />
-                    <Icon size={20} className="text-white hidden sm:block" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="p-5 sm:p-6 rounded-2xl bg-white/5 border border-white/10"
+              >
+                {/* Section Header - Mobile optimized */}
+                <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                      <Icon size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl font-bold">{currentSection?.label}</h2>
+                      <p className="text-xs text-white/50">Pflichtfelder mit * markiert</p>
+                    </div>
                   </div>
-                  <h2 className="text-base sm:text-xl font-semibold">{currentSection?.label}</h2>
                 </div>
-                <button 
-                  onClick={handleSave}
-                  disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
-                  className="w-full sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl font-medium flex items-center justify-center gap-2 text-sm bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed hover:from-cyan-400 hover:to-teal-400 transition-all">
-                  {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  {isSaving ? 'Speichern...' : 'Speichern'}
-                </button>
-              </div>
-              {renderContent()}
-              {!profil.einwilligungen.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                  <div className="flex items-start gap-3 flex-1">
-                    <AlertCircle size={18} className="text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-xs sm:text-sm text-amber-200"><strong>Hinweis:</strong> Bitte akzeptieren Sie im Bereich &quot;Datenschutz&quot; die Datenverarbeitung.</p>
+                
+                {renderContent()}
+                
+                {/* DSGVO Warning */}
+                {!profil.einwilligungen.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
+                  <div className="mt-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle size={20} className="text-amber-400 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-amber-200 font-medium mb-3">Bitte akzeptieren Sie im Bereich &quot;Datenschutz&quot; die Datenverarbeitung.</p>
+                        <button 
+                          onClick={() => setActiveSection('einwilligungen')} 
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-200 text-sm font-medium hover:bg-amber-500/30 transition-colors"
+                        >
+                          Zu Datenschutz →
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <button onClick={() => setActiveSection('einwilligungen')} className="w-full sm:w-auto px-3 py-2 rounded-lg bg-amber-500/20 text-amber-200 text-xs sm:text-sm hover:bg-amber-500/30 whitespace-nowrap">
-                    Zu Datenschutz →
-                  </button>
-                </div>
-              )}
+                )}
+              </motion.div>
+            </AnimatePresence>
+            
+            {/* Floating Save Button - Mobile */}
+            <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
+              <button 
+                onClick={handleSave}
+                disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
+                className="w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-3 text-base bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-cyan-500/30 active:scale-[0.98] transition-all"
+              >
+                {isSaving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
+                {isSaving ? 'Wird gespeichert...' : 'Änderungen speichern'}
+              </button>
+            </div>
+            
+            {/* Desktop Save Button */}
+            <div className="hidden lg:flex justify-end mt-6">
+              <button 
+                onClick={handleSave}
+                disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
+                className="px-6 py-3 rounded-xl font-medium flex items-center gap-2 text-sm bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 disabled:cursor-not-allowed hover:from-cyan-400 hover:to-teal-400 transition-all"
+              >
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                {isSaving ? 'Speichern...' : 'Änderungen speichern'}
+              </button>
             </div>
           </div>
         </div>
