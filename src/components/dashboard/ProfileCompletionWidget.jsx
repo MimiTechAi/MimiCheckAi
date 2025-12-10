@@ -1,37 +1,41 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useUserProfile } from '@/components/UserProfileContext';
 import { Button } from '@/components/ui/button';
 import SpotlightCard from '@/components/ui/SpotlightCard';
 import {
   User, MapPin, CreditCard, Baby, Briefcase, Home,
-  CheckCircle, AlertCircle, ChevronRight, Sparkles, X
+  CheckCircle, AlertCircle, ChevronRight, Sparkles, ChevronDown,
+  Heart, Users, PiggyBank
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import ProfileQuickEdit from './ProfileQuickEdit';
+import { useTranslation } from 'react-i18next';
 
 const PROFILE_SECTIONS = [
-  { id: 'persoenlich', label: 'Persönliche Daten', icon: User, fields: ['vorname', 'nachname', 'geburtsdatum'], priority: 1 },
-  { id: 'kontakt', label: 'Adresse', icon: MapPin, fields: ['strasse', 'plz', 'ort'], priority: 2 },
-  { id: 'einkommen', label: 'Einkommen', icon: Briefcase, fields: ['monatliches_nettoeinkommen', 'beschaeftigungsstatus'], priority: 3 },
-  { id: 'wohnung', label: 'Wohnsituation', icon: Home, fields: ['wohnart', 'monatliche_miete', 'haushaltsmitglieder_anzahl'], priority: 4 },
-  { id: 'kinder', label: 'Kinder', icon: Baby, fields: ['kinder_anzahl'], priority: 5 },
-  { id: 'bank', label: 'Bankverbindung', icon: CreditCard, fields: ['iban', 'kontoinhaber'], priority: 6 }
+  { id: 'persoenlich', labelKey: 'personal', icon: User, fields: ['vorname', 'nachname', 'geburtsdatum'], priority: 1 },
+  { id: 'kontakt', labelKey: 'address', icon: MapPin, fields: ['strasse', 'plz', 'ort'], priority: 2 },
+  { id: 'einkommen', labelKey: 'income', icon: Briefcase, fields: ['monatliches_nettoeinkommen', 'beschaeftigungsstatus'], priority: 3 },
+  { id: 'wohnung', labelKey: 'living', icon: Home, fields: ['wohnart', 'monatliche_miete', 'haushaltsmitglieder_anzahl'], priority: 4 },
+  { id: 'kinder', labelKey: 'children', icon: Baby, fields: ['kinder_anzahl'], priority: 5 },
+  { id: 'bank', labelKey: 'bank', icon: CreditCard, fields: ['iban', 'kontoinhaber'], priority: 6 },
+  { id: 'versicherung', labelKey: 'insurance', icon: Heart, fields: ['krankenversicherung_art', 'krankenkasse_name'], priority: 7 },
+  { id: 'partner', labelKey: 'partner', icon: Users, fields: ['partner_vorname', 'partner_nachname'], priority: 8 },
+  { id: 'vermoegen', labelKey: 'assets', icon: PiggyBank, fields: ['gesamtvermoegen'], priority: 9 }
 ];
 
 export default function ProfileCompletionWidget({ onAnalysisReady }) {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user: userProfile, updateUserProfile, profileVersion } = useUserProfile();
   const [completionData, setCompletionData] = useState({ overall: 0, sections: [] });
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [activeSection, setActiveSection] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  useEffect(() => {
-    if (userProfile) {
-      calculateCompletion();
-    }
-  }, [userProfile, profileVersion]);
+  // Get translated section label
+  const getSectionLabel = useCallback((labelKey) => {
+    return t(`dashboard.profileWidget.sections.${labelKey}`, labelKey);
+  }, [t]);
 
   const getNestedValue = (obj, path) => {
     if (!obj) return undefined;
@@ -51,7 +55,7 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
     return current;
   };
 
-  const calculateCompletion = () => {
+  const calculateCompletion = useCallback(() => {
     const sectionResults = PROFILE_SECTIONS.map(section => {
       const filledFields = section.fields.filter(field => {
         const value = getNestedValue(userProfile, field);
@@ -60,6 +64,7 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
       
       return {
         ...section,
+        label: getSectionLabel(section.labelKey),
         filled: filledFields.length,
         total: section.fields.length,
         percentage: Math.round((filledFields.length / section.fields.length) * 100),
@@ -78,14 +83,19 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
     setCompletionData({
       overall,
       sections: sectionResults,
-      isReady: overall >= 60 // Mindestens 60% für AI-Analyse
+      isReady: overall >= 60
     });
 
-    // Callback wenn Profil bereit für Analyse
     if (overall >= 60 && onAnalysisReady) {
       onAnalysisReady(true);
     }
-  };
+  }, [userProfile, getSectionLabel, onAnalysisReady]);
+
+  useEffect(() => {
+    if (userProfile) {
+      calculateCompletion();
+    }
+  }, [userProfile, profileVersion, calculateCompletion]);
 
   const handleSectionClick = (section) => {
     setActiveSection(section);
@@ -100,40 +110,48 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
   const incompleteSections = completionData.sections.filter(s => !s.isComplete);
   const nextSection = incompleteSections.sort((a, b) => a.priority - b.priority)[0];
 
+  // Visible sections based on expansion state (mobile: show 4, expanded: all)
+  const visibleSections = isExpanded 
+    ? completionData.sections 
+    : completionData.sections.slice(0, 6);
+  const hasMoreSections = completionData.sections.length > 6;
+
   return (
     <>
       <SpotlightCard 
-        className="p-6 border-white/10" 
+        className="p-4 sm:p-6 border-white/10" 
         spotlightColor={completionData.overall >= 60 ? "rgba(16, 185, 129, 0.15)" : "rgba(249, 115, 22, 0.15)"}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl ${completionData.overall >= 60 ? 'bg-emerald-500/10' : 'bg-orange-500/10'}`}>
+        {/* Header - Mobile optimized */}
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className={`p-2 sm:p-3 rounded-xl ${completionData.overall >= 60 ? 'bg-emerald-500/10' : 'bg-orange-500/10'}`}>
               {completionData.overall >= 60 ? (
-                <Sparkles className="w-6 h-6 text-emerald-400" />
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
               ) : (
-                <AlertCircle className="w-6 h-6 text-orange-400" />
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
               )}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">Profil-Status</h3>
-              <p className="text-sm text-slate-400">
+              <h3 className="text-base sm:text-lg font-bold text-white">
+                {t('dashboard.profileWidget.status', 'Profil-Status')}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-400">
                 {completionData.overall >= 60 
-                  ? 'Bereit für AI-Analyse' 
-                  : 'Vervollständige dein Profil'}
+                  ? t('dashboard.profileWidget.readyForAnalysis', 'Bereit für AI-Analyse')
+                  : t('dashboard.profileWidget.completeYourProfile', 'Vervollständige dein Profil')}
               </p>
             </div>
           </div>
           <div className="text-right">
-            <span className={`text-3xl font-bold ${completionData.overall >= 60 ? 'text-emerald-400' : 'text-orange-400'}`}>
+            <span className={`text-2xl sm:text-3xl font-bold ${completionData.overall >= 60 ? 'text-emerald-400' : 'text-orange-400'}`}>
               {completionData.overall}%
             </span>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-3 bg-white/5 rounded-full overflow-hidden mb-6">
+        <div className="h-2 sm:h-3 bg-white/5 rounded-full overflow-hidden mb-4 sm:mb-6">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${completionData.overall}%` }}
@@ -146,9 +164,9 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
           />
         </div>
 
-        {/* Section Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          {completionData.sections.map((section) => {
+        {/* Section Grid - Responsive with collapsible */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          {visibleSections.map((section) => {
             const Icon = section.icon;
             return (
               <motion.button
@@ -156,42 +174,55 @@ export default function ProfileCompletionWidget({ onAnalysisReady }) {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSectionClick(section)}
-                className={`p-4 rounded-xl border transition-all text-left ${
+                className={`p-3 sm:p-4 rounded-xl border transition-all text-left ${
                   section.isComplete
                     ? 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500/50'
                     : 'bg-white/5 border-white/10 hover:border-white/20'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <Icon className={`w-4 h-4 ${section.isComplete ? 'text-emerald-400' : 'text-slate-400'}`} />
-                  {section.isComplete && <CheckCircle className="w-3 h-3 text-emerald-400" />}
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${section.isComplete ? 'text-emerald-400' : 'text-slate-400'}`} />
+                  {section.isComplete && <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400" />}
                 </div>
-                <p className={`text-sm font-medium ${section.isComplete ? 'text-emerald-300' : 'text-white'}`}>
+                <p className={`text-xs sm:text-sm font-medium truncate ${section.isComplete ? 'text-emerald-300' : 'text-white'}`}>
                   {section.label}
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {section.filled}/{section.total} Felder
+                <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1">
+                  {section.filled}/{section.total} {t('dashboard.profileWidget.fields', 'Felder')}
                 </p>
               </motion.button>
             );
           })}
         </div>
 
+        {/* Expand/Collapse Button for mobile */}
+        {hasMoreSections && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-center gap-2 py-2 mb-4 text-xs sm:text-sm text-slate-400 hover:text-white transition-colors"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+            {isExpanded 
+              ? t('common.showLess', 'Weniger anzeigen')
+              : t('common.showMore', `+${completionData.sections.length - 6} mehr`)}
+          </button>
+        )}
+
         {/* CTA */}
         {completionData.overall < 100 && nextSection && (
           <Button
             onClick={() => handleSectionClick(nextSection)}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm sm:text-base"
           >
             <nextSection.icon className="w-4 h-4 mr-2" />
-            {nextSection.label} ausfüllen
+            {t('dashboard.profileWidget.fillSection', '{{section}} ausfüllen', { section: nextSection.label })}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         )}
 
         {completionData.overall >= 60 && completionData.overall < 100 && (
-          <p className="text-xs text-center text-slate-500 mt-4">
-            Tipp: Je vollständiger dein Profil, desto bessere Empfehlungen!
+          <p className="text-[10px] sm:text-xs text-center text-slate-500 mt-3 sm:mt-4">
+            {t('dashboard.profileWidget.tip', 'Tipp: Je vollständiger dein Profil, desto bessere Empfehlungen!')}
           </p>
         )}
       </SpotlightCard>
