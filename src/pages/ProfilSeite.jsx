@@ -265,8 +265,8 @@ export default function ProfilSeite() {
   };
 
   return (
-    <div className="min-h-full bg-slate-950 text-white px-4 py-4 sm:p-6 pb-24 lg:pb-6">
-      <div className="max-w-6xl mx-auto pt-12 lg:pt-0">
+    <div className="min-h-full bg-slate-950 text-white px-4 py-4 sm:p-6 pb-28 lg:pb-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -302,8 +302,8 @@ export default function ProfilSeite() {
           </div>
         </div>
 
-        {/* Mobile Section Selector - Sticky */}
-        <div className="lg:hidden mb-6 sticky top-0 z-40 -mx-4 px-4 py-3 bg-slate-950/95 backdrop-blur-lg">
+        {/* Mobile Section Selector */}
+        <div className="lg:hidden mb-6">
           <button
             onClick={() => setIsMobileNavOpen(true)}
             className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-cyan-500/15 to-teal-500/10 border border-cyan-500/30 active:scale-[0.98] transition-transform"

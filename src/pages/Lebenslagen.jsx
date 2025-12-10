@@ -279,7 +279,7 @@ export default function Lebenslagen() {
                 onCancel={() => navigate(createPageUrl('ProfilSeite'))}
             />
             <div className={`${showConsent ? 'opacity-20 blur-sm pointer-events-none' : ''}`}>
-                <div className="flex items-start gap-3 mb-6 pt-12 lg:pt-0">
+                <div className="flex items-start gap-3 mb-6">
                     <Button
                         variant="outline"
                         size="icon"
@@ -346,8 +346,8 @@ export default function Lebenslagen() {
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        {/* Mobile: Horizontal scroll tabs - Sticky */}
-                        <div className="sticky top-0 z-40 -mx-4 px-4 sm:mx-0 sm:px-0 pb-3 sm:pb-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg sm:bg-transparent sm:backdrop-blur-none">
+                        {/* Mobile: Horizontal scroll tabs */}
+                        <div className="-mx-4 px-4 sm:mx-0 sm:px-0 pb-3 sm:pb-0">
                             <div className="overflow-x-auto scrollbar-hide">
                                 <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl min-w-max sm:min-w-0 gap-1">
                                     <TabsTrigger value="persoenlich" className="text-xs sm:text-sm px-4 py-2.5 sm:px-4 whitespace-nowrap rounded-xl data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-md transition-all">

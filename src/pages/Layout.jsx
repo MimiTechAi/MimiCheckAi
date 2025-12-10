@@ -242,8 +242,16 @@ export default function Layout({ children }) {
     // ============================================================
     return (
         <div className="min-h-screen bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
-            {/* SIDEBAR - Dark Theme */}
-            <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-72 bg-slate-900/50 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+            
+            {/* SIDEBAR - Dark Theme - Hidden on mobile by default */}
+            <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 backdrop-blur-xl border-r border-white/5 flex flex-col transition-transform duration-300 ease-out lg:static lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
                 }`}>
                 {/* Logo Area */}
                 <div className="p-8">
@@ -404,17 +412,24 @@ export default function Layout({ children }) {
             </aside>
 
             {/* MAIN CONTENT WRAPPER - Dark Theme Container */}
-            <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen overflow-hidden">
-                <main className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border border-white/5 backdrop-blur-sm">
+            <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen overflow-hidden w-full">
+                <main className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm">
 
-                    {/* Mobile Menu Toggle */}
-                    <div className="lg:hidden absolute top-4 left-4 z-50">
+                    {/* Mobile Header Bar */}
+                    <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/5">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 bg-slate-800/80 backdrop-blur-md text-white rounded-lg border border-white/10"
+                            className="p-2.5 bg-slate-800 text-white rounded-xl border border-white/10 active:scale-95 transition-transform"
                         >
-                            <Menu className="w-6 h-6" />
+                            <Menu className="w-5 h-5" />
                         </button>
+                        <Link to="/" className="flex items-center gap-2">
+                            <img src="/logo.png" alt="MiMiCheck" className="h-7 w-auto" />
+                            <span className="text-lg font-bold text-white">
+                                MiMi<span className="text-emerald-400">Check</span>
+                            </span>
+                        </Link>
+                        <div className="w-10" /> {/* Spacer for centering */}
                     </div>
 
                     {/* Page Content */}
