@@ -5,35 +5,38 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { useMemo } from "react";
+import { useTranslation } from "@/i18n";
 
 export interface TrustMarqueeProps {
-  title?: string;
   speed?: number;
   className?: string;
 }
 
-// Simple text-based trust items - clean, no icons
-const trustItems = [
-  "Wohngeld",
-  "BAföG",
-  "Kindergeld",
-  "Elterngeld",
-  "Bürgergeld",
-  "Kinderzuschlag",
-  "Wohnungsbauprämie",
-  "Grundsicherung",
-];
-
 export default function TrustMarquee({
-  title = "Über 50+ Förderungen automatisch prüfen",
   speed = 30,
   className = "",
 }: TrustMarqueeProps) {
   const prefersReducedMotion = useReducedMotion();
+  const { t } = useTranslation();
 
-  const duplicatedItems = useMemo(() => {
+  // Get trust items from translations
+  const trustItemsRaw = t("trustMarquee.items");
+  const trustItems = Array.isArray(trustItemsRaw)
+    ? trustItemsRaw
+    : [
+        "Wohngeld",
+        "BAföG",
+        "Kindergeld",
+        "Elterngeld",
+        "Bürgergeld",
+        "Kinderzuschlag",
+        "Wohnungsbauprämie",
+        "Grundsicherung",
+      ];
+
+  const duplicatedItems = useMemo((): string[] => {
     return [...trustItems, ...trustItems, ...trustItems];
-  }, []);
+  }, [trustItems]);
 
   return (
     <section className={`py-16 bg-[#0a0a0a] overflow-hidden ${className}`}>
@@ -46,7 +49,7 @@ export default function TrustMarquee({
           transition={{ duration: 0.6 }}
           className="text-center text-sm text-white/40 mb-10"
         >
-          {title}
+          {t("trustMarquee.title")}
         </motion.p>
 
         {/* Marquee */}

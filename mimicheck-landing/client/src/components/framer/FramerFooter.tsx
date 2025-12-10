@@ -10,6 +10,7 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Shield, Award, Bot, MapPin, Mail, ExternalLink } from "lucide-react";
+import { useTranslation } from "@/i18n";
 
 export interface FooterLink {
   label: string;
@@ -50,44 +51,73 @@ export interface FramerFooterProps {
   className?: string;
 }
 
-// Default link groups per requirements (10.2)
-const defaultLinkGroups: FooterLinkGroup[] = [
-  {
-    title: "Förderungen",
-    links: [
-      { label: "Wohngeld", href: "/auth" },
-      { label: "Kindergeld", href: "/auth" },
-      { label: "BAföG", href: "/auth" },
-      { label: "Elterngeld", href: "/auth" },
-      { label: "Bürgergeld", href: "/auth" },
-    ],
-  },
-  {
-    title: "Rechtliches",
-    links: [
-      { label: "Impressum", href: "/impressum" },
-      { label: "Datenschutz", href: "/datenschutz" },
-      { label: "AGB", href: "/agb" },
-      { label: "Barrierefreiheit", href: "/barrierefreiheit" },
-    ],
-  },
-  {
-    title: "Support",
-    links: [
-      { label: "Kontakt", href: "/contact" },
-      { label: "Hilfe & FAQ", href: "/hilfe" },
-      { label: "Anmelden", href: "/auth" },
-      { label: "KI-Transparenz", href: "/ki-transparenz" },
-    ],
-  },
-];
+// Helper to get string from translation
+const getString = (
+  t: (key: string) => string | string[],
+  key: string
+): string => {
+  const value = t(key);
+  return Array.isArray(value) ? value.join(", ") : value;
+};
 
-// Default trust badges per requirements (10.4)
-const defaultTrustBadges: TrustBadge[] = [
-  { icon: <span className="text-base">🇩🇪</span>, label: "Made in Germany" },
-  { icon: <Shield className="w-4 h-4 text-emerald-400" />, label: "DSGVO" },
-  { icon: <Bot className="w-4 h-4 text-violet-400" />, label: "EU AI Act" },
-];
+// Function to get default link groups with translations
+function getDefaultLinkGroups(
+  t: (key: string) => string | string[]
+): FooterLinkGroup[] {
+  return [
+    {
+      title: getString(t, "footer.benefits"),
+      links: [
+        { label: "Wohngeld", href: "/auth" },
+        { label: "Kindergeld", href: "/auth" },
+        { label: "BAföG", href: "/auth" },
+        { label: "Elterngeld", href: "/auth" },
+        { label: "Bürgergeld", href: "/auth" },
+      ],
+    },
+    {
+      title: getString(t, "footer.legal"),
+      links: [
+        { label: getString(t, "footer.imprint"), href: "/impressum" },
+        { label: getString(t, "footer.privacy"), href: "/datenschutz" },
+        { label: getString(t, "footer.terms"), href: "/agb" },
+        {
+          label: getString(t, "footer.accessibility"),
+          href: "/barrierefreiheit",
+        },
+      ],
+    },
+    {
+      title: getString(t, "footer.support"),
+      links: [
+        { label: getString(t, "footer.contact"), href: "/contact" },
+        { label: getString(t, "footer.help"), href: "/hilfe" },
+        { label: getString(t, "footer.login"), href: "/auth" },
+        {
+          label: getString(t, "footer.aiTransparency"),
+          href: "/ki-transparenz",
+        },
+      ],
+    },
+  ];
+}
+
+// Function to get default trust badges with translations
+function getDefaultTrustBadges(
+  t: (key: string) => string | string[]
+): TrustBadge[] {
+  return [
+    {
+      icon: <span className="text-base">🇩🇪</span>,
+      label: getString(t, "trust.madeIn"),
+    },
+    {
+      icon: <Shield className="w-4 h-4 text-emerald-400" />,
+      label: getString(t, "trust.gdpr"),
+    },
+    { icon: <Bot className="w-4 h-4 text-violet-400" />, label: "EU AI Act" },
+  ];
+}
 
 /**
  * FramerFooter - Premium footer with Framer-style design
@@ -96,16 +126,19 @@ export default function FramerFooter({
   logo = "/mimicheck-logo-medium.png",
   logoAlt = "MimiCheck Logo",
   brandName = "MimiCheck",
-  description = "Dein digitaler Assistent für Förderanträge. KI-gestützt, sicher und 100% DSGVO-konform.",
-  linkGroups = defaultLinkGroups,
-  trustBadges = defaultTrustBadges,
   companyName = "MiMi Tech Ai UG (haftungsbeschränkt)",
   address = "Lindenplatz 23, 75378 Bad Liebenzell",
   email = "info@mimicheck.de",
   className = "",
-}: FramerFooterProps) {
+}: Omit<FramerFooterProps, "description" | "linkGroups" | "trustBadges">) {
   const prefersReducedMotion = useReducedMotion();
   const currentYear = new Date().getFullYear();
+  const { t } = useTranslation();
+
+  // Get translated content
+  const description = t("footer.description");
+  const linkGroups = getDefaultLinkGroups(t);
+  const trustBadges = getDefaultTrustBadges(t);
 
   // Animation variants
   const containerVariants = {
@@ -260,8 +293,8 @@ export default function FramerFooter({
         >
           {/* Copyright Notice */}
           <p>
-            © {currentYear} {companyName.split(" (")[0]}. Alle Rechte
-            vorbehalten.
+            © {currentYear} {companyName.split(" (")[0]}.{" "}
+            {getString(t, "footer.copyright")}
           </p>
 
           {/* Additional Trust Indicator */}
@@ -271,7 +304,7 @@ export default function FramerFooter({
                 className="w-4 h-4 text-[var(--framer-emerald)]"
                 aria-hidden="true"
               />
-              <span>Trusted by 10.000+ users</span>
+              <span>{getString(t, "footer.trustedBy")}</span>
             </span>
           </div>
         </motion.div>

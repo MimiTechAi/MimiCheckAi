@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useTranslation } from "@/i18n";
 
 // Lazy load 3D component for performance
 const HeroSphere3D = lazy(() => import("./HeroSphere3D"));
@@ -24,7 +25,7 @@ function useWriterEffect(
 
   const animate = useCallback(() => {
     const currentWord = words[currentWordIndex];
-    
+
     if (!currentWord) return undefined;
 
     if (!isDeleting) {
@@ -78,15 +79,13 @@ export interface FramerHeroProps {
 
 export default function FramerHero({ className = "" }: FramerHeroProps) {
   const prefersReducedMotion = useReducedMotion();
+  const { t } = useTranslation();
 
-  // Words for the writer effect - passend für Förderanträge
-  const rotatingWords = [
-    "Geld",
-    "Wohngeld",
-    "BAföG",
-    "Kindergeld",
-    "Förderung",
-  ];
+  // Get rotating words from translations
+  const rotatingWordsRaw = t("hero.rotatingWords");
+  const rotatingWords = Array.isArray(rotatingWordsRaw)
+    ? rotatingWordsRaw
+    : ["Geld", "Wohngeld", "BAföG", "Kindergeld", "Förderung"];
   const typedWord = useWriterEffect(rotatingWords, 120, 80, 2500);
 
   const containerVariants = {
@@ -102,7 +101,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as any },
+      transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
     },
   };
 
@@ -135,12 +134,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
-          <span className="text-sm text-white/80">
-            <span className="text-emerald-400 font-semibold">
-              50+ Förderungen
-            </span>{" "}
-            automatisch prüfen
-          </span>
+          <span className="text-sm text-white/80">{t("hero.badge")}</span>
         </motion.div>
 
         {/* Headline with Writer Effect */}
@@ -149,11 +143,11 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
           className="mb-6"
         >
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
-            <span className="text-white">Hol dir dein</span>
+            <span className="text-white">{t("hero.title1")}</span>
             <br />
             <span className="relative inline-block min-w-[200px] sm:min-w-[280px] md:min-w-[350px]">
               <span className="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-                {prefersReducedMotion ? "Geld" : typedWord}
+                {prefersReducedMotion ? t("hero.titleHighlight") : typedWord}
               </span>
               {!prefersReducedMotion && (
                 <motion.span
@@ -164,7 +158,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
               )}
             </span>
             <br />
-            <span className="text-white">zurück.</span>
+            <span className="text-white">{t("hero.title2")}</span>
           </h1>
         </motion.div>
 
@@ -173,10 +167,11 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
           variants={prefersReducedMotion ? undefined : itemVariants}
           className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed"
         >
-          Finde in{" "}
-          <span className="text-emerald-400 font-medium">3 Minuten</span>{" "}
-          heraus, welche Förderungen dir zustehen –
-          <span className="text-white/70"> KI-gestützt & 100% kostenlos.</span>
+          {t("hero.subtitle")}{" "}
+          <span className="text-emerald-400 font-medium">
+            {t("hero.subtitleHighlight")}
+          </span>{" "}
+          {t("hero.subtitleEnd")}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -190,7 +185,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
             className="group w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white px-8 py-6 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:-translate-y-0.5"
           >
             <a href="/auth" className="flex items-center gap-2">
-              Jetzt Förderung prüfen
+              {t("hero.ctaPrimary")}
               <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </a>
           </Button>
@@ -201,7 +196,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
             variant="outline"
             className="w-full sm:w-auto px-8 py-6 text-base font-semibold rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10 hover:border-white/20 backdrop-blur-sm transition-all duration-300"
           >
-            <a href="#so-funktionierts">So funktioniert's</a>
+            <a href="#so-funktionierts">{t("hero.ctaSecondary")}</a>
           </Button>
         </motion.div>
 
@@ -211,19 +206,27 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
           className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto"
         >
           <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-2xl sm:text-3xl font-bold text-white">847€</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">
+              {t("stats.savings")}
+            </p>
             <p className="text-xs sm:text-sm text-white/40 mt-1">
-              Ø Ersparnis/Jahr
+              {t("stats.savingsLabel")}
             </p>
           </div>
           <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-2xl sm:text-3xl font-bold text-emerald-400">3</p>
-            <p className="text-xs sm:text-sm text-white/40 mt-1">Minuten</p>
+            <p className="text-2xl sm:text-3xl font-bold text-emerald-400">
+              {t("stats.time")}
+            </p>
+            <p className="text-xs sm:text-sm text-white/40 mt-1">
+              {t("stats.timeLabel")}
+            </p>
           </div>
           <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-2xl sm:text-3xl font-bold text-white">98%</p>
+            <p className="text-2xl sm:text-3xl font-bold text-white">
+              {t("stats.success")}
+            </p>
             <p className="text-xs sm:text-sm text-white/40 mt-1">
-              Erfolgsquote
+              {t("stats.successLabel")}
             </p>
           </div>
         </motion.div>
@@ -235,12 +238,12 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
         >
           <div className="flex items-center gap-2">
             <span className="text-yellow-400">★★★★★</span>
-            <span>4.9/5 Bewertung</span>
+            <span>{t("trust.rating")}</span>
           </div>
           <span className="hidden sm:inline text-white/20">•</span>
-          <span>DSGVO konform</span>
+          <span>{t("trust.gdpr")}</span>
           <span className="hidden sm:inline text-white/20">•</span>
-          <span className="text-emerald-400/80">Made in Germany</span>
+          <span className="text-emerald-400/80">{t("trust.madeIn")}</span>
         </motion.div>
       </motion.div>
 

@@ -61,7 +61,6 @@ export {
 export {
   default as FeaturesShowcase,
   type FeaturesShowcaseProps,
-  features,
 } from "./FeaturesShowcase";
 
 // Process Section

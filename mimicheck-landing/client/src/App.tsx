@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SupabaseAuthProvider } from "./contexts/SupabaseAuthContext";
+import { I18nProvider } from "./i18n/I18nProvider";
 import LandingFramer from "./pages/LandingFramer";
 import LandingPagePremium from "./pages/LandingPagePremium";
 import Contact from "./pages/Contact";
@@ -131,14 +132,16 @@ function PagePlaceholder({
 function App() {
   return (
     <ErrorBoundary>
-      <SupabaseAuthProvider>
-        <ThemeProvider defaultTheme="light" switchable>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ThemeProvider>
-      </SupabaseAuthProvider>
+      <I18nProvider>
+        <SupabaseAuthProvider>
+          <ThemeProvider defaultTheme="light" switchable>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </ThemeProvider>
+        </SupabaseAuthProvider>
+      </I18nProvider>
     </ErrorBoundary>
   );
 }

@@ -12,6 +12,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { useTranslation } from "@/i18n";
 
 export interface MenuItem {
   label: string;
@@ -35,13 +36,7 @@ export interface FramerNavbarProps {
   className?: string;
 }
 
-// Default menu items per requirements
-const defaultMenuItems: MenuItem[] = [
-  { label: "Home", href: "/" },
-  { label: "Über uns", href: "/about" },
-  { label: "Blog", href: "/blog" },
-  { label: "Kontakt", href: "/contact" },
-];
+// Menu items will be translated dynamically
 
 /**
  * FramerNavbar - Premium navigation with scroll effects and mobile menu
@@ -50,11 +45,22 @@ export default function FramerNavbar({
   logo = "/mimicheck-logo-nav.png",
   logoAlt = "MimiCheck Logo",
   brandName = "MimiCheck",
-  menuItems = defaultMenuItems,
-  ctaText = "Jetzt starten",
+  menuItems: customMenuItems,
+  ctaText: customCtaText,
   ctaHref = "/auth",
   className = "",
 }: FramerNavbarProps) {
+  const { t } = useTranslation();
+
+  // Use translated menu items if not provided
+  const menuItems = customMenuItems || [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.about"), href: "/about" },
+    { label: t("nav.blog"), href: "/blog" },
+    { label: t("nav.contact"), href: "/contact" },
+  ];
+
+  const ctaText = customCtaText || t("nav.cta");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const prefersReducedMotion = useReducedMotion();
