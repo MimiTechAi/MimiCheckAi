@@ -44,7 +44,7 @@ const validateMinLength = (value, min, fieldName, t) => {
     return null;
 };
 
-const validateNumber = (value, min, max, fieldName, t) => {
+const _validateNumber = (value, min, max, fieldName, t) => {
     if (value === null || value === undefined || value === '') return null;
     const num = Number(value);
     if (isNaN(num)) {
@@ -101,15 +101,15 @@ const computeProfileCompletion = (userData) => {
 
 const FormSection = ({ title, icon: Icon, children }) => (
     <Card className="shadow-xl border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/50 dark:to-blue-900/20 border-b border-slate-200/60 dark:border-slate-700/60">
-            <CardTitle className="flex items-center gap-3 text-slate-800 dark:text-white">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Icon className="w-5 h-5 text-white" />
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/50 dark:to-blue-900/20 border-b border-slate-200/60 dark:border-slate-700/60 p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 sm:gap-3 text-slate-800 dark:text-white text-base sm:text-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
-                {title}
+                <span className="truncate">{title}</span>
             </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6 p-6">{children}</CardContent>
+        <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">{children}</CardContent>
     </Card>
 );
 
@@ -123,7 +123,7 @@ export default function Lebenslagen() {
     const [validationErrors, setValidationErrors] = useState({});
     const [completionData, setCompletionData] = useState(null);
 
-    const { control, handleSubmit, reset, watch, formState: { errors }, setValue } = useForm({
+    const { control, handleSubmit, reset, watch, formState: { errors: _formErrors }, setValue: _setValue } = useForm({
         mode: 'onBlur'
     });
 
@@ -279,18 +279,18 @@ export default function Lebenslagen() {
                 onCancel={() => navigate(createPageUrl('ProfilSeite'))}
             />
             <div className={`${showConsent ? 'opacity-20 blur-sm pointer-events-none' : ''}`}>
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
                     <Button
                         variant="outline"
                         size="icon"
                         onClick={() => navigate(createPageUrl("ProfilSeite"))}
-                        className="shadow-md hover:shadow-lg transition-all duration-300"
+                        className="shadow-md hover:shadow-lg transition-all duration-300 flex-shrink-0 mt-1 sm:mt-0"
                     >
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <div className="flex-1">
-                        <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white">{t('lebenslagenPage.title')}</h1>
-                        <p className="text-base lg:text-lg text-slate-600 dark:text-slate-400 mt-2">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-slate-800 dark:text-white truncate">{t('lebenslagenPage.title')}</h1>
+                        <p className="text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-400 mt-1 sm:mt-2 line-clamp-2">
                             {t('lebenslagenPage.subtitle')}
                         </p>
                     </div>
@@ -317,14 +317,19 @@ export default function Lebenslagen() {
                 )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
+                        <div className="flex items-center gap-2 sm:gap-4 order-2 sm:order-1">
+                            <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
                                 {t('lebenslagenPage.autoSave')}
                             </span>
                         </div>
-                        <Button type="submit" disabled={isSaving || saveSuccess} size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                        <Button 
+                            type="submit" 
+                            disabled={isSaving || saveSuccess} 
+                            size="lg" 
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 w-full sm:w-auto order-1 sm:order-2"
+                        >
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {saveSuccess && <Check className="mr-2 h-4 w-4" />}
                             {isSaving ? t('lebenslagenPage.buttons.saving') : saveSuccess ? t('lebenslagenPage.buttons.saved') : t('lebenslagenPage.buttons.save')}
@@ -332,17 +337,40 @@ export default function Lebenslagen() {
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-                            <TabsTrigger value="persoenlich">{t('lebenslagenPage.tabs.personal')}</TabsTrigger>
-                            <TabsTrigger value="wohnen">{t('lebenslagenPage.tabs.living')}</TabsTrigger>
-                            <TabsTrigger value="finanzen">{t('lebenslagenPage.tabs.finance')}</TabsTrigger>
-                            <TabsTrigger value="behoerden">{t('lebenslagenPage.tabs.authorities')}</TabsTrigger>
-                            <TabsTrigger value="dsgvo">{t('lebenslagenPage.tabs.privacy')}</TabsTrigger>
-                        </TabsList>
+                        {/* Mobile: Horizontal scroll tabs */}
+                        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-2 sm:pb-0">
+                            <TabsList className="inline-flex sm:grid sm:w-full sm:grid-cols-5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl min-w-max sm:min-w-0 gap-1">
+                                <TabsTrigger value="persoenlich" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
+                                    <span className="sm:hidden">👤</span>
+                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.personal')}</span>
+                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.personal')}</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="wohnen" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
+                                    <span className="sm:hidden">🏠</span>
+                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.living')}</span>
+                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.living')}</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="finanzen" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
+                                    <span className="sm:hidden">💰</span>
+                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.finance')}</span>
+                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.finance')}</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="behoerden" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
+                                    <span className="sm:hidden">🏛️</span>
+                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.authorities')}</span>
+                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.authorities')}</span>
+                                </TabsTrigger>
+                                <TabsTrigger value="dsgvo" className="text-xs sm:text-sm px-3 sm:px-4 whitespace-nowrap">
+                                    <span className="sm:hidden">🔒</span>
+                                    <span className="hidden sm:inline">{t('lebenslagenPage.tabs.privacy')}</span>
+                                    <span className="sm:hidden ml-1">{t('lebenslagenPage.tabs.privacy')}</span>
+                                </TabsTrigger>
+                            </TabsList>
+                        </div>
 
                         <TabsContent value="persoenlich" className="space-y-6 mt-8">
                             <FormSection title={t('lebenslagenPage.sections.personal.title')} icon={UserIcon}>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                     <Controller
                                         name="vorname"
                                         control={control}
@@ -377,7 +405,7 @@ export default function Lebenslagen() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.familienstand"
                                         control={control}
@@ -426,7 +454,7 @@ export default function Lebenslagen() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.haushaltsmitglieder_anzahl"
                                         control={control}
@@ -471,7 +499,7 @@ export default function Lebenslagen() {
 
                                 <div className="space-y-3">
                                     <Label className="text-base font-semibold">{t('lebenslagenPage.sections.personal.specialCircumstances')}</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <Controller
                                             name="lebenssituation.besondere_umstaende.alleinerziehend"
                                             control={control}
@@ -592,7 +620,7 @@ export default function Lebenslagen() {
 
                         <TabsContent value="wohnen" className="space-y-6 mt-8">
                             <FormSection title={t('lebenslagenPage.sections.living.title')} icon={Home}>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.wohnadresse.strasse"
                                         control={control}
@@ -630,7 +658,7 @@ export default function Lebenslagen() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.wohnadresse.ort"
                                         control={control}
@@ -676,7 +704,7 @@ export default function Lebenslagen() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.wohnart"
                                         control={control}
@@ -716,7 +744,7 @@ export default function Lebenslagen() {
                                 </div>
 
                                 {(watchWohnart === 'miete' || watchWohnart === 'sozialwohnung') && (
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                         <Controller
                                             name="lebenssituation.monatliche_miete_kalt"
                                             control={control}
@@ -791,7 +819,7 @@ export default function Lebenslagen() {
 
                                 <div>
                                     <Label className="text-base font-semibold mb-3 block">{t('lebenslagenPage.sections.finance.detailsTitle')}</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <Controller
                                             name="lebenssituation.einkommen_details.gehalt_angestellt"
                                             control={control}
@@ -937,7 +965,7 @@ export default function Lebenslagen() {
 
                                 <div>
                                     <Label className="text-base font-semibold mb-3 block">{t('lebenslagenPage.sections.finance.insuranceTitle')}</Label>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <Controller
                                             name="lebenssituation.krankenversicherung.art"
                                             control={control}
@@ -982,7 +1010,7 @@ export default function Lebenslagen() {
                                     </AlertDescription>
                                 </Alert>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <Controller
                                         name="lebenssituation.steuer_id"
                                         control={control}
