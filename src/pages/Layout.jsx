@@ -447,6 +447,10 @@ export default function Layout({ children }) {
                                 <a href="https://www.mimitechai.com/agb" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors">AGB</a>
                             </div>
                         </div>
+                        {/* Version Indicator - für Debug */}
+                        <div className="mt-4 text-center">
+                            <span className="text-[10px] text-slate-700 font-mono">v2.1.0-mobile-fix-dec10</span>
+                        </div>
                     </footer>
                 </main>
             </div>

@@ -383,6 +383,8 @@ export default function ProfilSeite() {
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {isSaving ? 'Speichern...' : 'Speichern'}
           </button>
+          {/* Debug Version */}
+          <p className="text-center text-[8px] text-white/20 mt-1 font-mono">mobile-v2.1-dec10</p>
         </div>
       </div>
 
