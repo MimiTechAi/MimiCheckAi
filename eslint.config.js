@@ -20,7 +20,9 @@ export default [
       '*.config.js',
       'vite.config.js',
       'tailwind.config.js',
-      'postcss.config.js'
+      'postcss.config.js',
+      'supabase/**',
+      'supabase/functions/**'
     ] 
   },
   // JavaScript/JSX files

@@ -20,7 +20,7 @@ const RETRY_DELAY = 1000; // 1 Sekunde
  */
 interface TimeoutController {
   controller: AbortController;
-  timeoutId: NodeJS.Timeout;
+  timeoutId: ReturnType<typeof setTimeout>;
 }
 
 /**
