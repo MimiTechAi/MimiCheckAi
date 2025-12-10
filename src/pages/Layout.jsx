@@ -244,7 +244,16 @@ export default function Layout({ children }) {
         <div className="min-h-screen bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
             {/* DEBUG BANNER - Remove after testing */}
             <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white text-center py-1 text-xs font-bold lg:hidden">
-                📱 MOBILE v2.1 - Dec 10 - If you see this, deployment works!
+                📱 MOBILE v2.2 - Breakpoint: 
+                <span className="sm:hidden">XS(&lt;640)</span>
+                <span className="hidden sm:inline md:hidden">SM(640-767)</span>
+                <span className="hidden md:inline lg:hidden">MD(768-1023)</span>
+            </div>
+            {/* Desktop indicator */}
+            <div className="fixed top-0 left-0 right-0 z-[9999] bg-green-600 text-white text-center py-1 text-xs font-bold hidden lg:block">
+                🖥️ DESKTOP - Breakpoint: 
+                <span className="xl:hidden">LG(1024-1279)</span>
+                <span className="hidden xl:inline">XL(1280+)</span>
             </div>
             
             {/* Mobile Overlay */}

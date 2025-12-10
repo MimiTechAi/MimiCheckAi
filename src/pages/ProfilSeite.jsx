@@ -261,6 +261,15 @@ export default function ProfilSeite() {
 
   return (
     <div className="min-h-full bg-slate-950 text-white">
+      {/* DEBUG: Screen width indicator */}
+      <div className="fixed top-8 right-2 z-[9999] text-[10px] font-mono bg-yellow-500 text-black px-2 py-1 rounded">
+        <span className="sm:hidden">XS</span>
+        <span className="hidden sm:inline md:hidden">SM</span>
+        <span className="hidden md:inline lg:hidden">MD</span>
+        <span className="hidden lg:inline xl:hidden">LG</span>
+        <span className="hidden xl:inline">XL</span>
+      </div>
+      
       {/* Mobile: Single Column Layout */}
       <div className="lg:hidden">
         <div className="px-4 py-4 pb-32">
