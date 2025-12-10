@@ -11,6 +11,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Menu, X, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 
 export interface MenuItem {
   label: string;
@@ -199,8 +200,9 @@ export default function FramerNavbar({
               ))}
             </div>
 
-            {/* Desktop CTA Button (Requirement: 7.3) */}
-            <div className="hidden md:flex items-center">
+            {/* Desktop CTA Button & Language Switcher (Requirement: 7.3) */}
+            <div className="hidden md:flex items-center gap-4">
+              <LanguageSwitcher />
               <Button
                 asChild
                 className="bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-500 hover:from-emerald-400 hover:via-teal-400 hover:to-violet-400 text-white px-5 py-2 rounded-lg font-medium transition-all duration-200 hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:-translate-y-0.5"
@@ -295,10 +297,26 @@ export default function FramerNavbar({
                   ))}
                 </ul>
 
+                {/* Mobile Language Switcher */}
+                <motion.div
+                  className="mt-4 pt-4 border-t border-[var(--framer-border)]"
+                  custom={menuItems.length}
+                  variants={prefersReducedMotion ? undefined : menuItemVariants}
+                  initial="closed"
+                  animate="open"
+                >
+                  <div className="px-4 py-2">
+                    <p className="text-xs text-gray-500 uppercase mb-2">
+                      Sprache / Language
+                    </p>
+                    <LanguageSwitcher />
+                  </div>
+                </motion.div>
+
                 {/* Mobile CTA Button */}
                 <motion.div
-                  className="mt-6 pt-6 border-t border-[var(--framer-border)]"
-                  custom={menuItems.length}
+                  className="mt-4 pt-4 border-t border-[var(--framer-border)]"
+                  custom={menuItems.length + 1}
                   variants={prefersReducedMotion ? undefined : menuItemVariants}
                   initial="closed"
                   animate="open"
