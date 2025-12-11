@@ -12,6 +12,7 @@
     "test:run": "vitest --run",
     "test:coverage": "vitest --run --coverage",
     "lighthouse": "lhci autorun",
+    "lighthouse:mobile": "lhci autorun --config=lighthouserc-mobile.json",
     "audit": "npm audit --audit-level=moderate",
     "audit:fix": "npm audit fix",
     "secrets:encrypt": "tsx scripts/secrets/cli.ts encrypt",
@@ -21,6 +22,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -53,6 +56,7 @@
     "@supabase/auth-js": "^2.84.0",
     "@supabase/supabase-js": "^2.84.0",
     "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-virtual": "^3.13.13",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

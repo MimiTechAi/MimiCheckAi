@@ -382,3 +382,52 @@ html.rtl .notification-badge {
 html.rtl ::-webkit-scrollbar {
   direction: rtl;
 }
+
+/* ============================================
+   Safe Area Support for Notched Devices
+   iOS, Android with notches/cutouts
+   ============================================ */
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Fixed elements that need safe area consideration */
+.fixed-safe-top {
+  top: env(safe-area-inset-top);
+}
+
+.fixed-safe-bottom {
+  bottom: env(safe-area-inset-bottom);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

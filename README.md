@@ -203,6 +203,36 @@ npm run test:run
 npm run build
 ```
 
+## ⚡ Performance Testing
+
+MiMiCheck is optimized for mobile performance with Core Web Vitals targets:
+
+```bash
+# Build the app first
+npm run build
+
+# Desktop Lighthouse audit
+npm run lighthouse
+
+# Mobile Lighthouse audit (recommended for performance testing)
+npm run lighthouse:mobile
+```
+
+**Mobile Performance Targets:**
+- LCP (Largest Contentful Paint): ≤2500ms
+- CLS (Cumulative Layout Shift): ≤0.1
+- INP (Interaction to Next Paint): ≤200ms
+
+**Key Performance Features:**
+- ✅ Code splitting with React.lazy() and IntersectionObserver
+- ✅ Virtual scrolling for long lists (@tanstack/react-virtual)
+- ✅ Self-hosted fonts (no Google Fonts CDN)
+- ✅ GSAP animations skip on mobile and prefers-reduced-motion
+- ✅ Offline support with data caching
+- ✅ Safe area CSS for notched devices
+
+See [PERFORMANCE_IMPROVEMENTS.md](./PERFORMANCE_IMPROVEMENTS.md) for detailed documentation.
+
 ## 📄 Lizenz
 
 Proprietär - MiMiTech AI
