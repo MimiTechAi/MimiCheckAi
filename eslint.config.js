@@ -22,7 +22,8 @@ export default [
       'tailwind.config.js',
       'postcss.config.js',
       'supabase/**',
-      'supabase/functions/**'
+      'supabase/functions/**',
+      'scripts/secrets/**'
     ] 
   },
   // JavaScript/JSX files

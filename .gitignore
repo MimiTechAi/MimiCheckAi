@@ -22,7 +22,16 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.secrets
+.env.supabase
+.env.vercel
+
+# Encrypted secrets
+*.age
+.encrypted-secrets.json.age
+.env.encrypted.age
 
 # Deployment
 windsurf_deployment.yaml
 .vercel
+.csp-nonce
