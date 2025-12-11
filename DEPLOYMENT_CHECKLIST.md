@@ -172,6 +172,10 @@ git reset --hard <commit-hash>
 git push origin main --force
 ```
 
+### Detailed Rollback Procedures
+For comprehensive rollback instructions including Supabase Edge Functions, database migrations, and environment variables, see:
+- **[Incident Response Runbook - Rollback Procedures](./docs/runbooks/INCIDENT_RESPONSE.md#-general-rollback-procedures)**
+
 ---
 
 ## Monitoring nach Deployment
@@ -193,6 +197,11 @@ git push origin main --force
 - [ ] User Feedback: Keine Beschwerden
 - [ ] Performance Metrics: Verbesserung sichtbar
 - [ ] Error Tracking: Keine neuen Fehler
+
+### If Issues Arise
+- 🚨 **[Incident Response Runbooks](./docs/runbooks/README.md)** - Quick access to operational procedures
+- 🔧 **[Rollback Procedures](./docs/runbooks/INCIDENT_RESPONSE.md#-general-rollback-procedures)** - Step-by-step rollback guide
+- 📞 **[Emergency Contacts](./docs/runbooks/INCIDENT_RESPONSE.md#-emergency-contacts)** - Who to call during incidents
 
 ---
 
