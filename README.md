@@ -174,9 +174,24 @@ docker compose -f docker-compose.dev.yml build --no-cache
 | Dokument | Beschreibung |
 |----------|--------------|
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Vercel Deployment Anleitung |
+| [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) | Pre-Deployment Verification |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Technische Architektur |
 | [TASKS.md](./TASKS.md) | Projekt-Status & Roadmap |
 | [docs/reports](./docs/reports) | Technische Detail-Dokumentation |
+| 🚨 **[docs/runbooks](./docs/runbooks)** | **Incident Response & Operational Runbooks** |
+
+### 🆘 For On-Call Engineers
+
+**Having a production incident?** Start here:
+
+| Issue Type | Quick Link | Response Time |
+|------------|-----------|---------------|
+| 🗄️ Supabase Down | [Supabase Outage](./docs/runbooks/INCIDENT_RESPONSE.md#-supabase-outage-response) | < 5 min |
+| 💳 Payment Failure | [Stripe Issues](./docs/runbooks/INCIDENT_RESPONSE.md#-stripe-payment-failure-response) | < 5 min |
+| 🔐 Login Broken | [Auth Regression](./docs/runbooks/INCIDENT_RESPONSE.md#-authentication-regression-response) | < 5 min |
+| 🔧 General Incident | [Full Runbook](./docs/runbooks/INCIDENT_RESPONSE.md) | < 2 min |
+
+**Complete operational guide:** [docs/runbooks/README.md](./docs/runbooks/README.md)
 
 ## 🧪 Tests
 
