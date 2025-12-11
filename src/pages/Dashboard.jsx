@@ -27,13 +27,17 @@ import TypingHeadline from "@/components/ui/TypingHeadline";
 import MagneticButton from "@/components/ui/MagneticButton";
 import DashboardAnimation from "@/components/animations/DashboardAnimation";
 import SpotlightCard from "@/components/ui/SpotlightCard";
-import DashboardTabs from "@/components/dashboard/DashboardTabs";
 import DashboardMobileShell from "@/components/dashboard/mobile/DashboardMobileShell";
 import DashboardBottomNav from "@/components/dashboard/mobile/DashboardBottomNav";
+import { OfflineBanner } from "@/components/ui/OfflineBanner";
+import { LazySection } from "@/components/ui/LazySection";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-// Lazy load heavy 3D component
+// Lazy load heavy components
 const FlowDiagram3D = lazy(() => import("@/components/3d/FlowDiagram3D"));
+const DashboardTabs = lazy(() => import("@/components/dashboard/DashboardTabs"));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,19 +46,27 @@ import { useTranslation } from 'react-i18next';
 export default function Dashboard() {
     const { t } = useTranslation();
     const { isMobile, isDesktop } = useBreakpoint();
+    const { isOnline } = useNetworkStatus();
+    const prefersReducedMotion = usePrefersReducedMotion();
     const [user, setUser] = useState(null);
     const [abrechnungen, setAbrechnungen] = useState([]);
+    const [cachedAbrechnungen, setCachedAbrechnungen] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const heroRef = useRef(null);
 
-    const loadData = async () => {
+    const loadData = async (useCache = false) => {
+        if (!isOnline && useCache) {
+            setAbrechnungen(cachedAbrechnungen);
+            setIsLoading(false);
+            return;
+        }
+
         setIsLoading(true);
         setError(null);
 
         try {
-            // Timeout für User-Laden (10 Sekunden)
             const userPromise = User.me();
             const timeoutPromise = new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('Timeout beim Laden der Benutzerdaten')), 10000)
@@ -64,7 +76,6 @@ export default function Dashboard() {
             
             setUser(currentUser);
 
-            // Abrechnungen laden (mit Timeout)
             try {
                 const abrechnungenPromise = Abrechnung.list({ orderBy: 'created_date', ascending: false, limit: 10 });
                 const abrechnungenTimeout = new Promise((resolve) => 
@@ -72,13 +83,22 @@ export default function Dashboard() {
                 );
                 const userAbrechnungen = await Promise.race([abrechnungenPromise, abrechnungenTimeout]);
                 setAbrechnungen(userAbrechnungen || []);
+                setCachedAbrechnungen(userAbrechnungen || []);
             } catch (abrErr) {
                 console.warn('Dashboard: Abrechnungen konnten nicht geladen werden:', abrErr);
-                setAbrechnungen([]);
+                if (cachedAbrechnungen.length > 0) {
+                    setAbrechnungen(cachedAbrechnungen);
+                } else {
+                    setAbrechnungen([]);
+                }
             }
         } catch (error) {
             console.error("Dashboard: Fehler beim Laden:", error);
-            setError("Dashboard konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.");
+            if (!isOnline && cachedAbrechnungen.length > 0) {
+                setAbrechnungen(cachedAbrechnungen);
+            } else {
+                setError("Dashboard konnte nicht geladen werden. Bitte überprüfen Sie Ihre Internetverbindung.");
+            }
         } finally {
             setIsLoading(false);
         }
@@ -86,11 +106,19 @@ export default function Dashboard() {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // GSAP ScrollTrigger for Hero Section (Desktop only)
     useEffect(() => {
-        if (!heroRef.current || !isDesktop || isLoading) return;
+        if (!isOnline && cachedAbrechnungen.length > 0) {
+            loadData(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOnline]);
+
+    // GSAP ScrollTrigger for Hero Section (Desktop only, skip if reduced motion)
+    useEffect(() => {
+        if (!heroRef.current || !isDesktop || isLoading || prefersReducedMotion) return;
 
         gsap.to(".hero-content", {
             y: 50,
@@ -118,7 +146,7 @@ export default function Dashboard() {
         );
 
         return () => ScrollTrigger.getAll().forEach(t => t.kill());
-    }, [isLoading, isDesktop]);
+    }, [isLoading, isDesktop, prefersReducedMotion]);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -184,12 +212,17 @@ export default function Dashboard() {
 
     return (
         <div className="h-full w-full bg-transparent text-white relative">
-            {/* Background Animation */}
-            <div className="absolute inset-0 z-0">
-                <Suspense fallback={<div className="w-full h-full bg-slate-950" />}>
-                    <DashboardAnimation />
-                </Suspense>
-            </div>
+            {/* Offline Banner */}
+            <OfflineBanner />
+
+            {/* Background Animation - Skip on mobile or reduced motion */}
+            {(!isMobile && !prefersReducedMotion) && (
+                <div className="absolute inset-0 z-0">
+                    <Suspense fallback={<div className="w-full h-full bg-slate-950" />}>
+                        <DashboardAnimation />
+                    </Suspense>
+                </div>
+            )}
 
             {/* Main Content wrapped in Mobile Shell */}
             <DashboardMobileShell>
@@ -263,13 +296,14 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* Flow Diagram - Desktop Only */}
-            {isDesktop && (
-                <section className="relative z-10 mb-12 lg:mb-20">
-                    <Suspense fallback={<div className="h-48" />}>
-                        <FlowDiagram3D />
-                    </Suspense>
-                </section>
+            {/* Flow Diagram - Desktop Only (Lazy loaded with IntersectionObserver) */}
+            {isDesktop && !prefersReducedMotion && (
+                <LazySection 
+                    fallback={<div className="h-48 bg-slate-900/20 rounded-xl animate-pulse" />}
+                    className="relative z-10 mb-12 lg:mb-20"
+                >
+                    <FlowDiagram3D />
+                </LazySection>
             )}
 
             {/* Stats Grid - Mobile First */}
@@ -344,21 +378,27 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* Profile & Anträge Tabs - Mobile First */}
-            <section 
-                id="tabs"
+            {/* Profile & Anträge Tabs - Mobile First (Lazy loaded with IntersectionObserver) */}
+            <LazySection
+                fallback={
+                    <div className="relative z-10 max-w-7xl mx-auto py-6 md:py-8 lg:py-16">
+                        <div className="h-64 bg-slate-900/20 rounded-xl animate-pulse" />
+                    </div>
+                }
                 className="relative z-10 max-w-7xl mx-auto py-6 md:py-8 lg:py-16"
             >
-                <div className="mb-4 md:mb-6 lg:mb-8">
-                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-heading mb-2">
-                        {t('dashboard.tabs.title', 'Dein Förder-Cockpit')}
-                    </h2>
-                    <p className="text-sm md:text-base text-slate-400">
-                        {t('dashboard.tabs.subtitle', 'Profil ausfüllen, AI-Analyse starten, passende Anträge finden.')}
-                    </p>
-                </div>
-                <DashboardTabs />
-            </section>
+                <section id="tabs">
+                    <div className="mb-4 md:mb-6 lg:mb-8">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-heading mb-2">
+                            {t('dashboard.tabs.title', 'Dein Förder-Cockpit')}
+                        </h2>
+                        <p className="text-sm md:text-base text-slate-400">
+                            {t('dashboard.tabs.subtitle', 'Profil ausfüllen, AI-Analyse starten, passende Anträge finden.')}
+                        </p>
+                    </div>
+                    <DashboardTabs />
+                </section>
+            </LazySection>
 
             {/* Recent Activity - Mobile First */}
             <section 

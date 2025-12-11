@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
  * - Subtle network connections representing data points
  * - Professional color palette (Blue/Indigo with Purple accents)
  * - Minimalist design, no distracting floating charts
+ * - Respects prefers-reduced-motion
  */
 export default function DashboardAnimation({ className = '' }) {
     const canvasRef = useRef(null);
@@ -14,6 +15,12 @@ export default function DashboardAnimation({ className = '' }) {
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
+
+        // Respect prefers-reduced-motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) {
+            return;
+        }
 
         const ctx = canvas.getContext('2d');
         let width = window.innerWidth;

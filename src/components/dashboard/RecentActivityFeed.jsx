@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/hooks/useAuth';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,12 +15,16 @@ import { Skeleton } from '@/components/ui/skeleton';
  * 
  * Displays the user's recent activities (uploads, analyses, reports).
  * Fetches data from Supabase and displays in a timeline format.
+ * Features virtualization for long lists and offline support.
  * 
  * @param {Object} props
- * @param {number} [props.limit=5] - Number of activities to display
+ * @param {number} [props.limit=50] - Number of activities to display
+ * @param {boolean} [props.virtualized=false] - Enable virtualization for long lists
  */
-export function RecentActivityFeed({ limit = 5 }) {
+export function RecentActivityFeed({ limit = 50, virtualized = false }) {
   const { user } = useAuth();
+  const { isOnline } = useNetworkStatus();
+  const parentRef = useRef(null);
   
   const { data: activities, isLoading, error } = useQuery({
     queryKey: ['recentActivity', user?.id, limit],
@@ -44,8 +51,16 @@ export function RecentActivityFeed({ limit = 5 }) {
         icon: getActivityIcon(app.status),
       }));
     },
-    enabled: !!user?.id,
-    staleTime: 1 * 60 * 1000, // 1 minute
+    enabled: !!user?.id && isOnline,
+    staleTime: 1 * 60 * 1000,
+    refetchInterval: isOnline ? 30000 : false,
+  });
+
+  const virtualizer = useVirtualizer({
+    count: activities?.length || 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 80,
+    overscan: 5,
   });
   
   if (isLoading) {
@@ -82,40 +97,74 @@ export function RecentActivityFeed({ limit = 5 }) {
       </div>
     );
   }
+
+  const ActivityItem = ({ activity, index, style = {} }) => (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: Math.min(index * 0.05, 0.5) }}
+      className="flex gap-4 items-start"
+      style={style}
+    >
+      <div className="flex-shrink-0">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <activity.icon className="h-5 w-5 text-primary" />
+        </div>
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-foreground">
+          {activity.title}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {activity.description}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatDistanceToNow(activity.timestamp, { 
+            addSuffix: true, 
+            locale: de 
+          })}
+        </p>
+      </div>
+    </motion.div>
+  );
+
+  if (virtualized && activities.length > 10) {
+    return (
+      <div ref={parentRef} className="h-[500px] overflow-auto space-y-4">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const activity = activities[virtualItem.index];
+            return (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <ActivityItem activity={activity} index={virtualItem.index} />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-4">
       {activities.map((activity, index) => (
-        <motion.div
-          key={activity.id}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="flex gap-4 items-start"
-        >
-          {/* Icon */}
-          <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <activity.icon className="h-5 w-5 text-primary" />
-            </div>
-          </div>
-          
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground">
-              {activity.title}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {activity.description}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {formatDistanceToNow(activity.timestamp, { 
-                addSuffix: true, 
-                locale: de 
-              })}
-            </p>
-          </div>
-        </motion.div>
+        <ActivityItem key={activity.id} activity={activity} index={index} />
       ))}
     </div>
   );
