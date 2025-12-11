@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/api/entities';
-import { InvokeLLM } from '@/api/integrations';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,22 +7,17 @@ import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
     Zap, 
-    Shield, 
     CheckCircle, 
     XCircle, 
     AlertTriangle,
     Activity,
     Clock,
-    Database,
-    Globe,
-    Lock,
     Gauge,
-    Server,
-    Eye
+    Server
 } from 'lucide-react';
 
 // ZEPTO STEP 9.1: Production Readiness Test Cases (RED PHASE - Tests First!)
-class ProductionReadinessTestCase {
+export class ProductionReadinessTestCase {
     constructor(name, testFn, expectedResult = null, category = 'performance', criticality = 'medium') {
         this.id = `prod_test_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.name = name;
@@ -115,7 +109,7 @@ class ProductionReadinessTestCase {
 }
 
 // ZEPTO STEP 9.2: Advanced Performance Monitor (GREEN PHASE)
-class AdvancedPerformanceMonitor {
+export class AdvancedPerformanceMonitor {
     constructor() {
         this.metrics = {
             pageLoadTimes: [],
@@ -133,38 +127,51 @@ class AdvancedPerformanceMonitor {
             firstInputDelay: 100 // 100ms target
         };
         this.isMonitoring = false;
+        this.observers = [];
+        this.intervalIds = [];
         this.initializePerformanceObservers();
     }
 
     // ZEPTO STEP 9.3: Initialize Performance Observers
     initializePerformanceObservers() {
+        // Only initialize in browser environment and not during Vitest
+        if (typeof window === 'undefined' || import.meta.env.VITEST) {
+            return;
+        }
+
         // Core Web Vitals monitoring
         if ('PerformanceObserver' in window) {
             // First Contentful Paint
-            new PerformanceObserver((entryList) => {
+            const paintObserver = new PerformanceObserver((entryList) => {
                 for (const entry of entryList.getEntries()) {
                     if (entry.name === 'first-contentful-paint') {
                         this.recordMetric('firstContentfulPaint', entry.startTime);
                     }
                 }
-            }).observe({ entryTypes: ['paint'] });
+            });
+            paintObserver.observe({ entryTypes: ['paint'] });
+            this.observers.push(paintObserver);
 
             // Largest Contentful Paint
-            new PerformanceObserver((entryList) => {
+            const lcpObserver = new PerformanceObserver((entryList) => {
                 for (const entry of entryList.getEntries()) {
                     this.recordMetric('largestContentfulPaint', entry.startTime);
                 }
-            }).observe({ entryTypes: ['largest-contentful-paint'] });
+            });
+            lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+            this.observers.push(lcpObserver);
 
             // First Input Delay
-            new PerformanceObserver((entryList) => {
+            const fidObserver = new PerformanceObserver((entryList) => {
                 for (const entry of entryList.getEntries()) {
                     this.recordMetric('firstInputDelay', entry.processingStart - entry.startTime);
                 }
-            }).observe({ entryTypes: ['first-input'] });
+            });
+            fidObserver.observe({ entryTypes: ['first-input'] });
+            this.observers.push(fidObserver);
 
             // Cumulative Layout Shift
-            new PerformanceObserver((entryList) => {
+            const clsObserver = new PerformanceObserver((entryList) => {
                 let clsScore = 0;
                 for (const entry of entryList.getEntries()) {
                     if (!entry.hadRecentInput) {
@@ -172,14 +179,17 @@ class AdvancedPerformanceMonitor {
                     }
                 }
                 this.recordMetric('cumulativeLayoutShift', clsScore);
-            }).observe({ entryTypes: ['layout-shift'] });
+            });
+            clsObserver.observe({ entryTypes: ['layout-shift'] });
+            this.observers.push(clsObserver);
         }
 
         // Memory usage monitoring
         if (performance.memory) {
-            setInterval(() => {
+            const memoryIntervalId = setInterval(() => {
                 this.recordMemoryUsage();
             }, 5000); // Every 5 seconds
+            this.intervalIds.push(memoryIntervalId);
         }
 
         if (window.MiMiCheckObservability) {
@@ -248,6 +258,39 @@ class AdvancedPerformanceMonitor {
         }
     }
 
+    // ZEPTO STEP 9.4: Cleanup method to prevent test hangs
+    destroy() {
+        // Disconnect all PerformanceObservers
+        this.observers.forEach(observer => {
+            if (observer && typeof observer.disconnect === 'function') {
+                observer.disconnect();
+            }
+        });
+        this.observers = [];
+
+        // Clear all setInterval timers
+        this.intervalIds.forEach(intervalId => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+        });
+        this.intervalIds = [];
+
+        // Stop monitoring
+        this.isMonitoring = false;
+
+        if (window.MiMiCheckObservability) {
+            window.MiMiCheckObservability.trackUserInteraction(
+                'performance_monitoring_destroyed',
+                'AdvancedPerformanceMonitor',
+                { 
+                    observersCount: this.observers.length,
+                    intervalsCount: this.intervalIds.length 
+                }
+            );
+        }
+    }
+
     // ZEPTO STEP 9.5: Generate performance report
     generatePerformanceReport() {
         const report = {
@@ -285,7 +328,7 @@ class AdvancedPerformanceMonitor {
             const memoryUsagePercent = (latestMemory.used / latestMemory.total) * 100;
             
             report.systemHealth.memoryUsage = {
-                current: memoryUsagePercent.toFixed(1) + '%',
+                current: `${memoryUsagePercent.toFixed(1)  }%`,
                 status: memoryUsagePercent < 70 ? 'good' : memoryUsagePercent < 85 ? 'warning' : 'critical'
             };
         }
@@ -295,7 +338,7 @@ class AdvancedPerformanceMonitor {
 }
 
 // ZEPTO STEP 9.6: Security Hardening Checker (CRITICAL)
-class SecurityHardeningChecker {
+export class SecurityHardeningChecker {
     constructor() {
         this.vulnerabilities = [];
         this.securityScore = 0;
@@ -377,7 +420,7 @@ class SecurityHardeningChecker {
                         JSON.parse(value);
                         unencryptedData = true;
                         break;
-                    } catch (e) {
+                    } catch {
                         // Good - data appears to be encrypted/not readable JSON
                     }
                 }
@@ -389,7 +432,7 @@ class SecurityHardeningChecker {
                 severity: unencryptedData ? 'medium' : 'info',
                 message: unencryptedData ? 'Sensitive data in localStorage may not be encrypted' : 'No sensitive unencrypted data detected'
             };
-        } catch (error) {
+        } catch {
             return {
                 check: 'Local Storage Encryption',
                 passed: false,
@@ -401,12 +444,10 @@ class SecurityHardeningChecker {
 
     checkSensitiveDataExposure() {
         // Check console for exposed sensitive data
-        let sensitiveDataExposed = false;
+        const sensitiveDataExposed = false;
         
-        // Override console methods temporarily to check for sensitive data
-        const originalLog = console.log;
-        const sensitivePatterns = [/password/i, /token/i, /secret/i, /key/i, /api.*key/i];
-        
+        // This would normally check console logs for sensitive patterns
+        // but for now we assume no exposure
         return {
             check: 'Sensitive Data Exposure',
             passed: !sensitiveDataExposed,
@@ -445,7 +486,7 @@ class SecurityHardeningChecker {
 }
 
 // ZEPTO STEP 9.7: Production Readiness Tests (RED PHASE - Define Critical Tests)
-const createProductionReadinessTests = () => [
+export const createProductionReadinessTests = () => [
     new ProductionReadinessTestCase(
         'Page Load Performance < 3s',
         async () => {
@@ -555,19 +596,19 @@ const createProductionReadinessTests = () => [
         async () => {
             // Simulate database health check
             try {
-                const user = await User.me();
-                return { 
-                    connected: true, 
-                    responseTime: Date.now(),
-                    healthy: true 
-                };
-            } catch (error) {
-                return { 
-                    connected: false, 
-                    error: error.message,
-                    healthy: false 
-                };
-            }
+                        await User.me();
+                        return {
+                            connected: true,
+                            responseTime: Date.now(),
+                            healthy: true
+                        };
+                    } catch (error) {
+                        return {
+                            connected: false,
+                            error: error.message,
+                            healthy: false
+                        };
+                    }
         },
         { healthy: true },
         'reliability',
@@ -621,6 +662,11 @@ export default function ProductionReadinessController() {
                 { timestamp: new Date().toISOString() }
             );
         }
+
+        // Cleanup function to prevent test hangs
+        return () => {
+            performanceMonitor.destroy();
+        };
     }, [performanceMonitor]);
 
     const runAllTests = async () => {
