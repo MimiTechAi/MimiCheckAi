@@ -928,6 +928,192 @@ npx supabase secrets set KEY_NAME=previous_value
 
 ---
 
+## 🔒 Security Incident Response
+
+### Security Incident Detection
+
+**Automated Alerts:**
+- CSP violations detected
+- Suspicious authentication patterns
+- Unauthorized access attempts
+- Rate limiting thresholds exceeded
+- Secret rotation overdue
+
+**Manual Detection:**
+- Audit log anomalies
+- Unusual data access patterns
+- Failed privilege escalation attempts
+- Social engineering reports
+
+### Immediate Actions (0-5 minutes)
+
+1. **Acknowledge & Isolate**
+   - [ ] Create `#security-incident-<timestamp>` Slack channel
+   - [ ] Notify Security Officer immediately
+   - [ ] Do NOT publicize incident details yet
+   - [ ] Disable affected user accounts if compromised (preserve logs)
+
+2. **Assess Scope**
+   - [ ] Query audit logs for suspicious activity:
+   ```sql
+   SELECT * FROM audit_logs 
+   WHERE status = 'failure' 
+     AND created_at > NOW() - INTERVAL '1 hour'
+   ORDER BY created_at DESC;
+   ```
+   - [ ] Check for unusual role assignments:
+   ```sql
+   SELECT * FROM audit_logs 
+   WHERE action = 'role_assigned' 
+     AND created_at > NOW() - INTERVAL '24 hours';
+   ```
+   - [ ] Review CSP violation logs
+   - [ ] Check rate limiting metrics
+
+3. **Preserve Evidence**
+   - [ ] Export full audit logs for time period
+   - [ ] Collect error logs from edge functions
+   - [ ] Save Vercel deployment logs
+   - [ ] Capture Supabase query logs
+   - [ ] Screenshot anomalous behavior
+
+### Investigation Phase (5-30 minutes)
+
+**For Suspected Unauthorized Access:**
+```bash
+# Check who accessed sensitive data
+SELECT * FROM audit_logs 
+WHERE (resource_type IN ('users', 'abrechnungen') 
+   OR action IN ('view_audit_logs', 'manage_users'))
+  AND created_at > NOW() - INTERVAL '24 hours'
+  AND status = 'success'
+ORDER BY created_at DESC;
+
+# Check for privilege escalation attempts
+SELECT * FROM audit_logs 
+WHERE action LIKE 'role_%'
+  AND created_at > NOW() - INTERVAL '24 hours';
+```
+
+**For Suspected Data Breach:**
+```bash
+# List all documents accessed in suspicious window
+SELECT * FROM audit_logs 
+WHERE resource_type = 'abrechnungen'
+  AND action = 'document_accessed'
+  AND created_at BETWEEN '2025-01-01 10:00:00' AND '2025-01-01 12:00:00'
+ORDER BY created_at DESC;
+```
+
+**For Suspected Secret Compromise:**
+- [ ] Check when secret was last rotated
+- [ ] Review all edge function invocations
+- [ ] Check API usage metrics for unusual patterns
+- [ ] Look for failed auth attempts (could indicate compromised key)
+
+### Containment Actions
+
+**For Confirmed Unauthorized Access:**
+```bash
+# 1. Revoke compromised session
+DELETE FROM auth.sessions 
+WHERE user_id = '<compromised_user_id>'
+  AND created_at > '<breach_start_time>';
+
+# 2. Force password reset
+UPDATE auth.users 
+SET email_confirmed_at = NULL 
+WHERE id = '<compromised_user_id>';
+
+# 3. Log the incident
+SELECT public.audit_log_error(
+  '<compromised_user_id>',
+  'unauthorized_access_detected',
+  'auth_session',
+  'Unauthorized access detected and contained',
+  jsonb_build_object('breach_window', '<time_range>')
+);
+```
+
+**For Compromised Secrets:**
+- [ ] **Immediate**: Rotate secrets via `npm run secrets:rotate`
+- [ ] Update Vercel environment variables
+- [ ] Update Supabase function secrets
+- [ ] Restart all edge functions
+- [ ] Revoke old API keys
+- [ ] Notify external services (Stripe, OpenAI, Anthropic)
+
+**For CSP Violations:**
+- [ ] Review CSP logs for attack vectors
+- [ ] Check for XSS payload attempts
+- [ ] Block attacker IP if identifiable
+- [ ] Update CSP headers if policy too permissive
+- [ ] Consider enabling stricter directives
+
+### Notification & Disclosure
+
+**Do NOT Disclose Until:**
+- [ ] Scope fully assessed
+- [ ] Evidence preserved
+- [ ] Containment completed
+- [ ] Legal review (if applicable)
+
+**Notification Timeline:**
+- **Tier 1** (Critical data breach): Notify users within 24 hours
+- **Tier 2** (Unauthorized access, no data): Notify within 72 hours
+- **Tier 3** (Failed attack): Notify within 1 week
+- **Tier 4** (Non-security incident): May not require notification
+
+**Disclosure Template:**
+```
+Subject: Security Incident Notification [INCIDENT_ID]
+
+We discovered a security incident affecting your account on [DATE].
+
+Incident: [Description of what happened]
+Impact: [What data was potentially exposed]
+Timeline: [When it occurred, when we detected it, when we contained it]
+Our Response: [Actions we took]
+Your Action: [What users should do - change password, etc]
+Support: [Contact information for affected users]
+
+We take your security seriously and will continue monitoring for any signs of misuse.
+```
+
+### Post-Security-Incident
+
+1. **Forensic Analysis**
+   - [ ] Generate full audit log report
+   - [ ] Correlate logs with external logs (Vercel, Supabase)
+   - [ ] Create incident timeline with minute-by-minute events
+   - [ ] Document root cause
+
+2. **Remediation**
+   - [ ] Fix vulnerability that was exploited
+   - [ ] Add monitoring/alerting for similar patterns
+   - [ ] Update security policies if needed
+   - [ ] Patch affected systems
+
+3. **Lessons Learned**
+   - [ ] Schedule security review meeting
+   - [ ] Update incident response procedures
+   - [ ] Consider additional security controls
+   - [ ] Share learnings with team
+
+4. **Audit Logging Verification**
+   ```sql
+   -- Verify all incident events were logged
+   SELECT COUNT(*) as total_logs,
+          status,
+          COUNT(CASE WHEN status = 'failure' THEN 1 END) as failures
+   FROM audit_logs
+   WHERE created_at > '<incident_start>'
+     AND created_at < '<incident_end>'
+   GROUP BY status;
+   ```
+
+---
+
 ## 📱 Escalation Paths
 
 ### P0 - Critical Incident Escalation

@@ -4,14 +4,18 @@ import supabaseEntities from '@/api/supabaseEntities';
 
 const UserProfileContext = createContext({
     user: null,
+    userRoles: [],
     isLoading: true,
     refreshUser: async () => { },
-    updateUserProfile: async (data) => { },
-    profileVersion: 0
+    updateUserProfile: async (_data) => { },
+    profileVersion: 0,
+    hasPermission: (_resource, _action) => false,
+    hasRole: (_roleName) => false
 });
 
 export function UserProfileProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [userRoles, setUserRoles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [profileVersion, setProfileVersion] = useState(0);
 
@@ -25,12 +29,31 @@ export function UserProfileProvider({ children }) {
             if (userProfile) {
                 setUser(userProfile);
                 setProfileVersion(prev => prev + 1);
+                
+                // Load user roles using RPC
+                try {
+                    const { data, error } = await supabase.rpc('get_user_roles', {
+                        user_id: userProfile.id
+                    });
+                    
+                    if (error) {
+                        console.warn('Failed to load user roles:', error);
+                        setUserRoles([]);
+                    } else {
+                        setUserRoles(data || []);
+                    }
+                } catch (roleError) {
+                    console.warn('Failed to load user roles:', roleError);
+                    setUserRoles([]);
+                }
             } else {
                 setUser(null);
+                setUserRoles([]);
             }
         } catch (error) {
             console.error('Failed to load user:', error);
             setUser(null);
+            setUserRoles([]);
         } finally {
             setIsLoading(false);
         }
@@ -73,12 +96,30 @@ export function UserProfileProvider({ children }) {
         }
     }, []);
 
+    const hasRole = useCallback((roleName) => {
+        return userRoles.some(r => r.role_name === roleName);
+    }, [userRoles]);
+
+    const hasPermission = useCallback((_resource, _action) => {
+        // Check if user is admin (admins have all permissions)
+        if (hasRole('admin')) {
+            return true;
+        }
+        
+        // This will be extended when we have proper permission checking
+        // For now, we just check if user has the role
+        return false;
+    }, [hasRole]);
+
     const contextValue = {
         user,
+        userRoles,
         isLoading,
         refreshUser,
         updateUserProfile,
-        profileVersion
+        profileVersion,
+        hasPermission,
+        hasRole
     };
 
     return (
@@ -88,6 +129,7 @@ export function UserProfileProvider({ children }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useUserProfile() {
     const context = useContext(UserProfileContext);
     if (!context) {
@@ -96,9 +138,10 @@ export function useUserProfile() {
     return context;
 }
 
-export function useProfileUpdateListener(callback, dependencies = []) {
+// eslint-disable-next-line react-refresh/only-export-components
+export function useProfileUpdateListener(_callback) {
     // Simplified - no event emitter for now
     useEffect(() => {
         // Empty for now to avoid errors
-    }, dependencies);
+    }, []);
 }

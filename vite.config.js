@@ -1,9 +1,10 @@
 // vite.config.js
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { cspNoncePlugin } from "./src/lib/csp-nonce-plugin.js";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cspNoncePlugin()],
   server: {
     host: true,            // 0.0.0.0 (LAN/VM)
     port: 8005,

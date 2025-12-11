@@ -115,6 +115,118 @@ Overall Severity: **High**. Mission-critical flows (eligibility, payments, AI) b
 
 ---
 
+# Area 1.5 – Security Hardening & Compliance
+
+## Current Security Posture
+
+### Content Security Policy (CSP)
+- **Status:** ✅ **HARDENED** - No `unsafe-inline` or `unsafe-eval`
+- **Implementation:** Nonce-based CSP via Vite plugin (`src/lib/csp-nonce-plugin.js`)
+- **Verification:** `window.__CSP_NONCE__` injected at build time
+- **Headers Deployed:** `vercel.json`, `netlify.toml`, `mimicheck-landing/vercel.json`
+
+**CSP Directives:**
+```
+default-src 'self'
+script-src 'self' https://js.stripe.com https://cdn.anthropic.com
+style-src 'self' https://fonts.googleapis.com
+font-src 'self' https://fonts.gstatic.com
+img-src 'self' data: https: blob:
+connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://api.anthropic.com https://api.openai.com
+frame-src https://js.stripe.com https://hooks.stripe.com
+frame-ancestors 'none'
+upgrade-insecure-requests
+object-src 'none'
+base-uri 'none'
+```
+
+### Role-Based Access Control (RBAC)
+- **Status:** ✅ **IMPLEMENTED** - Enterprise-grade RBAC
+- **Database Schema:** `supabase/migrations/006_rbac.sql`
+  - `roles` table: admin, moderator, user, viewer
+  - `permissions` table: resource + action pairs
+  - `role_permissions` junction table
+  - `user_roles` junction table with RLS policies
+  - Helper functions: `has_permission()`, `get_user_roles()`
+- **Frontend Integration:** `UserProfileContext` extended with `useAuthorization()` hook
+- **Protected Routes:** `ProtectedRoute`, `AdminOnlyRoute`, `ConditionalRender` components
+
+### Audit Logging
+- **Status:** ✅ **COMPREHENSIVE** - Full audit trail
+- **Schema:** `supabase/migrations/007_audit_logs.sql`
+- **Scope:** All sensitive operations logged
+  - User creation, modification, deletion
+  - Role assignments and removals
+  - Document uploads and deletions
+  - Stripe session creation
+  - AI API invocations
+  - Admin dashboard access
+  - Secret rotation events
+- **Edge Function:** `supabase/functions/audit-log` - structured logging API
+- **Database Triggers:** Automatic audit logging on inserts/updates
+- **RLS:** Only admins and viewers can access audit logs
+
+**Logged Fields:**
+```
+user_id, actor_role, action, resource_type, resource_id,
+changes (JSONB), metadata (JSONB), ip_address, user_agent,
+status (success|failure), error_message, created_at
+```
+
+### Secret Management
+- **Status:** ✅ **ENCRYPTED** - age-based encryption
+- **CLI Tools:** TypeScript CLI for encrypt/decrypt/rotate (`scripts/secrets/`)
+- **Configuration:** `scripts/secrets/secrets-config.ts` with Zod schema validation
+- **Supported Targets:**
+  - Supabase Functions: `supabase/.encrypted-secrets.json.age`
+  - Vercel Environment: `.env.encrypted.age`
+  - Edge Functions: `supabase/functions/.env.encrypted.age`
+- **Encryption:** ChaCha20-Poly1305 via age
+- **CI/CD Integration:** GitHub OIDC token exchange (placeholder in workflow)
+- **Rotation:** Manual CLI or automated `workflow_dispatch` trigger
+
+**Commands:**
+```bash
+npm run secrets:encrypt -- --target supabase --file .env.supabase
+npm run secrets:decrypt -- --target supabase
+npm run secrets:sync -- --target vercel
+npm run secrets:rotate  # Full rotation across all targets
+```
+
+### Vulnerability Scanning
+- **Status:** ✅ **COMPREHENSIVE** - Multi-layer scanning
+- **Workflow:** `.github/workflows/security-audit.yml`
+- **Scanners:**
+  - **npm audit:** Node.js dependency vulnerabilities (production + all)
+  - **pnpm audit:** Landing page dependencies
+  - **Trivy:** File system and container image scanning (SARIF output)
+  - **Semgrep:** Static analysis for OWASP Top 10 and security patterns (SARIF output)
+  - **Dependency Review:** PR-level dependency change review
+- **SARIF Upload:** All vulnerability results uploaded to GitHub Code Scanning
+- **Failure Criteria:** High/critical vulnerabilities fail the build
+- **Triggers:**
+  - Push to main/develop
+  - Pull requests
+  - Weekly scheduled (Monday 9 AM UTC)
+  - Manual trigger with optional secret rotation
+
+### Security Documentation
+- **SECURITY.md:** Comprehensive security policy and procedures
+- **INCIDENT_RESPONSE.md:** Security incident handling with investigation templates
+- **Audit Log Queries:** Pre-written SQL for common security investigations
+
+## Remaining High-Priority Security Gaps (from ARCH-01 to ARCH-05)
+
+| Gap | Finding | Status | Remediation |
+|-----|---------|--------|-------------|
+| **Unauthorized Payment Flow** | `stripe-webhook` edge function mutates `public.users` directly without intermediate service. No audit of payment changes. | ⚠️ Partial | Add audit logging trigger on subscription updates; consider moving payment state machine to FastAPI BFF. |
+| **Secret Exposure in Logs** | Edge functions may log secrets or stack traces before error handling. | ⚠️ Partial | Enforce sanitization in all edge functions; rotate any exposed secrets immediately. |
+| **AI API Key Management** | Anthropic/OpenAI keys passed via environment; no per-user rate limiting or cost controls. | ⚠️ Partial | Implement cost-per-user tracking in audit_logs; add token-bucket rate limiter. |
+| **CSP Nonce Distribution** | Nonce generated at build time; if leaked, attacker can inject scripts for entire deployment. | ⚠️ Mitigated | Best practice: generate nonce per request (requires edge middleware). |
+| **RLS Policy Coverage** | Not all tables have comprehensive RLS policies (e.g., abrechnungen, antraege). | ⚠️ Partial | Audit and harden RLS on user-accessible tables. |
+
+---
+
 # Area 2 – Code Quality & Engineering Excellence
 **Date:** 2025-12-10
 

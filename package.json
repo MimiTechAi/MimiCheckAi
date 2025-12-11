@@ -14,6 +14,10 @@
     "lighthouse": "lhci autorun",
     "audit": "npm audit --audit-level=moderate",
     "audit:fix": "npm audit fix",
+    "secrets:encrypt": "tsx scripts/secrets/cli.ts encrypt",
+    "secrets:decrypt": "tsx scripts/secrets/cli.ts decrypt",
+    "secrets:sync": "tsx scripts/secrets/cli.ts sync",
+    "secrets:rotate": "tsx scripts/secrets/cli.ts rotate",
     "prepare": "husky"
   },
   "dependencies": {
