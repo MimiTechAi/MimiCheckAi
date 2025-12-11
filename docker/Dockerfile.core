@@ -1,0 +1,26 @@
+# Development Dockerfile for Core Vite App
+FROM node:20-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install dependencies for better compatibility
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Expose Vite dev server port
+EXPOSE 8005
+
+# Set environment for hot reload in Docker
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+# Start development server
+CMD ["npm", "run", "dev"]

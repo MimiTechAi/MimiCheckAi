@@ -1,0 +1,58 @@
+services:
+  core-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.core
+    ports:
+      - "8005:8005"
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.js:/app/vite.config.js
+      - ./tailwind.config.js:/app/tailwind.config.js
+      - ./postcss.config.js:/app/postcss.config.js
+      - ./jsconfig.json:/app/jsconfig.json
+      # Share environment files
+      - ./.env:/app/.env
+      - ./.env.development:/app/.env.development
+      - ./.env.local:/app/.env.local
+      # Prevent node_modules override
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    command: npm run dev
+    stdin_open: true
+    tty: true
+
+  landing-app:
+    build:
+      context: ./mimicheck-landing
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reload
+      - ./mimicheck-landing/client:/app/client
+      - ./mimicheck-landing/server:/app/server
+      - ./mimicheck-landing/shared:/app/shared
+      - ./mimicheck-landing/vite.config.ts:/app/vite.config.ts
+      - ./mimicheck-landing/tsconfig.json:/app/tsconfig.json
+      - ./mimicheck-landing/tsconfig.node.json:/app/tsconfig.node.json
+      - ./mimicheck-landing/drizzle.config.ts:/app/drizzle.config.ts
+      # Share environment files
+      - ./mimicheck-landing/.env:/app/.env
+      - ./mimicheck-landing/.env.development:/app/.env.development
+      - ./mimicheck-landing/.env.local:/app/.env.local
+      # Prevent node_modules override
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    command: pnpm run dev
+    stdin_open: true
+    tty: true

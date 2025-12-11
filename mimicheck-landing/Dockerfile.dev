@@ -1,0 +1,29 @@
+# Development Dockerfile for Landing Page
+FROM node:20-slim
+
+# Set working directory
+WORKDIR /app
+
+# Enable Corepack for pnpm support
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Install git for better compatibility
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Expose development server port
+EXPOSE 3000
+
+# Set environment for hot reload in Docker
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+# Start development server
+CMD ["pnpm", "run", "dev"]
