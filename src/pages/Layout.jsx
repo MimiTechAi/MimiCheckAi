@@ -242,20 +242,6 @@ export default function Layout({ children }) {
     // ============================================================
     return (
         <div className="min-h-screen bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
-            {/* DEBUG BANNER - Remove after testing */}
-            <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white text-center py-1 text-xs font-bold lg:hidden">
-                📱 MOBILE v2.2 - Breakpoint: 
-                <span className="sm:hidden">XS(&lt;640)</span>
-                <span className="hidden sm:inline md:hidden">SM(640-767)</span>
-                <span className="hidden md:inline lg:hidden">MD(768-1023)</span>
-            </div>
-            {/* Desktop indicator */}
-            <div className="fixed top-0 left-0 right-0 z-[9999] bg-green-600 text-white text-center py-1 text-xs font-bold hidden lg:block">
-                🖥️ DESKTOP - Breakpoint: 
-                <span className="xl:hidden">LG(1024-1279)</span>
-                <span className="hidden xl:inline">XL(1280+)</span>
-            </div>
-            
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div 
@@ -429,8 +415,8 @@ export default function Layout({ children }) {
             <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen overflow-hidden w-full">
                 <main className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm">
 
-                    {/* Mobile Header Bar - top-6 to account for debug banner */}
-                    <div className="lg:hidden sticky top-6 z-30 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/5">
+                    {/* Mobile Header Bar */}
+                    <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/5">
                         <button
                             onClick={() => setIsSidebarOpen(true)}
                             className="p-2.5 bg-slate-800 text-white rounded-xl border border-white/10 active:scale-95 transition-transform"

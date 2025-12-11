@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -22,14 +22,18 @@ import {
 } from "lucide-react";
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-// LoadingState removed - using inline loading
 import ErrorState from "@/components/ui/ErrorState";
 import TypingHeadline from "@/components/ui/TypingHeadline";
 import MagneticButton from "@/components/ui/MagneticButton";
-import FlowDiagram3D from "@/components/3d/FlowDiagram3D";
 import DashboardAnimation from "@/components/animations/DashboardAnimation";
 import SpotlightCard from "@/components/ui/SpotlightCard";
 import DashboardTabs from "@/components/dashboard/DashboardTabs";
+import DashboardMobileShell from "@/components/dashboard/mobile/DashboardMobileShell";
+import DashboardBottomNav from "@/components/dashboard/mobile/DashboardBottomNav";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
+
+// Lazy load heavy 3D component
+const FlowDiagram3D = lazy(() => import("@/components/3d/FlowDiagram3D"));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -37,6 +41,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function Dashboard() {
     const { t } = useTranslation();
+    const { isMobile, isDesktop } = useBreakpoint();
     const [user, setUser] = useState(null);
     const [abrechnungen, setAbrechnungen] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -49,8 +54,6 @@ export default function Dashboard() {
         setError(null);
 
         try {
-            console.log('Dashboard: Loading user data...');
-            
             // Timeout für User-Laden (10 Sekunden)
             const userPromise = User.me();
             const timeoutPromise = new Promise((_, reject) => 
@@ -85,9 +88,9 @@ export default function Dashboard() {
         loadData();
     }, []);
 
-    // GSAP ScrollTrigger for Hero Section
+    // GSAP ScrollTrigger for Hero Section (Desktop only)
     useEffect(() => {
-        if (!heroRef.current) return;
+        if (!heroRef.current || !isDesktop || isLoading) return;
 
         gsap.to(".hero-content", {
             y: 50,
@@ -115,7 +118,7 @@ export default function Dashboard() {
         );
 
         return () => ScrollTrigger.getAll().forEach(t => t.kill());
-    }, [isLoading]);
+    }, [isLoading, isDesktop]);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -181,15 +184,21 @@ export default function Dashboard() {
 
     return (
         <div className="h-full w-full bg-transparent text-white relative">
-            {/* Background Animation - Same style as Upload */}
+            {/* Background Animation */}
             <div className="absolute inset-0 z-0">
                 <Suspense fallback={<div className="w-full h-full bg-slate-950" />}>
                     <DashboardAnimation />
                 </Suspense>
             </div>
 
-            {/* Hero Section - Mobile Optimized */}
-            <section ref={heroRef} className="relative pt-16 sm:pt-20 pb-16 sm:pb-32 overflow-hidden">
+            {/* Main Content wrapped in Mobile Shell */}
+            <DashboardMobileShell>
+                {/* Hero Section - Mobile First */}
+                <section 
+                    id="hero"
+                    ref={heroRef} 
+                    className="relative pt-8 md:pt-16 lg:pt-20 pb-12 md:pb-16 lg:pb-32 overflow-hidden"
+                >
                 <div className="hero-content relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -218,12 +227,13 @@ export default function Dashboard() {
                             {t('dashboard.hero.subtitle', 'MiMiCheck analysiert Ihre Dokumente mit KI.')}
                         </p>
 
-                        {/* CTA Buttons - Mobile Stack */}
-                        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 justify-center mb-8 sm:mb-16 px-2">
+                        {/* CTA Buttons - Mobile First Stack */}
+                        <div className="flex flex-col gap-3 md:flex-row md:gap-4 justify-center mb-8 md:mb-16">
                             <MagneticButton
                                 onClick={() => navigate(createPageUrl("Upload"))}
                                 data-cursor-text={t('dashboard.hero.ctaUpload', 'Upload starten')}
-                                className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 transition-all duration-300 text-sm sm:text-base"
+                                size="touch"
+                                className="w-full md:w-auto rounded-2xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 transition-all duration-300"
                             >
                                 <Plus className="w-5 h-5 mr-2 inline" />
                                 {t('dashboard.hero.ctaUpload', 'Neue Abrechnung')}
@@ -231,7 +241,8 @@ export default function Dashboard() {
                             <MagneticButton
                                 onClick={() => navigate(createPageUrl("Antraege"))}
                                 data-cursor-text={t('dashboard.hero.ctaAntraege', 'Anträge ansehen')}
-                                className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 text-white text-sm sm:text-base"
+                                size="touch"
+                                className="w-full md:w-auto rounded-2xl font-semibold border border-white/10 bg-white/5 backdrop-blur-sm hover:bg-white/10 transition-all duration-300 text-white"
                             >
                                 <FileText className="w-5 h-5 mr-2 inline" />
                                 {t('dashboard.hero.ctaAntraege', 'Meine Anträge')}
@@ -240,7 +251,8 @@ export default function Dashboard() {
                                 <MagneticButton
                                     onClick={() => navigate(createPageUrl("Pricing"))}
                                     data-cursor-text="Premium upgraden"
-                                    className="w-full sm:w-auto px-6 sm:px-8 py-4 rounded-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 animate-pulse text-sm sm:text-base"
+                                    size="touch"
+                                    className="w-full md:w-auto rounded-2xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 transition-all duration-300 animate-pulse"
                                 >
                                     <Sparkles className="w-5 h-5 mr-2 inline" />
                                     Premium upgraden
@@ -251,13 +263,20 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* Flow Diagram */}
-            <section className="relative z-10 mb-20">
-                <FlowDiagram3D />
-            </section>
+            {/* Flow Diagram - Desktop Only */}
+            {isDesktop && (
+                <section className="relative z-10 mb-12 lg:mb-20">
+                    <Suspense fallback={<div className="h-48" />}>
+                        <FlowDiagram3D />
+                    </Suspense>
+                </section>
+            )}
 
-            {/* Stats Grid with Spotlight Cards - Mobile Optimized */}
-            <section className="stats-grid relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+            {/* Stats Grid - Mobile First */}
+            <section 
+                id="stats"
+                className="stats-grid relative z-10 max-w-7xl mx-auto py-6 md:py-8 lg:py-16"
+            >
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     {/* Quick Stats Cards */}
                     <motion.div className="stats-card">
@@ -325,21 +344,27 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* Profile & Anträge Tabs - Mobile Optimized */}
-            <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
-                <div className="mb-6 sm:mb-8">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading mb-2">
+            {/* Profile & Anträge Tabs - Mobile First */}
+            <section 
+                id="tabs"
+                className="relative z-10 max-w-7xl mx-auto py-6 md:py-8 lg:py-16"
+            >
+                <div className="mb-4 md:mb-6 lg:mb-8">
+                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-heading mb-2">
                         {t('dashboard.tabs.title', 'Dein Förder-Cockpit')}
                     </h2>
-                    <p className="text-sm sm:text-base text-slate-400">
+                    <p className="text-sm md:text-base text-slate-400">
                         {t('dashboard.tabs.subtitle', 'Profil ausfüllen, AI-Analyse starten, passende Anträge finden.')}
                     </p>
                 </div>
                 <DashboardTabs />
             </section>
 
-            {/* Recent Activity - Mobile Optimized */}
-            <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
+            {/* Recent Activity - Mobile First */}
+            <section 
+                id="activity"
+                className="relative z-10 max-w-7xl mx-auto py-6 md:py-8 lg:py-16"
+            >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
                     <h2 className="text-2xl sm:text-3xl font-bold text-white font-heading">{t('dashboard.activity.title', 'Letzte Aktivitäten')}</h2>
                     <Button variant="ghost" onClick={() => navigate(createPageUrl("Abrechnungen"))} className="text-slate-400 hover:text-white w-full sm:w-auto justify-center sm:justify-start">
@@ -356,7 +381,11 @@ export default function Dashboard() {
                                 <p className="text-sm text-slate-400 mb-6">
                                     {t('dashboard.activity.emptyText', 'Starten Sie jetzt und lassen Sie uns Ihre Dokumente analysieren!')}
                                 </p>
-                                <Button onClick={() => navigate(createPageUrl("Upload"))} className="bg-blue-600 hover:bg-blue-500 text-white">
+                                <Button 
+                                    onClick={() => navigate(createPageUrl("Upload"))} 
+                                    size="touch"
+                                    className="bg-blue-600 hover:bg-blue-500 text-white w-full md:w-auto"
+                                >
                                     <Plus className="w-4 h-4 mr-2" />
                                     {t('dashboard.activity.createFirst', 'Erste Abrechnung erstellen')}
                                 </Button>
@@ -408,6 +437,10 @@ export default function Dashboard() {
                     )}
                 </div>
             </section>
+            </DashboardMobileShell>
+
+            {/* Mobile Bottom Navigation */}
+            {isMobile && <DashboardBottomNav />}
         </div>
     );
 }

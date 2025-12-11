@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
-export default function MagneticButton({ children, className = "", ...props }) {
+export default function MagneticButton({ children, className = "", size = "default", ...props }) {
     const buttonRef = useRef(null);
     const [position, setPosition] = useState({ x: 0, y: 0 });
+
+    const sizeClasses = {
+        default: "px-6 py-3",
+        touch: "min-h-[48px] min-w-[48px] px-4 py-3 md:px-6",
+        lg: "px-8 py-4",
+    };
 
     useEffect(() => {
         const button = buttonRef.current;
@@ -42,7 +49,7 @@ export default function MagneticButton({ children, className = "", ...props }) {
             ref={buttonRef}
             animate={{ x: position.x, y: position.y }}
             transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
-            className={className}
+            className={cn(sizeClasses[size], className)}
             {...props}
         >
             {children}
