@@ -1,7 +1,36 @@
 import { useState, useEffect } from 'react';
-import { User, MapPin, CreditCard, Heart, Home, Briefcase, Users, PiggyBank, Shield, ChevronDown, Check, AlertCircle, Save, Lock, Sparkles, Baby, Info, Loader2 } from 'lucide-react';
+import { User, MapPin, CreditCard, Heart, Home, Briefcase, Users, PiggyBank, Shield, ChevronDown, Check, AlertCircle, Save, Lock, Sparkles, Baby, Info, Loader2, GraduationCap, TriangleAlert } from 'lucide-react';
 import { useUserProfile } from '@/components/UserProfileContext.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+
+import {
+  PersoenlichesDatenSection,
+  EinwilligungenSection,
+  KontaktSection,
+  BankSection,
+  KrankenversicherungSection,
+  WohnungSection,
+  EinkommenSection,
+  PartnerSection,
+  KinderSection,
+  VermoegenSection,
+  BesonderesSection,
+  BildungSection
+} from '@/components/profil';
+
+const INITIAL_PROFIL = {
+  anrede: '', vorname: '', nachname: '', geburtsdatum: '',
+  steuer_id: '', sozialversicherungsnummer: '',
+
+  strasse: '', hausnummer: '', adresszusatz: '', plz: '', ort: '',
+  bundesland: '', landkreis: '', telefon_mobil: '', telefon_festnetz: '',
+  email: '', de_mail: '',
+
+  iban: '', bic: '', kontoinhaber: '', bank_name: '',
+
+  dsgvo_einwilligung: false, ki_verarbeitung_einwilligung: false,
+  datenweitergabe_behoerden: false
+};
 
 export default function ProfilSeite() {
   const { user: userProfile, updateUserProfile } = useUserProfile();
@@ -9,51 +38,61 @@ export default function ProfilSeite() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  const [profil, setProfil] = useState({
-    persoenlich: { anrede: '', vorname: '', nachname: '', geburtsdatum: '', steuer_id: '' },
-    kontakt: { strasse: '', hausnummer: '', plz: '', ort: '', email: '' },
-    bank: { kontoinhaber: '', iban: '' },
-    einwilligungen: { dsgvo_einwilligung: false }
-  });
+
+  const [profil, setProfil] = useState(INITIAL_PROFIL);
+
+  // Load local draft first (fast path)
+  useEffect(() => {
+    const localData = localStorage.getItem('mimicheck-profil');
+    if (!localData) return;
+    try {
+      const parsed = JSON.parse(localData);
+      setProfil(prev => ({ ...prev, ...parsed }));
+    } catch {
+      // ignore invalid local storage
+    }
+  }, []);
+
+  // Auto-save draft to localStorage
+  useEffect(() => {
+    const dataToSave = {};
+    Object.keys(profil).forEach((key) => {
+      const value = profil[key];
+      if (typeof value === 'boolean') {
+        dataToSave[key] = value;
+      } else if (value && value !== '') {
+        dataToSave[key] = value;
+      }
+    });
+
+    try {
+      localStorage.setItem('mimicheck-profil', JSON.stringify(dataToSave));
+    } catch {
+      // ignore write issues
+    }
+  }, [profil]);
 
   useEffect(() => {
-    if (userProfile) {
-      setProfil({
-        persoenlich: {
-          anrede: userProfile.anrede || '',
-          vorname: userProfile.vorname || userProfile.name?.split(' ')[0] || '',
-          nachname: userProfile.nachname || userProfile.name?.split(' ').slice(1).join(' ') || '',
-          geburtsdatum: userProfile.geburtsdatum || '',
-          steuer_id: userProfile.steuer_id || ''
-        },
-        kontakt: {
-          strasse: userProfile.strasse || '',
-          hausnummer: userProfile.hausnummer || '',
-          plz: userProfile.plz || '',
-          ort: userProfile.ort || '',
-          email: userProfile.email || ''
-        },
-        bank: {
-          kontoinhaber: userProfile.kontoinhaber || '',
-          iban: userProfile.iban || ''
-        },
-        einwilligungen: {
-          dsgvo_einwilligung: userProfile.dsgvo_einwilligung || false
-        }
-      });
-    }
+    if (!userProfile) return;
+    const cleanData = {};
+    Object.keys(userProfile).forEach((key) => {
+      const value = userProfile[key];
+      if (value !== null && value !== undefined) {
+        cleanData[key] = value;
+      }
+    });
+    setProfil(prev => ({ ...prev, ...cleanData }));
   }, [userProfile]);
 
   const calculateCompleteness = () => {
     const requiredFields = [
-      profil.persoenlich.vorname,
-      profil.persoenlich.nachname,
-      profil.persoenlich.geburtsdatum,
-      profil.kontakt.strasse,
-      profil.kontakt.plz,
-      profil.kontakt.ort,
-      profil.einwilligungen.dsgvo_einwilligung
+      profil.vorname,
+      profil.nachname,
+      profil.geburtsdatum,
+      profil.strasse,
+      profil.plz,
+      profil.ort,
+      profil.dsgvo_einwilligung
     ];
     const filledFields = requiredFields.filter(f => f && f !== '').length;
     return Math.round((filledFields / requiredFields.length) * 100);
@@ -62,26 +101,37 @@ export default function ProfilSeite() {
   const profileCompleteness = calculateCompleteness();
 
   const handleSave = async () => {
-    if (!profil.einwilligungen.dsgvo_einwilligung) return;
     setIsSaving(true);
     setSaveMessage(null);
     try {
+      const dataToSave = {};
+      Object.keys(profil).forEach((key) => {
+        const value = profil[key];
+        if (typeof value === 'boolean') {
+          dataToSave[key] = value;
+        } else if (value && value !== '') {
+          dataToSave[key] = value;
+        }
+      });
+
+      try {
+        localStorage.setItem('mimicheck-profil', JSON.stringify(dataToSave));
+      } catch {
+        // ignore local save issues
+      }
+
+      if (!profil.dsgvo_einwilligung) {
+        setSaveMessage({ type: 'error', text: 'Bitte im Bereich „Datenschutz“ die Einwilligung erteilen, damit wir in der Cloud speichern dürfen.' });
+        return;
+      }
+
       await updateUserProfile({
-        anrede: profil.persoenlich.anrede,
-        vorname: profil.persoenlich.vorname,
-        nachname: profil.persoenlich.nachname,
-        name: `${profil.persoenlich.vorname} ${profil.persoenlich.nachname}`.trim(),
-        geburtsdatum: profil.persoenlich.geburtsdatum || null,
-        steuer_id: profil.persoenlich.steuer_id,
-        strasse: profil.kontakt.strasse,
-        hausnummer: profil.kontakt.hausnummer,
-        plz: profil.kontakt.plz,
-        ort: profil.kontakt.ort,
-        kontoinhaber: profil.bank.kontoinhaber,
-        iban: profil.bank.iban,
-        dsgvo_einwilligung: profil.einwilligungen.dsgvo_einwilligung,
+        ...dataToSave,
+        name: `${profil.vorname} ${profil.nachname}`.trim(),
+        geburtsdatum: profil.geburtsdatum || null,
         profile_completeness: profileCompleteness
       });
+
       setSaveMessage({ type: 'success', text: 'Profil erfolgreich gespeichert!' });
     } catch (error) {
       console.error('Save error:', error);
@@ -90,6 +140,11 @@ export default function ProfilSeite() {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);
     }
+  };
+
+  const handleChange = (field) => (e) => {
+    const value = e?.target?.type === 'checkbox' ? e.target.checked : e?.target?.value;
+    setProfil(prev => ({ ...prev, [field]: value }));
   };
 
   const sections = [
@@ -102,15 +157,10 @@ export default function ProfilSeite() {
     { id: 'partner', label: 'Partner/in', icon: Users, emoji: '👫' },
     { id: 'kinder', label: 'Kinder', icon: Baby, emoji: '👶' },
     { id: 'vermoegen', label: 'Vermögen', icon: PiggyBank, emoji: '💰' },
+    { id: 'besonderes', label: 'Besondere Umstände', icon: TriangleAlert, emoji: '⚠️' },
+    { id: 'bildung', label: 'Bildung', icon: GraduationCap, emoji: '🎓' },
     { id: 'einwilligungen', label: 'Datenschutz', icon: Shield, emoji: '🔒' }
   ];
-
-  const updateField = (section, field, value) => {
-    setProfil(prev => ({
-      ...prev,
-      [section]: { ...prev[section], [field]: value }
-    }));
-  };
 
   const currentSection = sections.find(s => s.id === activeSection);
   const Icon = currentSection?.icon || User;
@@ -121,142 +171,35 @@ export default function ProfilSeite() {
   };
 
   const renderContent = () => {
-    if (activeSection === 'persoenlich') {
-      return (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Anrede</label>
-              <select value={profil.persoenlich.anrede} onChange={(e) => updateField('persoenlich', 'anrede', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50">
-                <option value="" className="bg-slate-900">Bitte wählen...</option>
-                <option value="herr" className="bg-slate-900">Herr</option>
-                <option value="frau" className="bg-slate-900">Frau</option>
-              </select>
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Vorname *</label>
-              <input type="text" value={profil.persoenlich.vorname} onChange={(e) => updateField('persoenlich', 'vorname', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Nachname *</label>
-              <input type="text" value={profil.persoenlich.nachname} onChange={(e) => updateField('persoenlich', 'nachname', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Geburtsdatum *</label>
-              <input type="date" value={profil.persoenlich.geburtsdatum} onChange={(e) => updateField('persoenlich', 'geburtsdatum', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Steuer-ID *</label>
-            <input type="text" placeholder="11-stellig" value={profil.persoenlich.steuer_id} onChange={(e) => updateField('persoenlich', 'steuer_id', e.target.value)}
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:border-cyan-500/50" />
-          </div>
-        </div>
-      );
+    const props = { profil, handleChange, setProfil, handleSave, saving: isSaving };
+    switch (activeSection) {
+      case 'persoenlich':
+        return <PersoenlichesDatenSection {...props} />;
+      case 'kontakt':
+        return <KontaktSection {...props} />;
+      case 'bank':
+        return <BankSection {...props} />;
+      case 'krankenversicherung':
+        return <KrankenversicherungSection {...props} />;
+      case 'wohnung':
+        return <WohnungSection {...props} />;
+      case 'einkommen':
+        return <EinkommenSection {...props} />;
+      case 'partner':
+        return <PartnerSection {...props} />;
+      case 'kinder':
+        return <KinderSection {...props} />;
+      case 'vermoegen':
+        return <VermoegenSection {...props} />;
+      case 'besonderes':
+        return <BesonderesSection {...props} />;
+      case 'bildung':
+        return <BildungSection {...props} />;
+      case 'einwilligungen':
+        return <EinwilligungenSection {...props} />;
+      default:
+        return <PersoenlichesDatenSection {...props} />;
     }
-    
-    if (activeSection === 'kontakt') {
-      return (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Straße *</label>
-            <input type="text" value={profil.kontakt.strasse} onChange={(e) => updateField('kontakt', 'strasse', e.target.value)}
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Nr.</label>
-              <input type="text" value={profil.kontakt.hausnummer} onChange={(e) => updateField('kontakt', 'hausnummer', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">PLZ *</label>
-              <input type="text" value={profil.kontakt.plz} onChange={(e) => updateField('kontakt', 'plz', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Ort *</label>
-              <input type="text" value={profil.kontakt.ort} onChange={(e) => updateField('kontakt', 'ort', e.target.value)}
-                className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">E-Mail</label>
-            <input type="email" value={profil.kontakt.email} onChange={(e) => updateField('kontakt', 'email', e.target.value)}
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-          </div>
-        </div>
-      );
-    }
-
-    if (activeSection === 'bank') {
-      return (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">Kontoinhaber *</label>
-            <input type="text" value={profil.bank.kontoinhaber} onChange={(e) => updateField('bank', 'kontoinhaber', e.target.value)}
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-cyan-500/50" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-cyan-300/80 mb-1.5">IBAN *</label>
-            <input type="text" placeholder="DE00 0000 0000 0000 0000 00" value={profil.bank.iban} onChange={(e) => updateField('bank', 'iban', e.target.value)}
-              className="w-full px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:border-cyan-500/50" />
-          </div>
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-            <p className="text-xs text-emerald-300 flex items-start gap-2">
-              <Info size={14} className="shrink-0 mt-0.5" />
-              <span>Für Auszahlung von Kindergeld, Wohngeld etc.</span>
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    if (activeSection === 'einwilligungen') {
-      return (
-        <div className="space-y-4">
-          <div className="p-4 rounded-xl bg-slate-800 border border-white/10">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 flex items-center justify-center shrink-0">
-                <Shield size={18} className="text-white" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-white text-sm mb-1">EU-Datenschutz</h4>
-                <ul className="text-xs text-white/70 space-y-0.5">
-                  <li>✓ AES-256 Verschlüsselung</li>
-                  <li>✓ Server in Deutschland</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className={`p-4 rounded-xl border cursor-pointer ${profil.einwilligungen.dsgvo_einwilligung ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-white/5 border-white/10'}`}
-            onClick={() => updateField('einwilligungen', 'dsgvo_einwilligung', !profil.einwilligungen.dsgvo_einwilligung)}>
-            <div className="flex items-start gap-3">
-              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${profil.einwilligungen.dsgvo_einwilligung ? 'bg-gradient-to-r from-cyan-500 to-teal-500 border-transparent' : 'border-white/20'}`}>
-                {profil.einwilligungen.dsgvo_einwilligung && <Check size={12} className="text-white" />}
-              </div>
-              <div>
-                <span className="text-sm text-white/90 font-medium">DSGVO Einwilligung *</span>
-                <p className="text-xs text-white/40 mt-1">Daten zur Antragsbearbeitung speichern</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="text-center py-8">
-        <Sparkles size={32} className="mx-auto mb-3 text-cyan-400/50" />
-        <p className="text-sm text-white/60">Wird noch implementiert</p>
-      </div>
-    );
   };
 
   return (
@@ -272,7 +215,7 @@ export default function ProfilSeite() {
       
       {/* Mobile: Single Column Layout */}
       <div className="lg:hidden">
-        <div className="px-4 py-4 pb-32">
+        <div className="px-4 py-4 pb-[calc(10rem+env(safe-area-inset-bottom))]">
           {/* Header */}
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -367,7 +310,7 @@ export default function ProfilSeite() {
           </div>
 
           {/* DSGVO Warning */}
-          {!profil.einwilligungen.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
+          {!profil.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
             <div className="mt-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
               <div className="flex items-start gap-2">
                 <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
@@ -383,10 +326,10 @@ export default function ProfilSeite() {
         </div>
 
         {/* Floating Save Button */}
-        <div className="fixed bottom-4 left-4 right-4 z-50">
+        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50">
           <button 
             onClick={handleSave}
-            disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
+            disabled={isSaving}
             className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 shadow-xl shadow-cyan-500/30"
           >
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
@@ -469,7 +412,7 @@ export default function ProfilSeite() {
                   </div>
                   <button 
                     onClick={handleSave}
-                    disabled={!profil.einwilligungen.dsgvo_einwilligung || isSaving}
+                    disabled={isSaving}
                     className="px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 text-sm bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40"
                   >
                     {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
@@ -477,7 +420,7 @@ export default function ProfilSeite() {
                   </button>
                 </div>
                 {renderContent()}
-                {!profil.einwilligungen.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
+                {!profil.dsgvo_einwilligung && activeSection !== 'einwilligungen' && (
                   <div className="mt-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-4">
                     <AlertCircle size={20} className="text-amber-400" />
                     <p className="text-sm text-amber-200 flex-1">Bitte akzeptieren Sie im Bereich "Datenschutz" die Datenverarbeitung.</p>

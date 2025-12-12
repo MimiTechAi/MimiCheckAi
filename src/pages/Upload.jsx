@@ -274,9 +274,9 @@ export default function Upload() {
                 <UploadAnimation />
             </div>
 
-            <div className="relative z-10 container mx-auto px-4 py-8 max-w-5xl h-full flex flex-col">
+            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 h-full flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center justify-between mb-6 sm:mb-8">
                     <Button
                         variant="ghost"
                         onClick={() => navigate(-1)}
@@ -295,13 +295,13 @@ export default function Upload() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="w-full max-w-2xl"
+                        className="w-full max-w-none sm:max-w-2xl"
                     >
                         <div className="text-center mb-10">
-                            <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight font-heading">
+                            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 tracking-tight font-heading">
                                 {t('uploadPage.title', 'Dokument')} <span className="text-violet-400">{t('uploadPage.titleHighlight', 'hochladen')}</span>
                             </h1>
-                            <p className="text-lg text-slate-400 max-w-lg mx-auto">
+                            <p className="text-base sm:text-lg text-slate-400 max-w-lg mx-auto">
                                 {t('uploadPage.subtitle', 'Wir analysieren deine Nebenkostenabrechnung oder deinen Mietvertrag auf Fehler und Sparpotenzial.')}
                             </p>
                         </div>
@@ -325,7 +325,7 @@ export default function Upload() {
                             </SpotlightCard>
                         ) : (
                             <SpotlightCard className="p-1 border-white/10 overflow-hidden" spotlightColor="rgba(139, 92, 246, 0.15)">
-                                <div className="bg-slate-900/50 rounded-xl p-8 backdrop-blur-sm">
+                                <div className="bg-slate-900/50 rounded-xl p-4 sm:p-8 backdrop-blur-sm">
                                     <FileUploadZone
                                         onFileSelected={handleFileSelect}
                                         acceptedFileTypes={{
@@ -336,7 +336,7 @@ export default function Upload() {
                                         maxSize={10 * 1024 * 1024} // 10MB
                                     />
 
-                                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                                    <div className="mt-6 sm:mt-8 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 text-center">
                                         <div className="p-4 rounded-lg bg-white/5 border border-white/5">
                                             <div className="w-8 h-8 mx-auto mb-2 rounded-full bg-violet-500/20 flex items-center justify-center text-violet-400">
                                                 <FileText className="w-4 h-4" />

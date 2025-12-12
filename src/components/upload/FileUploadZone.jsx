@@ -237,8 +237,8 @@ export default function FileUploadZone({ onFileSelected }) {
     // FILE SELECTED - CONFIRMATION VIEW
     if (file) {
         return (
-            <div className="text-center p-8 border-2 border-dashed border-green-400 dark:border-green-600 bg-green-50/50 dark:bg-green-900/20 rounded-2xl">
-                <div className="flex items-center justify-center gap-4 text-lg font-semibold text-green-800 dark:text-green-300 mb-4">
+            <div className="text-center p-5 sm:p-8 border-2 border-dashed border-green-400 dark:border-green-600 bg-green-50/50 dark:bg-green-900/20 rounded-2xl">
+                <div className="flex items-center justify-center gap-3 sm:gap-4 text-base sm:text-lg font-semibold text-green-800 dark:text-green-300 mb-4">
                     <Check className="w-6 h-6" />
                     <span>Datei bereit zum Hochladen:</span>
                 </div>
@@ -253,7 +253,7 @@ export default function FileUploadZone({ onFileSelected }) {
                     </p>
                 </div>
                 
-                <div className="flex justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                     <Button 
                         variant="outline" 
                         onClick={() => {
@@ -340,7 +340,7 @@ export default function FileUploadZone({ onFileSelected }) {
                 </Alert>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch">
                 {/* DRAG & DROP ZONE */}
                 <div
                     onDragEnter={handleDrag}
@@ -349,7 +349,7 @@ export default function FileUploadZone({ onFileSelected }) {
                     onDrop={handleDrop}
                     onClick={openFileDialog}
                     className={cn(
-                        "relative group p-10 flex flex-col items-center justify-center text-center border-4 border-dashed rounded-3xl transition-all duration-300 ease-in-out cursor-pointer",
+                        "relative group p-6 sm:p-10 flex flex-col items-center justify-center text-center border-2 sm:border-4 border-dashed rounded-3xl transition-all duration-300 ease-in-out cursor-pointer",
                         isDragActive && !isDragReject && 'border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20',
                         isDragReject && 'border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20',
                         !isDragActive && 'border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'
@@ -367,17 +367,17 @@ export default function FileUploadZone({ onFileSelected }) {
                     
                     <div className="relative">
                         <div className={cn(
-                            "w-24 h-24 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300",
+                            "w-16 h-16 sm:w-24 sm:h-24 rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300",
                             isDragReject ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'
                         )}>
                             {isDragReject ? (
-                                <X className="w-12 h-12 text-white" />
+                                <X className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
                             ) : (
-                                <Upload className="w-12 h-12 text-white" />
+                                <Upload className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
                             )}
                         </div>
                         
-                        <h3 className="mt-6 text-2xl font-bold text-slate-800 dark:text-white">
+                        <h3 className="mt-5 sm:mt-6 text-xl sm:text-2xl font-bold text-slate-800 dark:text-white">
                             Dokument hochladen
                         </h3>
                         
@@ -399,8 +399,8 @@ export default function FileUploadZone({ onFileSelected }) {
                 </div>
 
                 {/* ALTERNATIVES */}
-                <div className="p-8 bg-slate-100/50 dark:bg-slate-800/50 rounded-3xl border border-slate-200/60 dark:border-slate-700/60">
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+                <div className="p-5 sm:p-8 bg-slate-100/50 dark:bg-slate-800/50 rounded-3xl border border-slate-200/60 dark:border-slate-700/60">
+                    <h3 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white mb-4">
                         Alternativen
                     </h3>
                     
@@ -409,7 +409,7 @@ export default function FileUploadZone({ onFileSelected }) {
                             variant="outline" 
                             onClick={startCamera}
                             disabled={isCapturing}
-                            className="w-full justify-start p-6 text-left h-auto border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            className="w-full justify-start p-4 sm:p-6 text-left h-auto border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
                         >
                             <Camera className="w-5 h-5 mr-4 text-blue-600 dark:text-blue-400" />
                             <div>
@@ -424,7 +424,7 @@ export default function FileUploadZone({ onFileSelected }) {
                         
                         <Button 
                             variant="outline" 
-                            className="w-full justify-start p-6 text-left h-auto border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 opacity-50 cursor-not-allowed"
+                            className="w-full justify-start p-4 sm:p-6 text-left h-auto border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 opacity-50 cursor-not-allowed"
                             disabled
                         >
                             <FileText className="w-5 h-5 mr-4 text-slate-400" />
