@@ -18,7 +18,7 @@ const LoadingFallback = ({ text = 'Wird geladen...' }) => (
 // ============================================================
 // CRITICAL PATH - Direkte Imports (häufig genutzt)
 // ============================================================
-import ProfilSeiteSimple from "./ProfilSeiteSimple";
+import ProfilSeite from "./ProfilSeite";
 import Upload from "./Upload";
 import Assistent from "./Assistent";
 import Antraege from "./Antraege";
@@ -76,7 +76,7 @@ import AuthBridge from './AuthBridge.jsx';
 
 const PAGES = {
 
-    ProfilSeite: ProfilSeiteSimple,
+    ProfilSeite: ProfilSeite,
 
     Upload: Upload,
 
@@ -209,7 +209,7 @@ function PagesContent() {
                 {/* ProfilSeite */}
                 <Route path="/profilseite" element={
                   <ProtectedRoute>
-                    <ProfilSeiteSimple />
+                    <ProfilSeite />
                   </ProtectedRoute>
                 } />
 

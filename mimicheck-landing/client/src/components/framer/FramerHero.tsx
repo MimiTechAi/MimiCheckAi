@@ -107,11 +107,11 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
 
   return (
     <section
-      className={`relative min-h-screen flex items-center justify-center overflow-hidden ${className}`}
+      className={`relative min-h-[100svh] flex items-center justify-center overflow-hidden ${className}`}
     >
       {/* 3D Holographic Sphere - Background Element */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] md:w-[800px] md:h-[800px] opacity-60">
+        <div className="w-[420px] h-[420px] sm:w-[600px] sm:h-[600px] md:w-[800px] md:h-[800px] opacity-60">
           <Suspense fallback={<div className="w-full h-full" />}>
             <HeroSphere3D prefersReducedMotion={prefersReducedMotion} />
           </Suspense>
@@ -203,9 +203,9 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
         {/* Stats Row */}
         <motion.div
           variants={prefersReducedMotion ? undefined : itemVariants}
-          className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-8 max-w-2xl mx-auto"
         >
-          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+          <div className="text-center p-3 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
             <p className="text-2xl sm:text-3xl font-bold text-white">
               {t("stats.savings")}
             </p>
@@ -213,7 +213,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
               {t("stats.savingsLabel")}
             </p>
           </div>
-          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+          <div className="text-center p-3 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
             <p className="text-2xl sm:text-3xl font-bold text-emerald-400">
               {t("stats.time")}
             </p>
@@ -221,7 +221,7 @@ export default function FramerHero({ className = "" }: FramerHeroProps) {
               {t("stats.timeLabel")}
             </p>
           </div>
-          <div className="text-center p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+          <div className="text-center p-3 sm:p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
             <p className="text-2xl sm:text-3xl font-bold text-white">
               {t("stats.success")}
             </p>
