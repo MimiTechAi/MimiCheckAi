@@ -126,7 +126,7 @@ export default function Layout({ children }) {
             <div className="min-h-screen bg-slate-950 font-sans flex flex-col selection:bg-emerald-500/30">
                 {/* Public Navbar */}
                 <header className="sticky top-0 z-50 w-full border-b border-white/5 bg-slate-950/80 backdrop-blur-xl">
-                    <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+                    <div className="container mx-auto px-4 sm:px-6 h-auto sm:h-16 flex items-center justify-between py-3 sm:py-0 pt-[calc(0.75rem+env(safe-area-inset-top))] sm:pt-0">
                         {/* Logo */}
                         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                             <img src="/logo.png" alt="MiMiCheck Logo" className="h-8 w-auto" />

@@ -55,14 +55,14 @@ export default function Home() {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="min-h-screen supports-[min-height:100svh]:min-h-[100svh] bg-slate-950 text-white">
             {/* Hero Section */}
             <section className="relative overflow-hidden">
                 {/* Background Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-slate-950 to-emerald-600/10" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent" />
                 
-                <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-32">
+                <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 lg:py-32">
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div>
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-sm mb-6">
@@ -70,7 +70,7 @@ export default function Home() {
                                 KI-gestützte Dokumentenanalyse
                             </div>
                             
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
+                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
                                 Ihre Dokumente.
                                 <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
@@ -78,15 +78,15 @@ export default function Home() {
                                 </span>
                             </h1>
                             
-                            <p className="mt-6 text-lg text-slate-400 leading-relaxed max-w-lg">
+                            <p className="mt-5 sm:mt-6 text-base sm:text-lg text-slate-400 leading-relaxed max-w-lg">
                                 MiMiCheck analysiert Ihre Nebenkostenabrechnungen, Mietverträge und andere Dokumente mit künstlicher Intelligenz – und findet Fehler, die Geld kosten.
                             </p>
                             
-                            <div className="mt-8 flex flex-wrap gap-4">
+                            <div className="mt-7 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <Button 
                                     size="lg"
                                     onClick={() => navigate(createPageUrl('Upload'))}
-                                    className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/25"
+                                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white shadow-lg shadow-blue-500/25"
                                 >
                                     <Upload className="w-5 h-5 mr-2" />
                                     Dokument hochladen
@@ -95,7 +95,7 @@ export default function Home() {
                                     size="lg"
                                     variant="outline"
                                     onClick={() => navigate(createPageUrl('Abrechnungen'))}
-                                    className="border-white/20 text-white hover:bg-white/10"
+                                    className="w-full sm:w-auto border-white/20 text-white bg-white/5 hover:bg-white/10"
                                 >
                                     Meine Dokumente
                                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -195,7 +195,7 @@ export default function Home() {
             {/* Stats Section */}
             <section className="py-16 border-y border-white/5">
                 <div className="max-w-6xl mx-auto px-6">
-                    <div className="grid grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                         {stats.map((stat, index) => (
                             <div key={index} className="text-center">
                                 <p className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
