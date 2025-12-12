@@ -92,7 +92,7 @@ export default function AnspruchsAnalyse() {
   }
 
   return (
-    <div className="h-full w-full bg-transparent relative overflow-hidden">
+    <div className="min-h-full w-full bg-transparent relative">
       {/* Ultra 8K WebGL Background - Green Flow */}
       <div className="absolute inset-0 z-0">
         <Suspense fallback={
@@ -109,7 +109,7 @@ export default function AnspruchsAnalyse() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 h-full overflow-y-auto p-6 pb-24">
+      <div className="relative z-10 p-6 pb-24">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Ultra Glass Header */}
           <motion.div

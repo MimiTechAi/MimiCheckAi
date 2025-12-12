@@ -398,7 +398,7 @@ export default function Layout({ children }) {
 
             {/* MAIN CONTENT WRAPPER - Dark Theme Container */}
             <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen supports-[height:100svh]:h-[100svh] overflow-hidden w-full">
-                <main id="app-scroll-container" className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm">
+                <main id="app-scroll-container" className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-0">
 
                     {/* Mobile Header Bar */}
                     <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/5">

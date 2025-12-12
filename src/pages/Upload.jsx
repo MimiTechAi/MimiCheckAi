@@ -268,13 +268,13 @@ export default function Upload() {
     }
 
     return (
-        <div className="h-full w-full bg-transparent text-white relative overflow-hidden">
+        <div className="min-h-full w-full bg-transparent text-white relative">
             {/* Background Animation */}
             <div className="absolute inset-0 z-0">
                 <UploadAnimation />
             </div>
 
-            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 h-full flex flex-col">
+            <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6 sm:mb-8">
                     <Button

@@ -24,7 +24,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="h-full w-full bg-transparent text-white relative overflow-hidden">
+    <div className="min-h-full w-full bg-transparent text-white relative">
       {/* Background Animation */}
       <div className="absolute inset-0 z-0 opacity-30">
         <DashboardAnimation />
