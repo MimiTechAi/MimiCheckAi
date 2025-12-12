@@ -82,7 +82,7 @@ export default function Bericht() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+            <div className="min-h-full bg-slate-950 text-white flex items-center justify-center">
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-slate-400">Bericht wird geladen...</p>
@@ -93,7 +93,7 @@ export default function Bericht() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-slate-950 text-white p-8">
+            <div className="min-h-full bg-slate-950 text-white p-8">
                 <div className="max-w-2xl mx-auto text-center">
                     <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold mb-4">Fehler</h1>
@@ -125,7 +125,7 @@ export default function Bericht() {
     const einzelposten = extractedData.einzelposten || [];
     
     return (
-        <div className="min-h-screen bg-slate-950 text-white p-4 md:p-8">
+        <div className="min-h-full bg-slate-950 text-white p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">

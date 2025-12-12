@@ -83,7 +83,7 @@ export default function BackendSetup() {
 
     if (!user) {
         return (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex items-center justify-center min-h-full">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
         );
@@ -92,7 +92,7 @@ export default function BackendSetup() {
     // Only admins can access this page
     if (user.role !== 'admin') {
         return (
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex items-center justify-center min-h-full">
                 <Card className="max-w-md">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-red-600">

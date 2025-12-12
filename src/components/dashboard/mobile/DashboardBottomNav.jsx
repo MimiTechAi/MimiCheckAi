@@ -13,6 +13,10 @@ export default function DashboardBottomNav() {
   const { t } = useTranslation();
   const [activeSection, setActiveSection] = useState('hero');
 
+  const getScrollContainer = () => {
+    return document.getElementById('app-scroll-container') || window;
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const sections = [
@@ -21,13 +25,25 @@ export default function DashboardBottomNav() {
         { id: 'tabs', navId: 'stats' },
         { id: 'activity', navId: 'activity' }
       ];
-      const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+      const container = getScrollContainer();
+      const isWindow = container === window;
+      const scrollTop = isWindow ? window.scrollY : container.scrollTop;
+      const viewportHeight = isWindow ? window.innerHeight : container.clientHeight;
+      const scrollPosition = scrollTop + viewportHeight / 2;
+
+      const containerRect = !isWindow ? container.getBoundingClientRect() : null;
 
       for (const section of sections) {
         const element = document.getElementById(section.id);
         if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+          const elementRect = element.getBoundingClientRect();
+          const elementTop = isWindow
+            ? element.offsetTop
+            : (elementRect.top - containerRect.top + scrollTop);
+          const elementHeight = element.offsetHeight;
+
+          if (scrollPosition >= elementTop && scrollPosition < elementTop + elementHeight) {
             setActiveSection(section.navId);
             break;
           }
@@ -35,20 +51,47 @@ export default function DashboardBottomNav() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    const container = getScrollContainer();
+    if (container === window) {
+      window.addEventListener('scroll', handleScroll);
+    } else {
+      container.addEventListener('scroll', handleScroll);
+    }
+
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    return () => {
+      if (container === window) {
+        window.removeEventListener('scroll', handleScroll);
+      } else {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
   }, []);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
       const offset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      const container = getScrollContainer();
 
-      window.scrollTo({
-        top: offsetPosition,
+      if (container === window) {
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+        return;
+      }
+
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      const elementTop = elementRect.top - containerRect.top + container.scrollTop;
+      const targetTop = Math.max(0, elementTop - offset);
+
+      container.scrollTo({
+        top: targetTop,
         behavior: 'smooth'
       });
     }

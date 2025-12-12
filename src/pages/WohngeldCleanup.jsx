@@ -142,7 +142,7 @@ export default function WohngeldCleanup() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-full bg-slate-50 p-6">
             <div className="max-w-4xl mx-auto space-y-6">
                 
                 {/* Status Header */}

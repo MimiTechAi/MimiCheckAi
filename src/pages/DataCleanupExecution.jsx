@@ -77,7 +77,7 @@ export default function DataCleanupExecution() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-50 p-6 flex items-center justify-center">
+            <div className="min-h-full bg-slate-50 p-6 flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
                     <p className="text-slate-600">Lade Förderleistungen...</p>
@@ -87,7 +87,7 @@ export default function DataCleanupExecution() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 p-6">
+        <div className="min-h-full bg-slate-50 p-6">
             <div className="max-w-4xl mx-auto">
                 <Card className="border-red-200 shadow-xl">
                     <CardHeader className="bg-red-50 border-b">

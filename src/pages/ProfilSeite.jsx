@@ -214,8 +214,8 @@ export default function ProfilSeite() {
       </div>
       
       {/* Mobile: Single Column Layout */}
-      <div className="lg:hidden">
-        <div className="px-4 py-4 pb-[calc(10rem+env(safe-area-inset-bottom))]">
+      <div className="lg:hidden flex flex-col min-h-full">
+        <div className="px-4 py-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] flex-1">
           {/* Header */}
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-1">
@@ -326,16 +326,15 @@ export default function ProfilSeite() {
         </div>
 
         {/* Floating Save Button */}
-        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 pr-16">
+        <div className="sticky bottom-0 z-30 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent">
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 shadow-xl shadow-cyan-500/30"
+            className="w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 disabled:opacity-40 shadow-xl shadow-cyan-500/30"
           >
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             {isSaving ? 'Speichern...' : 'Speichern'}
           </button>
-          {/* Debug Version */}
           <p className="text-center text-[8px] text-white/20 mt-1 font-mono">mobile-v2.1-dec10</p>
         </div>
       </div>

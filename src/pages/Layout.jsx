@@ -241,7 +241,7 @@ export default function Layout({ children }) {
     // APP LAYOUT (Sidebar + Dashboard)
     // ============================================================
     return (
-        <div className="min-h-screen bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
+        <div className="min-h-screen supports-[height:100svh]:min-h-[100svh] bg-slate-950 font-sans flex overflow-hidden selection:bg-emerald-500/30">
             {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div 
@@ -397,8 +397,8 @@ export default function Layout({ children }) {
             </aside>
 
             {/* MAIN CONTENT WRAPPER - Dark Theme Container */}
-            <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen overflow-hidden w-full">
-                <main className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm">
+            <div className="flex-1 relative bg-slate-950 lg:py-3 lg:pr-3 h-screen supports-[height:100svh]:h-[100svh] overflow-hidden w-full">
+                <main id="app-scroll-container" className="h-full w-full bg-slate-900/50 lg:rounded-[2rem] shadow-2xl overflow-y-auto overflow-x-hidden relative scrollbar-hide border-0 lg:border border-white/5 backdrop-blur-sm">
 
                     {/* Mobile Header Bar */}
                     <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-slate-900/95 backdrop-blur-lg border-b border-white/5">

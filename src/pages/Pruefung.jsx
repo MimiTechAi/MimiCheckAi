@@ -118,7 +118,7 @@ export default function Pruefung() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+            <div className="min-h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
                 <Card className="w-96">
                     <CardContent className="p-6 text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -131,7 +131,7 @@ export default function Pruefung() {
 
     if (!leistung) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
+            <div className="min-h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6 flex items-center justify-center">
                 <Card className="w-96">
                     <CardContent className="p-6 text-center">
                         <AlertTriangle className="w-8 h-8 mx-auto mb-4 text-red-600" />
@@ -147,7 +147,7 @@ export default function Pruefung() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+        <div className="min-h-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">

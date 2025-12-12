@@ -17,14 +17,19 @@ export default function FoerderPruefradar() {
             setResults(evaluationResults);
             setIsCalculating(false);
             if (window.innerWidth < 768) {
-                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                const container = document.getElementById('app-scroll-container');
+                if (container) {
+                    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+                } else {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }
             }
         }, 500);
     };
 
     return (
         <div 
-            className="min-h-screen relative overflow-hidden"
+            className="min-h-full relative overflow-hidden"
             style={{
                 backgroundImage: "url('/uploads/20250726_1711_Cyberpunk German Emblem_simple_compose_01k13mh0awf0st6e14qcf1rj4b.png')",
                 backgroundSize: 'cover',

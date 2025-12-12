@@ -94,7 +94,7 @@ export default function Onboarding() {
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-full flex items-center justify-center bg-background">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -108,7 +108,7 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
+    <div className="min-h-full bg-background relative overflow-hidden flex items-center justify-center">
       {/* 3D Background */}
       <div className="absolute inset-0 z-0">
         <Suspense fallback={<div className="w-full h-full bg-gradient-to-br from-background to-muted" />}>

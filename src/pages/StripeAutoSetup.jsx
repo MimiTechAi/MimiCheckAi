@@ -94,7 +94,7 @@ export default function StripeAutoSetup() {
     // LOADING STATE
     if (isLoadingUser) {
         return (
-            <div className="flex justify-center items-center h-screen">
+            <div className="flex justify-center items-center min-h-full">
                 <div className="text-center space-y-4">
                     <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
                     <p className="text-slate-600 dark:text-slate-300">Lade Benutzer...</p>

@@ -7,7 +7,7 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 // Loading Fallback Komponente
 // ============================================================
 const LoadingFallback = ({ text = 'Wird geladen...' }) => (
-  <div className="flex h-screen bg-slate-950 text-white items-center justify-center">
+  <div className="flex h-full bg-slate-950 text-white items-center justify-center">
     <div className="text-center">
       <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
       <p className="text-white/60">{text}</p>
