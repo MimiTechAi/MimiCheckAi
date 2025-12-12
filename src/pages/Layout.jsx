@@ -322,23 +322,8 @@ export default function Layout({ children }) {
                                 </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-xl border-white/10 text-slate-200 shadow-xl shadow-black/20" align="end" side="top" sideOffset={8}>
-                                {/* User Info Header */}
-                                <div className="px-3 py-3 border-b border-white/5">
-                                    <p className="text-sm font-semibold text-white">{user.full_name || 'Benutzer'}</p>
-                                    <p className="text-xs text-slate-400">{user.email}</p>
-                                </div>
-                                
                                 {/* Account Actions */}
                                 <div className="py-1">
-                                    <DropdownMenuItem asChild className="focus:bg-emerald-500/10 focus:text-emerald-400 cursor-pointer">
-                                        <Link to={createPageUrl('Lebenslagen')} className="flex items-center">
-                                            <UserIcon className="w-4 h-4 mr-3 text-slate-400" />
-                                            <div>
-                                                <p className="text-sm">{t('layout.profile.data', 'Meine Daten')}</p>
-                                                <p className="text-xs text-slate-500">Persönliche Angaben verwalten</p>
-                                            </div>
-                                        </Link>
-                                    </DropdownMenuItem>
                                     <DropdownMenuItem asChild className="focus:bg-emerald-500/10 focus:text-emerald-400 cursor-pointer">
                                         <Link to={createPageUrl('Pricing')} className="flex items-center">
                                             <CreditCard className="w-4 h-4 mr-3 text-slate-400" />

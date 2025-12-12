@@ -326,7 +326,7 @@ export default function ProfilSeite() {
         </div>
 
         {/* Floating Save Button */}
-        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50">
+        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-4 right-4 z-50 pr-16">
           <button 
             onClick={handleSave}
             disabled={isSaving}

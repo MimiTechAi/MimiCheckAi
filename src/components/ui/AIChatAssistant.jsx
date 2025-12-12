@@ -126,14 +126,14 @@ Bei Fragen: kontakt@mimicheck.ai`;
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom)+5rem)] right-4 sm:bottom-6 sm:right-6 z-50">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="absolute bottom-16 right-0 w-[350px] md:w-[400px] h-[500px] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+                        className="absolute bottom-16 right-0 w-[320px] sm:w-[350px] md:w-[400px] h-[500px] bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-800/50">

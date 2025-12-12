@@ -157,7 +157,7 @@ export default function EinwilligungenSection({ profil, setProfil, handleSave, s
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium text-sm disabled:opacity-50"
+            className="hidden sm:inline-flex px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-medium text-sm disabled:opacity-50"
           >
             {saving ? 'Speichern...' : 'Profil speichern'}
           </button>

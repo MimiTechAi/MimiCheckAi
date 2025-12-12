@@ -1122,17 +1122,17 @@ export default function Lebenslagen() {
                             </FormSection>
                         </TabsContent>
 
-                        <TabsContent value="dsgvo" className="space-y-6 mt-8 pb-24 sm:pb-0">
+                        <TabsContent value="dsgvo" className="space-y-6 mt-8 pb-6 sm:pb-0">
                             <DsgvoActions />
                         </TabsContent>
                     </Tabs>
-                    
-                    {/* Mobile Floating Save Button */}
-                    <div className="sm:hidden fixed bottom-6 left-4 right-4 z-50">
-                        <Button 
-                            type="submit" 
-                            disabled={isSaving || saveSuccess} 
-                            size="lg" 
+
+                    {/* Mobile Save Action Bar */}
+                    <div className="sm:hidden sticky bottom-0 z-30 -mx-4 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent">
+                        <Button
+                            type="submit"
+                            disabled={isSaving || saveSuccess}
+                            size="lg"
                             className="w-full py-4 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/30 rounded-2xl"
                         >
                             {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
