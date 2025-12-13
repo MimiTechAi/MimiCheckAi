@@ -2,6 +2,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserProfile } from '@/components/UserProfileContext.jsx';
 import { supabase } from '@/api/supabaseClient';
+import AntragsService from '@/services/AntragsService';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AnalysisAnimation from "@/components/animations/AnalysisAnimation";
@@ -41,6 +42,15 @@ const mapProgramToCategory = (programName) => {
     return 'social'; // Default: Bürgergeld, Sozialhilfe, etc.
 };
 
+const mapProgramToCanonicalId = (programName = '') => {
+    const name = String(programName).toLowerCase();
+    if (name.includes('wohngeld')) return 'wohngeld';
+    if (name.includes('kindergeld')) return 'kindergeld';
+    if (name.includes('bürgergeld') || name.includes('buergergeld')) return 'buergergeld';
+    if (name.includes('bafög') || name.includes('bafoeg')) return 'bafoeg';
+    return programName.toLowerCase().replace(/\s+/g, '-');
+};
+
 export default function Antraege() {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -68,6 +78,30 @@ export default function Antraege() {
             return;
         }
 
+        const localEvaluations = (() => {
+            try {
+                return AntragsService.evaluateEligibilityAll(userProfile);
+            } catch (e) {
+                console.warn('Eligibility Fallback Error:', e);
+                return [];
+            }
+        })();
+
+        const localPrograms = localEvaluations.map((a) => ({
+            id: a.id,
+            name: a.name,
+            category: mapProgramToCategory(a.name),
+            description: a.reasoning || a.description || '',
+            confidence: Math.max(0, Math.min(100, Number(a.eligibilityScore ?? 0))),
+            estimatedAmount: a.estimatedAmount ? `~${a.estimatedAmount}€` : '',
+            processingTime: a.processingTime || '1-3 Monate',
+            downloadUrl: a.pdfUrl || '',
+            requiredDocuments: [],
+            nextSteps: [],
+            missingData: a.missingData || [],
+            eligibilityStatus: a.eligibilityStatus || 'unknown'
+        })).filter(p => p.eligibilityStatus !== 'ineligible');
+
         try {
             const { data, error } = await supabase.functions.invoke('analyze-eligibility', {
                 body: { userProfile }
@@ -78,7 +112,7 @@ export default function Antraege() {
             // Transform API response to expected format
             if (data?.analysis?.eligiblePrograms) {
                 const transformedPrograms = data.analysis.eligiblePrograms.map(program => ({
-                    id: program.programName.toLowerCase().replace(/\s+/g, '-'),
+                    id: mapProgramToCanonicalId(program.programName),
                     name: program.programName,
                     category: mapProgramToCategory(program.programName),
                     description: program.reasoning,
@@ -89,9 +123,36 @@ export default function Antraege() {
                     requiredDocuments: program.requiredDocuments || [],
                     nextSteps: program.nextSteps || []
                 }));
+
+                const apiById = new Map(transformedPrograms.map(p => [p.id, p]));
+                const merged = localPrograms.map(lp => {
+                    const ap = apiById.get(lp.id);
+                    if (!ap) return lp;
+                    return {
+                        ...lp,
+                        name: ap.name || lp.name,
+                        category: ap.category || lp.category,
+                        description: ap.description || lp.description,
+                        confidence: Math.max(lp.confidence ?? 0, Number(ap.confidence ?? 0)),
+                        estimatedAmount: ap.estimatedAmount || lp.estimatedAmount,
+                        processingTime: ap.processingTime || lp.processingTime,
+                        downloadUrl: ap.downloadUrl || lp.downloadUrl,
+                        requiredDocuments: ap.requiredDocuments || lp.requiredDocuments,
+                        nextSteps: ap.nextSteps || lp.nextSteps
+                    };
+                });
+
+                const localIds = new Set(localPrograms.map(p => p.id));
+                const apiOnly = transformedPrograms
+                    .filter(p => !localIds.has(p.id))
+                    .map(p => ({
+                        ...p,
+                        missingData: [],
+                        eligibilityStatus: 'eligible'
+                    }));
                 
                 setRecommendations({ 
-                    programs: transformedPrograms,
+                    programs: [...merged, ...apiOnly],
                     totalBenefit: data.analysis.estimatedTotalMonthlyBenefit,
                     recommendations: data.analysis.recommendations
                 });
@@ -100,56 +161,9 @@ export default function Antraege() {
             }
         } catch (err) {
             console.error('Fehler beim Laden der Empfehlungen:', err);
-            console.log('⚠️ Edge Function nicht verfügbar. Verwende Demo-Daten.');
-
-            // Robust Fallback Data with Translations
+            console.log('⚠️ Edge Function nicht verfügbar. Verwende lokale Eligibility.');
             setRecommendations({
-                programs: [
-                    {
-                        id: 'wohngeld',
-                        name: t('antraegePage.fallback.wohngeld.name'),
-                        category: 'housing',
-                        description: t('antraegePage.fallback.wohngeld.desc'),
-                        confidence: 85,
-                        estimatedAmount: '~150€',
-                        processingTime: '3-6 ' + (t('months') || 'Monate'), // Simple fallback if months not defined globally
-                        downloadUrl: 'https://www.bmas.de/SharedDocs/Downloads/DE/Formulare/wohngeldantrag.pdf',
-                        requiredDocuments: ['Mietvertrag', 'Einkommensnachweise', 'Personalausweis']
-                    },
-                    {
-                        id: 'kindergeld',
-                        name: t('antraegePage.fallback.kindergeld.name'),
-                        category: 'family',
-                        description: t('antraegePage.fallback.kindergeld.desc'),
-                        confidence: 90,
-                        estimatedAmount: '~250€',
-                        processingTime: '1-2 ' + (t('months') || 'Monate'),
-                        downloadUrl: 'https://www.arbeitsagentur.de/datei/kindergeld_ba013095.pdf',
-                        requiredDocuments: ['Geburtsurkunde', 'Steuer-ID']
-                    },
-                    {
-                        id: 'buergergeld',
-                        name: t('antraegePage.fallback.buergergeld.name'),
-                        category: 'social',
-                        description: t('antraegePage.fallback.buergergeld.desc'),
-                        confidence: 75,
-                        estimatedAmount: '~563€',
-                        processingTime: '1-3 ' + (t('months') || 'Monate'),
-                        downloadUrl: 'https://www.arbeitsagentur.de/datei/antrag-buergergeld_ba032632.pdf',
-                        requiredDocuments: ['Kontoauszüge', 'Mietbescheinigung', 'Ausweis']
-                    },
-                    {
-                        id: 'bafoeg',
-                        name: t('antraegePage.fallback.bafoeg.name'),
-                        category: 'education',
-                        description: t('antraegePage.fallback.bafoeg.desc'),
-                        confidence: 60,
-                        estimatedAmount: '~450€',
-                        processingTime: '2-4 ' + (t('months') || 'Monate'),
-                        downloadUrl: 'https://www.bafög.de/de/antragstellung-302.php',
-                        requiredDocuments: ['Immatrikulationsbescheinigung', 'Einkommensnachweise Eltern']
-                    }
-                ]
+                programs: localPrograms
             });
         } finally {
             setLoading(false);
@@ -162,6 +176,13 @@ export default function Antraege() {
             program.description.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesCategory && matchesSearch;
     }) || [];
+
+    const topPicks = (selectedCategory === 'all' && !searchTerm)
+        ? (recommendations?.programs || []).filter(p => (p.missingData?.length || 0) === 0).slice(0, 3)
+        : [];
+
+    const topPickIds = new Set(topPicks.map(p => p.id));
+    const remainingPrograms = filteredPrograms.filter(p => !topPickIds.has(p.id));
 
     return (
         <div className="min-h-full w-full bg-transparent text-white relative">
@@ -255,11 +276,83 @@ export default function Antraege() {
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <AnimatePresence>
-                            {filteredPrograms.map((program, index) => {
+                    <div className="space-y-10">
+                        {topPicks.length > 0 && (
+                            <div>
+                                <div className="flex items-end justify-between mb-5">
+                                    <div>
+                                        <h2 className="text-2xl md:text-3xl font-bold text-white">Top Empfehlungen</h2>
+                                        <p className="text-slate-400 text-sm mt-1">Die besten nächsten Schritte basierend auf deinem Profil</p>
+                                    </div>
+                                    <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">SOTA 2025</Badge>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <AnimatePresence>
+                                        {topPicks.map((program, index) => {
+                                            const categoryStyle = CATEGORY_STYLES[program.category] || { icon: FileText, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' };
+                                            const Icon = categoryStyle.icon;
+
+                                            return (
+                                                <motion.div
+                                                    key={`top-${program.id}`}
+                                                    initial={{ opacity: 0, y: 16 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.98 }}
+                                                    transition={{ delay: index * 0.06 }}
+                                                >
+                                                    <SpotlightCard className="h-full flex flex-col p-6 group cursor-pointer border-emerald-500/20" spotlightColor="rgba(16, 185, 129, 0.18)">
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <div className={`p-3 rounded-xl ${categoryStyle.bg} ${categoryStyle.color}`}>
+                                                                <Icon className="w-6 h-6" />
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <Badge className="bg-white/5 text-slate-200 border border-white/10">Top</Badge>
+                                                                <Badge variant="outline" className={`${categoryStyle.border} ${categoryStyle.color} bg-transparent`}>
+                                                                    {`${program.confidence}% ${t('antraegePage.card.match')}`}
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+
+                                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-emerald-400 transition-colors">
+                                                            {program.name}
+                                                        </h3>
+                                                        <p className="text-slate-400 text-sm mb-6 flex-1 leading-relaxed">
+                                                            {program.description}
+                                                        </p>
+
+                                                        <div className="space-y-4 mt-auto">
+                                                            <div className="flex items-center justify-between text-sm border-t border-white/5 pt-4">
+                                                                <span className="text-slate-500">{t('antraegePage.card.amount')}</span>
+                                                                <span className="text-emerald-400 font-mono font-bold">{program.estimatedAmount}</span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-sm">
+                                                                <span className="text-slate-500">{t('antraegePage.card.duration')}</span>
+                                                                <span className="text-white">{program.processingTime}</span>
+                                                            </div>
+
+                                                            <Button
+                                                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all mt-4"
+                                                                onClick={() => navigate(`/PdfAutofill?type=${encodeURIComponent(program.id)}`)}
+                                                            >
+                                                                {t('antraegePage.card.button')}
+                                                                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                                            </Button>
+                                                        </div>
+                                                    </SpotlightCard>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <AnimatePresence>
+                                {remainingPrograms.map((program, index) => {
                                 const categoryStyle = CATEGORY_STYLES[program.category] || { icon: FileText, color: 'text-slate-400', bg: 'bg-slate-500/10', border: 'border-slate-500/20' };
                                 const Icon = categoryStyle.icon;
+                                const hasMissing = (program.missingData?.length || 0) > 0;
 
                                 return (
                                     <motion.div
@@ -275,7 +368,7 @@ export default function Antraege() {
                                                     <Icon className="w-6 h-6" />
                                                 </div>
                                                 <Badge variant="outline" className={`${categoryStyle.border} ${categoryStyle.color} bg-transparent`}>
-                                                    {program.confidence}% {t('antraegePage.card.match')}
+                                                    {hasMissing ? `Daten fehlen (${program.missingData.length})` : `${program.confidence}% ${t('antraegePage.card.match')}`}
                                                 </Badge>
                                             </div>
 
@@ -285,6 +378,24 @@ export default function Antraege() {
                                             <p className="text-slate-400 text-sm mb-6 flex-1 leading-relaxed">
                                                 {program.description}
                                             </p>
+
+                                            {hasMissing && (
+                                                <div className="mb-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                                                    <div className="text-xs text-slate-400 mb-2">Fehlende Angaben:</div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {program.missingData.slice(0, 4).map((m) => (
+                                                            <span key={m} className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-200">
+                                                                {m}
+                                                            </span>
+                                                        ))}
+                                                        {program.missingData.length > 4 && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400">
+                                                                +{program.missingData.length - 4}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div className="space-y-4 mt-auto">
                                                 <div className="flex items-center justify-between text-sm border-t border-white/5 pt-4">
@@ -296,19 +407,30 @@ export default function Antraege() {
                                                     <span className="text-white">{program.processingTime}</span>
                                                 </div>
 
-                                                <Button
-                                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all mt-4"
-                                                    onClick={() => navigate(`/pdf-autofill?form=${program.id}`)}
-                                                >
-                                                    {t('antraegePage.card.button')}
-                                                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                                </Button>
+                                                {hasMissing ? (
+                                                    <Button
+                                                        className="w-full bg-blue-600 hover:bg-blue-500 text-white group-hover:shadow-lg group-hover:shadow-blue-500/20 transition-all mt-4"
+                                                        onClick={() => navigate('/Lebenslagen')}
+                                                    >
+                                                        Fehlende Angaben ergänzen
+                                                        <ChevronRight className="w-4 h-4 ml-2" />
+                                                    </Button>
+                                                ) : (
+                                                    <Button
+                                                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all mt-4"
+                                                        onClick={() => navigate(`/PdfAutofill?type=${encodeURIComponent(program.id)}`)}
+                                                    >
+                                                        {t('antraegePage.card.button')}
+                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                                                    </Button>
+                                                )}
                                             </div>
                                         </SpotlightCard>
                                     </motion.div>
                                 );
                             })}
-                        </AnimatePresence>
+                            </AnimatePresence>
+                        </div>
                     </div>
                 )}
             </div>

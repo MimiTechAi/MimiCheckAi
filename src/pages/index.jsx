@@ -257,6 +257,7 @@ function PagesContent() {
                 <Route path="/pricing" element={<Pricing />} />
 
                 <Route path="/Antraege" element={<ProtectedRoute><Antraege /></ProtectedRoute>} />
+                <Route path="/antraege" element={<ProtectedRoute><Antraege /></ProtectedRoute>} />
 
                 <Route path="/PdfAusfuellhilfe" element={<ProtectedRoute><PdfAusfuellhilfe /></ProtectedRoute>} />
 
@@ -273,6 +274,8 @@ function PagesContent() {
                 <Route path="/QATests" element={<ProtectedRoute><QATests /></ProtectedRoute>} />
 
                 <Route path="/PdfAutofill" element={<ProtectedRoute><PdfAutofill /></ProtectedRoute>} />
+                <Route path="/pdfautofill" element={<ProtectedRoute><PdfAutofill /></ProtectedRoute>} />
+                <Route path="/pdf-autofill" element={<ProtectedRoute><PdfAutofill /></ProtectedRoute>} />
 
                 <Route path="/web-assistent" element={<ProtectedRoute><WebAssistent /></ProtectedRoute>} />
                 <Route path="/anspruchsanalyse" element={<ProtectedRoute><AnspruchsAnalyse /></ProtectedRoute>} />

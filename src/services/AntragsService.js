@@ -114,6 +114,58 @@ const ANTRAEGE_DATABASE = {
 };
 
 class AntragsService {
+  static normalizeUserProfile(userProfile) {
+    const p = userProfile || {};
+    const ls = p.lebenssituation || {};
+    const wohnadresse = ls.wohnadresse || {};
+    const bank = ls.bankverbindung || {};
+    const arbeitgeber = ls.arbeitgeber_daten || {};
+
+    return {
+      vorname: p.vorname || ls.vorname,
+      nachname: p.nachname || ls.nachname,
+      geburtsdatum: p.geburtsdatum || ls.geburtsdatum,
+      adresse: p.adresse || ls.adresse,
+      plz: p.plz || wohnadresse.plz || ls.plz,
+      stadt: p.stadt || wohnadresse.ort || ls.ort,
+      wohnart: p.wohnart || ls.wohnart,
+      monatliche_miete_kalt: p.monatliche_miete_kalt ?? ls.monatliche_miete_kalt,
+      wohnflaeche_qm: p.wohnflaeche_qm ?? ls.wohnflaeche_qm,
+      haushalt_groesse: p.haushalt_groesse ?? ls.haushalt_groesse,
+      monatliches_nettoeinkommen: p.monatliches_nettoeinkommen ?? ls.monatliches_nettoeinkommen,
+      kinder_anzahl: p.kinder_anzahl ?? ls.kinder_anzahl,
+      beschaeftigungsstatus: p.beschaeftigungsstatus || ls.beschaeftigungsstatus,
+      familienstand: p.familienstand || ls.familienstand,
+      bankverbindung_iban: p.bankverbindung_iban || bank.iban,
+      letzter_arbeitgeber: p.letzter_arbeitgeber || arbeitgeber.name,
+      alter: p.alter || ls.alter
+    };
+  }
+
+  static evaluateEligibilityAll(userProfile) {
+    const normalized = this.normalizeUserProfile(userProfile);
+
+    return Object.values(ANTRAEGE_DATABASE).map((antrag) => {
+      const result = this.checkEligibility(normalized, antrag);
+      const missingData = result?.missingData || [];
+      const eligible = Boolean(result?.eligible);
+
+      const status = missingData.length > 0
+        ? 'unknown'
+        : eligible
+          ? 'eligible'
+          : 'ineligible';
+
+      return {
+        ...antrag,
+        eligibilityScore: result?.score ?? 0,
+        reasoning: result?.reasoning || '',
+        missingData,
+        eligibilityStatus: status
+      };
+    }).sort((a, b) => (b.eligibilityScore ?? 0) - (a.eligibilityScore ?? 0));
+  }
+
   /**
    * Findet passende Anträge basierend auf User-Profil
    */
@@ -132,11 +184,12 @@ class AntragsService {
       console.error('Fehler beim Suchen von Anträgen:', error);
       
       // Fallback zu lokaler Logik
+      const normalized = this.normalizeUserProfile(userProfile);
       const eligibleAntraege = [];
-      
-      for (const [key, antrag] of Object.entries(ANTRAEGE_DATABASE)) {
-        const isEligible = this.checkEligibility(userProfile, antrag);
-        
+
+      for (const antrag of Object.values(ANTRAEGE_DATABASE)) {
+        const isEligible = this.checkEligibility(normalized, antrag);
+
         if (isEligible.eligible) {
           eligibleAntraege.push({
             ...antrag,
@@ -146,8 +199,8 @@ class AntragsService {
           });
         }
       }
-      
-      eligibleAntraege.sort((a, b) => b.eligibilityScore - a.eligibilityScore);
+
+      eligibleAntraege.sort((a, b) => (b.eligibilityScore ?? 0) - (a.eligibilityScore ?? 0));
       
       return {
         success: true,
