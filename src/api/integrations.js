@@ -188,6 +188,135 @@ Falls das Problem weiterhin besteht, kontaktieren Sie bitte unseren Support.`;
   }
 };
 
+export const InvokeLLMStream = async ({ prompt, system_prompt, messages, onToken, signal }) => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const body = {
+    systemPrompt: system_prompt || `Du bist ein hilfreicher KI-Assistent für MiMiCheck, 
+eine App die Nutzern hilft ihre Nebenkostenabrechnungen zu prüfen und staatliche Förderungen zu finden.
+Antworte immer auf Deutsch, freundlich und kompetent.`,
+    messages: Array.isArray(messages) && messages.length
+      ? messages
+      : [{ role: 'user', content: prompt }],
+    stream: true
+  };
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`,
+      'apikey': supabaseKey,
+      'Accept': 'text/event-stream, application/json'
+    },
+    body: JSON.stringify(body),
+    signal
+  });
+
+  if (!res.ok) {
+    let details = '';
+    try {
+      details = await res.text();
+    } catch {
+      details = '';
+    }
+    throw new Error(details || `API Fehler: ${res.status}`);
+  }
+
+  const contentType = res.headers.get('content-type') || '';
+
+  if (!res.body || contentType.includes('application/json')) {
+    const data = await res.json().catch(() => ({}));
+    const text = data?.response || data?.content || data?.message || '';
+    if (onToken && text) onToken(text);
+    return text;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder('utf-8');
+
+  let fullText = '';
+  let buffer = '';
+
+  const emit = (chunk) => {
+    if (!chunk) return;
+    fullText += chunk;
+    onToken?.(chunk);
+  };
+
+  const tryExtractFromJson = (obj) => {
+    if (!obj) return '';
+    if (typeof obj === 'string') return obj;
+    if (obj.token) return obj.token;
+    if (obj.delta) return obj.delta;
+    if (obj.content) return obj.content;
+    if (obj.response) return obj.response;
+    const openaiDelta = obj?.choices?.[0]?.delta?.content;
+    if (openaiDelta) return openaiDelta;
+    const openaiText = obj?.choices?.[0]?.text;
+    if (openaiText) return openaiText;
+    return '';
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const parts = buffer.split('\n\n');
+    buffer = parts.pop() || '';
+
+    for (const part of parts) {
+      const lines = part.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        if (trimmed.startsWith('data:')) {
+          const payload = trimmed.slice(5).trim();
+          if (!payload || payload === '[DONE]') {
+            continue;
+          }
+          try {
+            const obj = JSON.parse(payload);
+            const chunk = tryExtractFromJson(obj);
+            emit(chunk);
+          } catch {
+            emit(payload);
+          }
+          continue;
+        }
+
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          try {
+            const obj = JSON.parse(trimmed);
+            const chunk = tryExtractFromJson(obj);
+            emit(chunk);
+          } catch {
+            emit(trimmed);
+          }
+          continue;
+        }
+
+        emit(trimmed);
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    try {
+      const obj = JSON.parse(buffer);
+      const chunk = tryExtractFromJson(obj);
+      emit(chunk);
+    } catch {
+      emit(buffer);
+    }
+  }
+
+  return fullText;
+};
+
 /**
  * ExtractDataFromUploadedFile - PDF/Dokument-Extraktion
  * Uses Supabase Edge Function for document extraction
