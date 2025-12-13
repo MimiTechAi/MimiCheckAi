@@ -39,23 +39,23 @@ echo ""
 
 # Set secrets using npx supabase
 echo "STRIPE_SECRET_KEY..."
-npx supabase secrets set STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" --project-ref yjjauvmjyhlxcoumwqlj
+supabase secrets set STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" --project-ref yjjauvmjyhlxcoumwqlj
 
 echo "STRIPE_PREMIUM_PRICE_ID..."
-npx supabase secrets set STRIPE_PREMIUM_PRICE_ID="$STRIPE_PREMIUM_PRICE_ID" --project-ref yjjauvmjyhlxcoumwqlj
+supabase secrets set STRIPE_PREMIUM_PRICE_ID="$STRIPE_PREMIUM_PRICE_ID" --project-ref yjjauvmjyhlxcoumwqlj
 
 echo "STRIPE_PRO_PRICE_ID..."
-npx supabase secrets set STRIPE_PRO_PRICE_ID="$STRIPE_PRO_PRICE_ID" --project-ref yjjauvmjyhlxcoumwqlj
+supabase secrets set STRIPE_PRO_PRICE_ID="$STRIPE_PRO_PRICE_ID" --project-ref yjjauvmjyhlxcoumwqlj
 
 echo "STRIPE_WEBHOOK_SECRET..."
-npx supabase secrets set STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET" --project-ref yjjauvmjyhlxcoumwqlj
+supabase secrets set STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET" --project-ref yjjauvmjyhlxcoumwqlj
 
 echo ""
 echo -e "${GREEN}✅ Alle Secrets gesetzt!${NC}"
 echo ""
 
 echo "Überprüfe Secrets:"
-npx supabase secrets list --project-ref yjjauvmjyhlxcoumwqlj
+supabase secrets list --project-ref yjjauvmjyhlxcoumwqlj
 
 echo ""
 echo -e "${YELLOW}⚠️  Verwendung:${NC}"

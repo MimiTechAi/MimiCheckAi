@@ -144,7 +144,7 @@ export default function PersonalizedRecommendations({
                         <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto leading-relaxed">
                             Vervollständigen Sie Ihr Profil für maßgeschneiderte Förderempfehlungen
                         </p>
-                        <Link to={createPageUrl("Lebenslagen")}>
+                        <Link to={createPageUrl("ProfilSeite")}>
                             <Button className="btn-ghost bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-none px-8 py-3 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
                                 <Sparkles className="w-5 h-5 mr-2" />
                                 Profil vervollständigen

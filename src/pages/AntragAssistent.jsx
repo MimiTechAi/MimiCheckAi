@@ -107,7 +107,7 @@ const FormFillingAssistant = ({ applicationType }) => {
                                 <p className="text-amber-700 dark:text-amber-300 text-sm mb-3">
                                     Für die bestmögliche Ausfüllhilfe sollten Sie zuerst Ihr Profil vervollständigen.
                                 </p>
-                                <Link to={createPageUrl('Lebenslagen')}>
+                                <Link to={createPageUrl('ProfilSeite')}>
                                     <Button className="bg-amber-600 hover:bg-amber-700 text-white text-sm">
                                         <UserIcon className="w-4 h-4 mr-2" />
                                         Jetzt vervollständigen
@@ -244,7 +244,7 @@ const FormFillingAssistant = ({ applicationType }) => {
                                 Manuelle Ausfüllhilfe
                             </Button>
                         </Link>
-                        <Link to={createPageUrl('Lebenslagen')} className="flex-1">
+                        <Link to={createPageUrl('ProfilSeite')} className="flex-1">
                             <Button variant="outline" className="w-full border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300">
                                 <UserIcon className="w-4 h-4 mr-2" />
                                 Profil bearbeiten

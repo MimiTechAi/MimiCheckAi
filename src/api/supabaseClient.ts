@@ -54,8 +54,9 @@ export const supabase: SupabaseClient = createClient(supabaseUrl || '', supabase
  */
 export async function supabaseHealthcheck(): Promise<boolean> {
   try {
-    const { error } = await supabase.from('contact_requests').select('id', { count: 'exact', head: true }).limit(1);
-    return !error;
+    const { data, error } = await supabase.functions.invoke('health', { body: {} });
+    if (error) return false;
+    return Boolean(data?.ok);
   } catch {
     return false;
   }

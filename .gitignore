@@ -35,3 +35,6 @@ dist-ssr
 windsurf_deployment.yaml
 .vercel
 .csp-nonce
+
+# Kiro
+/.kiro/

@@ -284,7 +284,7 @@ export default function PdfAusfuellhilfe() {
                             
                             <Button 
                                 variant="outline"
-                                onClick={() => navigate(createPageUrl('Lebenslagen'))}
+                                onClick={() => navigate('/profilseite')}
                                 className="w-full border-slate-300 dark:border-slate-600"
                             >
                                 Fehlende Daten im Profil ergänzen

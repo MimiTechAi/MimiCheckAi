@@ -241,7 +241,7 @@ export default function WebAssistent() {
                         <Button 
                             variant="link" 
                             className="text-amber-700 dark:text-amber-300 p-0 h-auto ml-2"
-                            onClick={() => navigate(createPageUrl('Lebenslagen'))}
+                            onClick={() => navigate('/profilseite')}
                         >
                             Jetzt vervollständigen →
                         </Button>

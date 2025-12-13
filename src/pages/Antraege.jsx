@@ -410,7 +410,7 @@ export default function Antraege() {
                                                 {hasMissing ? (
                                                     <Button
                                                         className="w-full bg-blue-600 hover:bg-blue-500 text-white group-hover:shadow-lg group-hover:shadow-blue-500/20 transition-all mt-4"
-                                                        onClick={() => navigate('/Lebenslagen')}
+                                                        onClick={() => navigate('/profilseite')}
                                                     >
                                                         Fehlende Angaben ergänzen
                                                         <ChevronRight className="w-4 h-4 ml-2" />

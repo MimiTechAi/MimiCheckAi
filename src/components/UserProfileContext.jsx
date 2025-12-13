@@ -29,23 +29,9 @@ export function UserProfileProvider({ children }) {
             if (userProfile) {
                 setUser(userProfile);
                 setProfileVersion(prev => prev + 1);
-                
-                // Load user roles using RPC
-                try {
-                    const { data, error } = await supabase.rpc('get_user_roles', {
-                        user_id: userProfile.id
-                    });
-                    
-                    if (error) {
-                        console.warn('Failed to load user roles:', error);
-                        setUserRoles([]);
-                    } else {
-                        setUserRoles(data || []);
-                    }
-                } catch (roleError) {
-                    console.warn('Failed to load user roles:', roleError);
-                    setUserRoles([]);
-                }
+
+                const roleName = userProfile?.role || 'user';
+                setUserRoles([{ role_name: roleName }]);
             } else {
                 setUser(null);
                 setUserRoles([]);

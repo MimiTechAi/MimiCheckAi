@@ -74,6 +74,146 @@ function handleError(error: unknown, operation: string): never {
   throw new Error(message);
 }
 
+function sanitizeUserProfileUpdates(updates: Record<string, any>): Record<string, any> {
+  const input: Record<string, any> = updates || {};
+
+  // Flatten legacy nested payloads (best-effort)
+  const legacyLebenssituation = input.lebenssituation || {};
+  const wohnadresse = legacyLebenssituation.wohnadresse || {};
+  const bankverbindung = legacyLebenssituation.bankverbindung || {};
+
+  const merged: Record<string, any> = {
+    ...input,
+    // Legacy mappings
+    plz: input.plz ?? wohnadresse.plz,
+    ort: input.ort ?? wohnadresse.ort,
+    strasse: input.strasse ?? wohnadresse.strasse,
+    iban: input.iban ?? bankverbindung.iban,
+    bic: input.bic ?? bankverbindung.bic,
+    kontoinhaber: input.kontoinhaber ?? bankverbindung.kontoinhaber,
+    nettoeinkommen: input.nettoeinkommen ?? input.monatliches_nettoeinkommen ?? legacyLebenssituation.monatliches_nettoeinkommen,
+    beschaeftigungsart: input.beschaeftigungsart ?? input.beschaeftigungsstatus ?? legacyLebenssituation.beschaeftigungsstatus,
+    kaltmiete: input.kaltmiete ?? input.monatliche_miete ?? input.monatliche_miete_kalt ?? legacyLebenssituation.monatliche_miete_kalt,
+    anzahl_kinder: input.anzahl_kinder ?? input.kinder_anzahl ?? legacyLebenssituation.anzahl_kinder
+  };
+
+  // Drop unsupported / dangerous keys
+  delete merged.id;
+  delete merged.auth_id;
+  delete merged.created_at;
+  delete merged.updated_at;
+  delete merged.last_signed_in;
+  delete merged.full_name;
+  delete merged.lebenssituation;
+
+  // Only allow columns that exist on public.users
+  const allowed = new Set([
+    'name', 'email', 'role',
+    'stripe_customer_id', 'subscription_tier', 'subscription_status', 'subscription_id', 'subscription_current_period_end',
+    'anrede', 'vorname', 'nachname', 'geburtsdatum', 'steuer_id', 'sozialversicherungsnummer',
+    'strasse', 'hausnummer', 'adresszusatz', 'plz', 'ort', 'bundesland', 'landkreis',
+    'telefon_mobil', 'telefon_festnetz', 'de_mail',
+    'iban', 'bic', 'kontoinhaber', 'bank_name',
+    'krankenversicherung_typ', 'krankenversicherung_name', 'krankenversicherung_nummer',
+    'wohnform', 'wohnflaeche', 'anzahl_zimmer', 'kaltmiete', 'nebenkosten', 'heizkosten', 'einzugsdatum', 'wohnart',
+    'beschaeftigungsart', 'arbeitgeber', 'bruttoeinkommen', 'nettoeinkommen', 'weitere_einkuenfte',
+    'familienstand', 'partner_vorname', 'partner_nachname', 'partner_geburtsdatum', 'partner_einkommen',
+    'kinder', 'anzahl_kinder',
+    'vermoegen_gesamt', 'vermoegen_details',
+    'behinderung', 'behinderungsgrad', 'pflegegrad', 'schwangerschaft', 'alleinerziehend',
+    'bildungsstand', 'aktuell_in_ausbildung', 'ausbildungsart', 'ausbildungsstaette',
+    'dsgvo_einwilligung', 'ki_verarbeitung_einwilligung', 'datenweitergabe_behoerden',
+    'profile_completeness', 'onboarding_completed_at', 'zustimmung'
+  ]);
+
+  const numericFields = new Set([
+    'kaltmiete', 'nebenkosten', 'heizkosten', 'bruttoeinkommen', 'nettoeinkommen', 'partner_einkommen', 'vermoegen_gesamt'
+  ]);
+  const intFields = new Set([
+    'wohnflaeche', 'anzahl_zimmer', 'anzahl_kinder', 'behinderungsgrad', 'pflegegrad', 'profile_completeness'
+  ]);
+  const boolFields = new Set([
+    'behinderung', 'schwangerschaft', 'alleinerziehend',
+    'aktuell_in_ausbildung',
+    'dsgvo_einwilligung', 'ki_verarbeitung_einwilligung', 'datenweitergabe_behoerden',
+    'zustimmung'
+  ]);
+  const jsonFields = new Set(['weitere_einkuenfte', 'kinder', 'vermoegen_details']);
+  const dateFields = new Set(['geburtsdatum', 'einzugsdatum']);
+
+  const sanitized: Record<string, any> = {};
+  for (const [key, value] of Object.entries(merged)) {
+    if (!allowed.has(key)) continue;
+
+    // Normalize empty strings
+    if (value === '') {
+      sanitized[key] = null;
+      continue;
+    }
+
+    if (value === undefined) continue;
+
+    if (numericFields.has(key)) {
+      if (value === null) {
+        sanitized[key] = null;
+      } else {
+        const num = typeof value === 'number' ? value : Number(String(value).replace(',', '.'));
+        sanitized[key] = Number.isFinite(num) ? num : null;
+      }
+      continue;
+    }
+
+    if (intFields.has(key)) {
+      if (value === null) {
+        sanitized[key] = null;
+      } else {
+        const num = typeof value === 'number' ? value : Number(String(value));
+        sanitized[key] = Number.isFinite(num) ? Math.trunc(num) : null;
+      }
+      continue;
+    }
+
+    if (boolFields.has(key)) {
+      if (typeof value === 'boolean') {
+        sanitized[key] = value;
+      } else if (value === null) {
+        sanitized[key] = null;
+      } else {
+        const v = String(value).toLowerCase().trim();
+        sanitized[key] = v === 'true' || v === '1' || v === 'yes';
+      }
+      continue;
+    }
+
+    if (jsonFields.has(key)) {
+      if (typeof value === 'string') {
+        try {
+          sanitized[key] = JSON.parse(value);
+        } catch {
+          sanitized[key] = null;
+        }
+      } else {
+        sanitized[key] = value;
+      }
+      continue;
+    }
+
+    if (dateFields.has(key)) {
+      if (value === null) {
+        sanitized[key] = null;
+      } else {
+        // Keep YYYY-MM-DD as-is; if ISO timestamp, keep as-is (Postgres can parse)
+        sanitized[key] = value;
+      }
+      continue;
+    }
+
+    sanitized[key] = value;
+  }
+
+  return sanitized;
+}
+
 // ============================================
 // USER PROFILES
 // ============================================
@@ -199,9 +339,11 @@ export const UserProfile: UserProfileEntity = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      const safeUpdates = sanitizeUserProfileUpdates(updates as Record<string, any>);
+
       const { data, error } = await supabase
         .from('users')
-        .update(updates)
+        .update(safeUpdates)
         .eq('auth_id', user.id)
         .select()
         .single();
@@ -263,7 +405,7 @@ export const Abrechnung: AbrechnungEntity = {
       if (error) throw error;
       
       // Map fields for backward compatibility
-      return (data || []).map(item => ({
+      return (data || []).map((item: any) => ({
         ...item,
         filename: item.title, // Alias for Dashboard display
         created_date: item.created_at // Legacy field name
@@ -729,14 +871,8 @@ export const Notification: NotificationEntity = {
    */
   async create(notificationData) {
     try {
-      const { data, error } = await supabase
-        .from('notifications')
-        .insert(notificationData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      void notificationData;
+      throw new Error('Create notification is not supported from the client');
     } catch (error) {
       handleError(error, 'Create notification');
     }

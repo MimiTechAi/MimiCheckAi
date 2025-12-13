@@ -215,7 +215,7 @@ export default function Pruefung() {
                                         variant="outline" 
                                         size="sm" 
                                         className="mt-3"
-                                        onClick={() => navigate(createPageUrl("Lebenslagen"))}
+                                        onClick={() => navigate('/profilseite')}
                                     >
                                         <UserIcon className="w-4 h-4 mr-2" />
                                         Profil vervollständigen

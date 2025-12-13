@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { useUserProfile } from '@/components/UserProfileContext.jsx';
+import { generateAIProfileContext } from '@/utils/aiProfileHelper';
 import { User, Abrechnung } from '@/api/entities';
 import { InvokeLLM, InvokeLLMStream } from '@/api/integrations';
 import { createPageUrl } from '@/utils';
@@ -82,6 +84,8 @@ export default function Assistent() {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const documentId = searchParams.get('documentId');
+
+    const { user: profileUser } = useUserProfile();
     
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
@@ -304,6 +308,8 @@ ${JSON.stringify(extractedData, null, 2)}
 **WICHTIG:** Beziehe dich in deiner Antwort KONKRET auf die Daten aus diesem Dokument!
 `;
             }
+
+            const profileContext = generateAIProfileContext(profileUser);
             
             const response = await InvokeLLM({
                 prompt: `Du bist ein Experte für deutsches Mietrecht und Nebenkostenabrechnungen. 
@@ -311,6 +317,9 @@ ${JSON.stringify(extractedData, null, 2)}
 **Nutzerfrage:** "${userQuestion}"
 
 **Kontext:** Der Nutzer hat ein ${user?.subscription_tier || 'free'} Abonnement.
+
+**NUTZERPROFIL (aus MimiCheck):**
+${profileContext}
 ${dokumentKontext}
 
 **Antwort-Stil:**
@@ -319,6 +328,7 @@ ${dokumentKontext}
 - Bei rechtlichen Fragen: Verweis auf Rechtsanwalt für finale Beratung
 - Strukturiert mit Aufzählungen oder Schritten
 - Deutsch verwenden
+ - Wenn Profildaten fehlen: Frage gezielt nur nach den fehlenden Feldern
 ${currentDocument ? '- WICHTIG: Beziehe dich konkret auf die Daten aus dem Dokument des Nutzers!' : ''}
 
 Antworte hilfreich und kompetent auf die Frage.`
@@ -395,11 +405,16 @@ ${JSON.stringify(extractedData, null, 2)}
 `;
         }
 
+        const profileContext = generateAIProfileContext(profileUser);
+
         const prompt = `Du bist ein Experte für deutsches Mietrecht und Nebenkostenabrechnungen. 
                 
 **Nutzerfrage:** "${question}"
 
 **Kontext:** Der Nutzer hat ein ${user?.subscription_tier || 'free'} Abonnement.
+
+**NUTZERPROFIL (aus MimiCheck):**
+${profileContext}
 ${dokumentKontext}
 
 **Antwort-Stil:**
@@ -408,6 +423,7 @@ ${dokumentKontext}
 - Bei rechtlichen Fragen: Verweis auf Rechtsanwalt für finale Beratung
 - Strukturiert mit Aufzählungen oder Schritten
 - Deutsch verwenden
+ - Wenn Profildaten fehlen: Frage gezielt nur nach den fehlenden Feldern
 ${currentDocument ? '- WICHTIG: Beziehe dich konkret auf die Daten aus dem Dokument des Nutzers!' : ''}
 
 Antworte hilfreich und kompetent auf die Frage.`;

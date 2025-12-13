@@ -32,7 +32,6 @@ import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 // LAZY LOADED - Selten genutzte Seiten
 // ============================================================
 const Abrechnungen = lazy(() => import("./Abrechnungen"));
-const Lebenslagen = lazy(() => import("./Lebenslagen"));
 const Pruefung = lazy(() => import("./Pruefung"));
 const Bericht = lazy(() => import("./Bericht"));
 const PdfAusfuellhilfe = lazy(() => import("./PdfAusfuellhilfe"));
@@ -65,7 +64,7 @@ const StripeAutoSetup = lazy(() => import("./StripeAutoSetup"));
 const QATests = lazy(() => import("./QATests"));
 const LandingPage = lazy(() => import("./LandingPage"));
 
-import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { NotificationProvider } from '@/components/notifications/NotificationContext.jsx';
 import Onboarding from './Onboarding';
 import { UserProfileProvider, useUserProfile } from '@/components/UserProfileContext.jsx';
@@ -84,9 +83,9 @@ const PAGES = {
 
     Assistent: Assistent,
 
-    Lebenslagen: Lebenslagen,
-
     Pruefung: Pruefung,
+
+    Bericht: Bericht,
 
     Implementierungsplan: Implementierungsplan,
 
@@ -219,7 +218,8 @@ function PagesContent() {
 
                 <Route path="/Assistent" element={<ProtectedRoute><Assistent /></ProtectedRoute>} />
 
-                <Route path="/Lebenslagen" element={<ProtectedRoute><Lebenslagen /></ProtectedRoute>} />
+                <Route path="/Lebenslagen" element={<Navigate to="/profilseite" replace />} />
+                <Route path="/lebenslagen" element={<Navigate to="/profilseite" replace />} />
 
                 <Route path="/Pruefung" element={<ProtectedRoute><Pruefung /></ProtectedRoute>} />
 

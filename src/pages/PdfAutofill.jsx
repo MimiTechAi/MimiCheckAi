@@ -372,7 +372,7 @@ export default function PdfAutofill() {
                         </Alert>
                     )}
 
-                    <Link to={createPageUrl('Lebenslagen')}>
+                    <Link to={createPageUrl('ProfilSeite')}>
                         <Button variant="outline" className="w-full">
                             <UserIcon className="w-4 h-4 mr-2" />
                             Profil vervollständigen
