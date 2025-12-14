@@ -58,6 +58,7 @@ export default function Antraege() {
     const { user: userProfile, isLoading: profileLoading } = useUserProfile();
     const [recommendations, setRecommendations] = useState(null);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     const handleStartAntrag = (programId) => {
         track('funnel.started_antrag', AREA.APPLICATION, { program_id: programId }, SEVERITY.MEDIUM);
@@ -74,6 +75,8 @@ export default function Antraege() {
     }, [userProfile, profileLoading, t]); // Reload when language changes
 
     const loadRecommendations = async () => {
+        setLoading(true);
+        setError(null);
         // Simulate loading delay for smoother UX
         await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -81,6 +84,7 @@ export default function Antraege() {
         const hasProfile = userProfile && (userProfile.vorname || userProfile.name || userProfile.onboarding_completed_at);
         
         if (!hasProfile) {
+            setRecommendations(null);
             setLoading(false);
             return;
         }

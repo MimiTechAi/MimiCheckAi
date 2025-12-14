@@ -109,8 +109,6 @@ const PAGES = {
 
     Hilfe: Hilfe,
 
-    Bericht: Bericht,
-
     Pricing: Pricing,
 
     Antraege: Antraege,
