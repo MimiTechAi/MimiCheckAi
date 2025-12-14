@@ -86,7 +86,7 @@ export default function Pricing() {
         if (paymentStatus === 'success') {
             setError(null);
             track('funnel.upgraded', AREA.BILLING, { source: 'pricing_success_param' }, SEVERITY.MEDIUM);
-            setTimeout(() => navigate(createPageUrl('Dashboard')), 2000);
+            setTimeout(() => navigate(createPageUrl('AnspruchsAnalyse')), 2000);
         } else if (paymentStatus === 'cancelled') {
             setError('Zahlung wurde abgebrochen. Sie können es jederzeit erneut versuchen.');
         }
@@ -187,17 +187,63 @@ export default function Pricing() {
             <div className="max-w-7xl mx-auto px-6 -mt-20 relative z-20">
                 {error && (
                     <Alert variant="destructive" className="mb-8 bg-red-900/20 border-red-500/50 text-red-200">
-                        <AlertCircle className="h-4 h-4" />
+                        <AlertCircle className="h-4 w-4" />
                         <AlertDescription>{error}</AlertDescription>
                     </Alert>
                 )}
 
                 {searchParams.get('payment') === 'success' && (
                     <Alert className="mb-8 bg-emerald-900/20 border-emerald-500/50 text-emerald-300">
-                        <CheckCircle className="h-4 h-4" />
+                        <CheckCircle className="h-4 w-4" />
                         <AlertDescription>Zahlung erfolgreich! Willkommen an Bord.</AlertDescription>
                     </Alert>
                 )}
+
+                {/* Why Premium / Trust Block */}
+                <div className="mb-10">
+                    <Card className="bg-slate-900/40 border-white/5 backdrop-blur-xl overflow-hidden">
+                        <CardContent className="p-8">
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+                                <div className="space-y-3 max-w-2xl">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-300 text-xs font-semibold">
+                                        <Star className="w-4 h-4" />
+                                        Warum Premium?
+                                    </div>
+                                    <div className="text-2xl md:text-3xl font-bold text-white">
+                                        Mehr Anträge. Mehr Erfolg. Weniger Stress.
+                                    </div>
+                                    <div className="text-slate-400">
+                                        Premium ist dafür gebaut, dass du schneller von der Analyse zur Auszahlung kommst – mit PDF-Export, Assistenz und mehr Kapazität.
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+                                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <div className="flex items-center gap-2 text-white font-semibold">
+                                            <Zap className="w-4 h-4 text-emerald-400" />
+                                            Schneller starten
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">Mehr Checks pro Monat + Priorität</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <div className="flex items-center gap-2 text-white font-semibold">
+                                            <CheckCircle className="w-4 h-4 text-emerald-400" />
+                                            PDF & Vorlagen
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">Reports, Musterbriefe, Export</div>
+                                    </div>
+                                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                                        <div className="flex items-center gap-2 text-white font-semibold">
+                                            <Shield className="w-4 h-4 text-emerald-400" />
+                                            Vertrauen
+                                        </div>
+                                        <div className="text-xs text-slate-400 mt-1">Sicher zahlen mit Stripe, jederzeit kündbar</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {pricingPlans.map((plan) => (

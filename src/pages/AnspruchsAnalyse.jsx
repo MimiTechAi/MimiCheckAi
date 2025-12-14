@@ -4,6 +4,7 @@ import { User } from '@/api/entities';
 import { supabase } from '@/api/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { track, AREA, SEVERITY } from '@/components/core/telemetry';
 import {
   Sparkles,
   TrendingUp,
@@ -36,8 +37,28 @@ export default function AnspruchsAnalyse() {
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
 
+  const [resume, setResume] = useState(null);
+
   useEffect(() => {
     loadUser();
+  }, []);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('last_started_antrag');
+      if (!raw) {
+        setResume(null);
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed?.programId) {
+        setResume(null);
+        return;
+      }
+      setResume(parsed);
+    } catch {
+      setResume(null);
+    }
   }, []);
 
   const loadUser = async () => {
@@ -72,6 +93,10 @@ export default function AnspruchsAnalyse() {
       if (analyzeError) throw analyzeError;
 
       setAnalysis(data.analysis);
+
+      track('funnel.completed_analysis', AREA.APPLICATION, {
+        eligible_programs_count: data?.analysis?.eligiblePrograms?.length ?? 0,
+      }, SEVERITY.MEDIUM);
     } catch (err) {
       console.error('Analyse-Fehler:', err);
 
@@ -85,6 +110,11 @@ export default function AnspruchsAnalyse() {
         eligiblePrograms: fallbackPrograms,
         recommendations: fallbackRecommendations
       });
+
+      track('funnel.completed_analysis', AREA.APPLICATION, {
+        eligible_programs_count: fallbackPrograms?.length ?? 0,
+        source: 'fallback',
+      }, SEVERITY.MEDIUM);
     } finally {
       setIsAnalyzing(false);
     }
@@ -230,6 +260,53 @@ export default function AnspruchsAnalyse() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
+              {/* Next Best Action */}
+              <Card className="backdrop-blur-3xl bg-slate-900/60 border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+                <CardContent className="relative z-10 p-6 md:p-8">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                    <div className="space-y-2">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300/80">
+                        Next Step
+                      </div>
+                      <div className="text-2xl md:text-3xl font-bold text-white font-heading">
+                        Starte jetzt deinen ersten Antrag
+                      </div>
+                      <div className="text-slate-400">
+                        Wir haben dir passende Förderungen gefunden. In den Anträgen kannst du direkt starten und PDFs ausfüllen.
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 w-full md:w-auto">
+                      <MagneticButton
+                        data-cursor-text="Anträge"
+                        onClick={() => {
+                          track('funnel.clicked_view_antraege', AREA.APPLICATION, {}, SEVERITY.MEDIUM);
+                          navigate(createPageUrl('Antraege'));
+                        }}
+                        className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-2xl hover:shadow-emerald-500/30 text-white"
+                      >
+                        <ArrowRight className="w-5 h-5 mr-2" />
+                        Anträge starten
+                      </MagneticButton>
+
+                      {resume?.programId && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId }, SEVERITY.MEDIUM);
+                            navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                          }}
+                          className="backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                        >
+                          Weiter machen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Ultra Glass Total Benefit Card */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}

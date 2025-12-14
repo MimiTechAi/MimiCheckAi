@@ -59,8 +59,18 @@ export default function Antraege() {
     const [recommendations, setRecommendations] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [resume, setResume] = useState(null);
 
     const handleStartAntrag = (programId) => {
+        try {
+            localStorage.setItem('last_started_antrag', JSON.stringify({
+                programId,
+                ts: Date.now(),
+            }));
+            setResume({ programId, ts: Date.now() });
+        } catch {
+            // ignore
+        }
         track('funnel.started_antrag', AREA.APPLICATION, { program_id: programId }, SEVERITY.MEDIUM);
         navigate(`/PdfAutofill?type=${encodeURIComponent(programId)}`);
     };
@@ -73,6 +83,28 @@ export default function Antraege() {
             loadRecommendations();
         }
     }, [userProfile, profileLoading, t]); // Reload when language changes
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('last_started_antrag');
+            if (!raw) {
+                setResume(null);
+                return;
+            }
+            const parsed = JSON.parse(raw);
+            if (!parsed?.programId) {
+                setResume(null);
+                return;
+            }
+            setResume(parsed);
+        } catch {
+            setResume(null);
+        }
+    }, []);
+
+    useEffect(() => {
+        track('funnel.viewed_antraege', AREA.APPLICATION, {}, SEVERITY.LOW);
+    }, []);
 
     const loadRecommendations = async () => {
         setLoading(true);
@@ -218,6 +250,53 @@ export default function Antraege() {
                         </p>
                     </motion.div>
                 </div>
+
+                {/* Resume Banner */}
+                {!loading && resume?.programId && (
+                    <div className="max-w-3xl mx-auto mb-10">
+                        <SpotlightCard className="p-6 md:p-7 border-emerald-500/20" spotlightColor="rgba(16, 185, 129, 0.16)">
+                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div>
+                                    <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300/80 mb-1">
+                                        Weiter machen
+                                    </div>
+                                    <div className="text-xl md:text-2xl font-bold text-white">
+                                        Du hast einen Antrag gestartet – willst du fortsetzen?
+                                    </div>
+                                    <div className="text-slate-400 text-sm mt-1">
+                                        Wir öffnen deinen letzten Entwurf direkt.
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button
+                                        onClick={() => {
+                                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId }, SEVERITY.MEDIUM);
+                                            navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                                        }}
+                                        className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                                    >
+                                        Fortsetzen
+                                        <ArrowRight className="ml-2 w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            try {
+                                                localStorage.removeItem('last_started_antrag');
+                                            } catch {
+                                                // ignore
+                                            }
+                                            setResume(null);
+                                        }}
+                                        className="bg-white/5 border-white/10 text-white hover:bg-white/10"
+                                    >
+                                        Ausblenden
+                                    </Button>
+                                </div>
+                            </div>
+                        </SpotlightCard>
+                    </div>
+                )}
 
                 {/* No Profile Warning */}
                 {!loading && (!userProfile || (!userProfile.vorname && !userProfile.name && !userProfile.onboarding_completed_at)) && (
