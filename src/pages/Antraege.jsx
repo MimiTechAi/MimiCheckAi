@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { track, AREA, SEVERITY } from '@/components/core/telemetry';
 
 const CATEGORY_STYLES = {
     'social': { icon: Euro, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
@@ -56,7 +57,13 @@ export default function Antraege() {
     const { t } = useTranslation();
     const { user: userProfile, isLoading: profileLoading } = useUserProfile();
     const [recommendations, setRecommendations] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    const handleStartAntrag = (programId) => {
+        track('funnel.started_antrag', AREA.APPLICATION, { program_id: programId }, SEVERITY.MEDIUM);
+        navigate(`/PdfAutofill?type=${encodeURIComponent(programId)}`);
+    };
+
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -332,7 +339,7 @@ export default function Antraege() {
 
                                                             <Button
                                                                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all mt-4"
-                                                                onClick={() => navigate(`/PdfAutofill?type=${encodeURIComponent(program.id)}`)}
+                                                                onClick={() => handleStartAntrag(program.id)}
                                                             >
                                                                 {t('antraegePage.card.button')}
                                                                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -418,7 +425,7 @@ export default function Antraege() {
                                                 ) : (
                                                     <Button
                                                         className="w-full bg-emerald-600 hover:bg-emerald-500 text-white group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-all mt-4"
-                                                        onClick={() => navigate(`/PdfAutofill?type=${encodeURIComponent(program.id)}`)}
+                                                        onClick={() => handleStartAntrag(program.id)}
                                                     >
                                                         {t('antraegePage.card.button')}
                                                         <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />

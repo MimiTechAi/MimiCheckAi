@@ -44,6 +44,10 @@ verify_jwt = true
 verify_jwt = false
 entrypoint = "./functions/create-stripe-checkout/index.ts"
 
+[functions.track-event]
+verify_jwt = true
+entrypoint = "./functions/track-event/index.ts"
+
 [auth]
 # Enable signup for local development
 enable_signup = true

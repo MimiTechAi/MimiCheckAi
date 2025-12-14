@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, MapPin, CreditCard, Heart, Home, Briefcase, Users, PiggyBank, Shield, ChevronDown, Check, AlertCircle, Save, Lock, Sparkles, Baby, Info, Loader2, GraduationCap, TriangleAlert } from 'lucide-react';
 import { useUserProfile } from '@/components/UserProfileContext.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { track, AREA, SEVERITY } from '@/components/core/telemetry';
 
 import {
   PersoenlichesDatenSection,
@@ -40,6 +41,7 @@ export default function ProfilSeite() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const [profil, setProfil] = useState(INITIAL_PROFIL);
+  const trackedFieldsRef = useRef(new Set());
 
   // Load local draft first (fast path)
   useEffect(() => {
@@ -132,6 +134,8 @@ export default function ProfilSeite() {
         profile_completeness: profileCompleteness
       });
 
+      track('funnel.profile_saved', AREA.PROFILE, { profile_completeness: profileCompleteness }, SEVERITY.MEDIUM);
+
       setSaveMessage({ type: 'success', text: 'Profil erfolgreich gespeichert!' });
     } catch (error) {
       console.error('Save error:', error);
@@ -144,7 +148,18 @@ export default function ProfilSeite() {
 
   const handleChange = (field) => (e) => {
     const value = e?.target?.type === 'checkbox' ? e.target.checked : e?.target?.value;
-    setProfil(prev => ({ ...prev, [field]: value }));
+    setProfil(prev => {
+      const prevVal = prev?.[field];
+      const prevFilled = prevVal === true || (typeof prevVal === 'string' && prevVal.trim() !== '') || (typeof prevVal === 'number' && Number.isFinite(prevVal));
+      const nextFilled = value === true || (typeof value === 'string' && value.trim() !== '') || (typeof value === 'number' && Number.isFinite(value));
+
+      if (!prevFilled && nextFilled && !trackedFieldsRef.current.has(field)) {
+        trackedFieldsRef.current.add(field);
+        track('funnel.completed_profile_field', AREA.PROFILE, { field }, SEVERITY.LOW);
+      }
+
+      return ({ ...prev, [field]: value });
+    });
   };
 
   const sections = [

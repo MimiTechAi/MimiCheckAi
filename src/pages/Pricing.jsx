@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createStripeCheckoutSession, createCustomerPortalSession } from '@/api/functions';
 import { useTranslation } from 'react-i18next';
+import { track, AREA, SEVERITY } from '@/components/core/telemetry';
 
 const pricingPlans = [
     {
@@ -79,9 +80,12 @@ export default function Pricing() {
             setIsLoading(false);
         }).catch(() => setIsLoading(false));
 
+        track('funnel.opened_paywall', AREA.BILLING, {}, SEVERITY.LOW);
+
         const paymentStatus = searchParams.get('payment');
         if (paymentStatus === 'success') {
             setError(null);
+            track('funnel.upgraded', AREA.BILLING, { source: 'pricing_success_param' }, SEVERITY.MEDIUM);
             setTimeout(() => navigate(createPageUrl('Dashboard')), 2000);
         } else if (paymentStatus === 'cancelled') {
             setError('Zahlung wurde abgebrochen. Sie können es jederzeit erneut versuchen.');
@@ -101,6 +105,8 @@ export default function Pricing() {
 
         setIsProcessing(true);
         setError(null);
+
+        track('funnel.checkout_started', AREA.BILLING, { plan_id: planId }, SEVERITY.MEDIUM);
 
         try {
             const response = await createStripeCheckoutSession({

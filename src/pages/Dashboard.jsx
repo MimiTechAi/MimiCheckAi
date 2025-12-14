@@ -34,6 +34,7 @@ import { LazySection } from "@/components/ui/LazySection";
 import { useBreakpoint } from "@/hooks/useBreakpoint";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { track, AREA, SEVERITY } from "@/components/core/telemetry";
 
 // Lazy load heavy components
 const FlowDiagram3D = lazy(() => import("@/components/3d/FlowDiagram3D"));
@@ -108,6 +109,15 @@ export default function Dashboard() {
         loadData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (isLoading) return;
+        if (error) return;
+        track('funnel.viewed_dashboard', AREA.DASHBOARD, {
+            subscription_tier: user?.subscription_tier || null,
+        }, SEVERITY.LOW);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoading, error]);
 
     useEffect(() => {
         if (!isOnline && cachedAbrechnungen.length > 0) {

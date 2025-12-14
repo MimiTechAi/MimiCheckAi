@@ -34,6 +34,26 @@ export const AREA = {
 const eventCache = new Map();
 const CACHE_TTL = 5000;
 
+async function sendFunnelEvent(payload) {
+    try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (!supabaseUrl) return;
+
+        const { supabase } = await import('@/api/supabaseClient');
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${supabaseUrl}/functions/v1/track-event`, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.send(JSON.stringify(payload));
+    } catch (e) {
+        // ignore telemetry send errors
+    }
+}
+
 export function track(eventName, area = AREA.APPLICATION, meta = {}, severity = SEVERITY.LOW) {
     if (!TELEMETRY_CONFIG.enabled) return;
 
@@ -79,6 +99,10 @@ export function track(eventName, area = AREA.APPLICATION, meta = {}, severity = 
             window.dispatchEvent(evt);
         }
     } catch (e) {}
+
+    if (typeof eventName === 'string' && eventName.startsWith('funnel.')) {
+        void sendFunnelEvent(payload);
+    }
 
     if (typeof window !== 'undefined' && window.MiMiCheckObservability) {
         try {

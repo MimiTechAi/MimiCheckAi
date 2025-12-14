@@ -13,12 +13,18 @@ import { track, trackPerformance, AREA, SEVERITY } from './telemetry';
 const originalFetch = window.fetch;
 let loaderCallbacks = { incrementPending: null, decrementPending: null };
 
+window.__mimicheckOriginalFetch = originalFetch;
+
 window.fetch = async function (...args) {
     const [resource, config] = args;
     const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const startTime = Date.now();
     const url = typeof resource === 'string' ? resource : resource.url;
     const method = config?.method || 'GET';
+
+    if (typeof url === 'string' && url.includes('/functions/v1/track-event')) {
+        return originalFetch(...args);
+    }
 
     // Increment pending counter
     if (loaderCallbacks.incrementPending) {
