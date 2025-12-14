@@ -99,7 +99,8 @@ export default function Layout({ children }) {
     }, []);
 
     const navItems = [
-        { name: t('layout.nav.dashboard', 'Dashboard'), icon: LayoutDashboard, page: 'profilseite' },
+        { name: t('layout.nav.dashboard', 'Dashboard'), icon: LayoutDashboard, page: 'AnspruchsAnalyse' },
+        { name: t('dashboard.tabs.profile', 'Mein Profil'), icon: UserIcon, page: 'ProfilSeite' },
         { name: t('layout.nav.upload', 'Upload'), icon: UploadIcon, page: 'Upload' },
         { name: t('abrechnungen.title', 'Abrechnungen'), icon: FileText, page: 'Abrechnungen' },
         { name: t('layout.nav.antraege', 'Anträge'), icon: FileCheck, page: 'Antraege' },
@@ -177,7 +178,7 @@ export default function Layout({ children }) {
                             </DropdownMenu>
 
                             {user ? (
-                                <Link to={createPageUrl('profilseite')}>
+                                <Link to={createPageUrl('AnspruchsAnalyse')}>
                                     <Button variant="outline" className="border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 hidden sm:flex">
                                         <LayoutDashboard className="w-4 h-4 mr-2" />
                                         Zum Dashboard

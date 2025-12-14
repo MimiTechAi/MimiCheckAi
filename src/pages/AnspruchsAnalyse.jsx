@@ -2,6 +2,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { User } from '@/api/entities';
 import { supabase } from '@/api/supabaseClient';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import {
   Sparkles,
   TrendingUp,
@@ -27,6 +29,7 @@ import { useTranslation } from 'react-i18next';
 
 export default function AnspruchsAnalyse() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -191,6 +194,16 @@ export default function AnspruchsAnalyse() {
                     </>
                   )}
                 </MagneticButton>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(createPageUrl('ProfilSeite'))}
+                    className="backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10 text-white"
+                  >
+                    {t('layout.profile.edit', 'Profil bearbeiten')}
+                  </Button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -363,6 +376,14 @@ export default function AnspruchsAnalyse() {
 
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <MagneticButton
+                  data-cursor-text="Profil"
+                  onClick={() => navigate(createPageUrl('ProfilSeite'))}
+                  variant="outline"
+                  className="px-8 py-4 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 text-white"
+                >
+                  {t('layout.profile.edit', 'Profil bearbeiten')}
+                </MagneticButton>
                 <MagneticButton
                   data-cursor-text="Erneut"
                   onClick={analyzeEligibility}

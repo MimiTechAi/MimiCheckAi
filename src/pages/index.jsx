@@ -160,6 +160,8 @@ function PagesContent() {
 
     React.useEffect(() => {
         const seen = localStorage.getItem('seenOnboarding');
+        const redirectedOnceKey = 'redirectedToAnspruchsAnalyseOnce';
+        const redirectedOnce = localStorage.getItem(redirectedOnceKey) === '1';
         const completion = (user?.profile_completeness ?? 0);
         const path = location.pathname.toLowerCase();
         const isPublic = (
@@ -190,8 +192,15 @@ function PagesContent() {
         else if (user && location.pathname === '/') {
             navigate('/profilseite');
         }
-        // Nach abgeschlossenem Onboarding: Direkt zur Anspruchsanalyse
-        else if (!isPublic && completion === 100 && location.pathname.toLowerCase() === '/profilseite') {
+
+        // Reset: If profile is no longer complete, allow redirect again when it reaches 100 later
+        if (completion < 100 && redirectedOnce) {
+            localStorage.removeItem(redirectedOnceKey);
+        }
+
+        // Nach abgeschlossenem Onboarding: Einmalig direkt zur Anspruchsanalyse
+        else if (!isPublic && completion === 100 && location.pathname.toLowerCase() === '/profilseite' && !redirectedOnce) {
+            localStorage.setItem(redirectedOnceKey, '1');
             navigate('/anspruchsanalyse');
         }
     }, [user, location.pathname, navigate]);
