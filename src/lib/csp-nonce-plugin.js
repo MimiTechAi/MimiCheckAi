@@ -25,12 +25,6 @@ export function cspNoncePlugin() {
         `$1 nonce="${nonce}"$2`
       );
 
-      // Inject CSP nonce into global scope before other scripts load
-      modified = modified.replace(
-        '</head>',
-        `<script nonce="${nonce}">window.__CSP_NONCE__ = '${nonce}';</script>\n</head>`
-      );
-
       // Inject into style tags as well
       modified = modified.replace(
         /(<style[^>]*)(>)/g,
