@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '@/api/entities';
 import { mimitech } from '@/api/mimitechClient';
 import { supabase } from '@/api/supabaseClient';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,14 +12,12 @@ import { Badge } from '@/components/ui/badge';
 import {
     Upload,
     Download,
-    FileText,
     User as UserIcon,
     AlertTriangle,
     CheckCircle,
     ArrowLeft,
     Loader2,
     Sparkles,
-    Eye,
     Info,
     XCircle,
     Brain,
@@ -31,6 +29,7 @@ import SuccessToast from '@/components/ui/SuccessToast';
 
 export default function PdfAutofill() {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const formType = searchParams.get('type');
     const applicationId = searchParams.get('application');
 
@@ -47,6 +46,9 @@ export default function PdfAutofill() {
     const [pdfAnalysis, setPdfAnalysis] = useState(null);
     const [processingStage, setProcessingStage] = useState('');
 
+    const [draftId, setDraftId] = useState(applicationId);
+    const autosaveTimer = useRef(null);
+
     useEffect(() => {
         const loadUser = async () => {
             try {
@@ -61,6 +63,111 @@ export default function PdfAutofill() {
         };
         loadUser();
     }, []);
+
+    useEffect(() => {
+        const loadDraft = async () => {
+            if (!applicationId || !user?.id) return;
+            try {
+                const { data, error: dbError } = await supabase
+                    .from('applications')
+                    .select('*')
+                    .eq('id', applicationId)
+                    .eq('user_id', user.id)
+                    .single();
+                if (dbError) throw dbError;
+                if (!data) return;
+
+                setDraftId(data.id);
+
+                if (data.file_url) {
+                    setUploadedFileUrl(data.file_url);
+                }
+
+                if (data.filename) {
+                    setUploadedFile({ name: data.filename, size: 0, type: 'application/pdf' });
+                }
+
+                if (data.extracted_data) {
+                    setPdfAnalysis(data.extracted_data);
+                }
+
+                try {
+                    localStorage.setItem('last_started_antrag', JSON.stringify({
+                        programId: data.type,
+                        applicationId: data.id,
+                        ts: Date.now(),
+                    }));
+                } catch {
+                    // ignore
+                }
+            } catch (e) {
+                console.warn('Could not load application draft:', e);
+            }
+        };
+
+        loadDraft();
+    }, [applicationId, user?.id]);
+
+    const ensureDraft = async (payload = {}) => {
+        if (!user?.id) return null;
+        if (draftId) return draftId;
+
+        const type = (formType || 'other');
+        const title = `Antrag: ${type}`;
+
+        const { data, error: dbError } = await supabase
+            .from('applications')
+            .insert({
+                user_id: user.id,
+                type,
+                status: 'draft',
+                title,
+                ...payload,
+            })
+            .select()
+            .single();
+        if (dbError) throw dbError;
+
+        setDraftId(data.id);
+
+        try {
+            localStorage.setItem('last_started_antrag', JSON.stringify({
+                programId: type,
+                applicationId: data.id,
+                ts: Date.now(),
+            }));
+        } catch {
+            // ignore
+        }
+
+        if (!applicationId) {
+            navigate(`?application=${encodeURIComponent(data.id)}`, { replace: true });
+        }
+
+        return data.id;
+    };
+
+    const queueAutosave = (updates) => {
+        if (autosaveTimer.current) {
+            clearTimeout(autosaveTimer.current);
+        }
+        autosaveTimer.current = setTimeout(async () => {
+            try {
+                const id = await ensureDraft();
+                if (!id) return;
+                await supabase
+                    .from('applications')
+                    .update({
+                        ...updates,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', id)
+                    .eq('user_id', user.id);
+            } catch (e) {
+                console.warn('Autosave failed:', e);
+            }
+        }, 800);
+    };
 
     const calculateCompleteness = () => {
         if (!user) return 0;
@@ -96,6 +203,12 @@ export default function PdfAutofill() {
         setUploadedFile(file);
         setPdfAnalysis(null);
 
+        try {
+            await ensureDraft({ filename: file.name });
+        } catch (e) {
+            console.warn('Could not create draft:', e);
+        }
+
         // PDF hochladen und analysieren
         try {
             setIsAnalyzing(true);
@@ -103,6 +216,8 @@ export default function PdfAutofill() {
 
             const { file_url } = await mimitech.integrations.Core.UploadFile({ file });
             setUploadedFileUrl(file_url);
+
+            queueAutosave({ file_url, filename: file.name, status: 'draft' });
 
             setProcessingStage('KI analysiert das Formular...');
 
@@ -125,6 +240,8 @@ export default function PdfAutofill() {
 
             if (analysisData) {
                 setPdfAnalysis(analysisData);
+
+                queueAutosave({ extracted_data: analysisData, status: 'draft' });
 
                 if (!analysisData.hasFormFields) {
                     setError('⚠️ Dieses PDF hat keine ausfüllbaren Formularfelder und kann nicht automatisch ausgefüllt werden. Bitte laden Sie ein Formular mit ausfüllbaren Feldern hoch.');
@@ -152,6 +269,12 @@ export default function PdfAutofill() {
 
         setIsProcessing(true);
         setError(null);
+
+        try {
+            await ensureDraft({ file_url: uploadedFileUrl, filename: uploadedFile?.name || null, status: 'draft' });
+        } catch (e) {
+            console.warn('Could not ensure draft:', e);
+        }
 
         try {
             setProcessingStage('🤖 KI bereitet die Daten vor...');
@@ -182,8 +305,9 @@ export default function PdfAutofill() {
                 const blob = new Blob([Uint8Array.from(atob(fillData.pdfBlob), c => c.charCodeAt(0))], { type: 'application/pdf' });
                 const url = window.URL.createObjectURL(blob);
                 setFilledPdfUrl(url);
+                queueAutosave({ analysis_results: { ...fillData, pdfBlob: null }, status: 'ready' });
             } else if (fillData?.mapping) {
-                console.log('KI Mapping:', fillData.mapping);
+                console.warn('KI Mapping:', fillData.mapping);
 
                 // Erstelle Preview mit Vorschlägen
                 const previewHtml = `
@@ -269,6 +393,8 @@ export default function PdfAutofill() {
                 const blob = new Blob([previewHtml], { type: 'text/html' });
                 const url = window.URL.createObjectURL(blob);
                 setFilledPdfUrl(url);
+
+                queueAutosave({ analysis_results: fillData, status: 'ready' });
             }
 
             const filledFields = fillData?.stats?.filledFields || fillData?.mapping?.suggestions?.length || 0;

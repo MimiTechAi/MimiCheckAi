@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserProfile } from '@/components/UserProfileContext.jsx';
 import { supabase } from '@/api/supabaseClient';
@@ -57,9 +57,9 @@ export default function Antraege() {
     const { t } = useTranslation();
     const { user: userProfile, isLoading: profileLoading } = useUserProfile();
     const [recommendations, setRecommendations] = useState(null);
-    const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const [resume, setResume] = useState(null);
+    const [myDrafts, setMyDrafts] = useState([]);
 
     const handleStartAntrag = (programId) => {
         try {
@@ -78,37 +78,8 @@ export default function Antraege() {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        if (!profileLoading) {
-            loadRecommendations();
-        }
-    }, [userProfile, profileLoading, t]); // Reload when language changes
-
-    useEffect(() => {
-        try {
-            const raw = localStorage.getItem('last_started_antrag');
-            if (!raw) {
-                setResume(null);
-                return;
-            }
-            const parsed = JSON.parse(raw);
-            if (!parsed?.programId) {
-                setResume(null);
-                return;
-            }
-            setResume(parsed);
-        } catch {
-            setResume(null);
-        }
-    }, []);
-
-    useEffect(() => {
-        track('funnel.viewed_antraege', AREA.APPLICATION, {}, SEVERITY.LOW);
-    }, []);
-
-    const loadRecommendations = async () => {
+    const loadRecommendations = useCallback(async () => {
         setLoading(true);
-        setError(null);
         // Simulate loading delay for smoother UX
         await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -121,7 +92,8 @@ export default function Antraege() {
             return;
         }
 
-        const localEvaluations = (() => {
+        // Local programs based on eligibility rules
+        const localPrograms = (() => {
             try {
                 return AntragsService.evaluateEligibilityAll(userProfile);
             } catch (e) {
@@ -130,19 +102,20 @@ export default function Antraege() {
             }
         })();
 
-        const localPrograms = localEvaluations.map((a) => ({
-            id: a.id,
-            name: a.name,
-            category: mapProgramToCategory(a.name),
-            description: a.reasoning || a.description || '',
-            confidence: Math.max(0, Math.min(100, Number(a.eligibilityScore ?? 0))),
-            estimatedAmount: a.estimatedAmount ? `~${a.estimatedAmount}€` : '',
-            processingTime: a.processingTime || '1-3 Monate',
-            downloadUrl: a.pdfUrl || '',
-            requiredDocuments: [],
-            nextSteps: [],
-            missingData: a.missingData || [],
-            eligibilityStatus: a.eligibilityStatus || 'unknown'
+        // Map local programs to expected format
+        const transformedPrograms = localPrograms.map(p => ({
+            id: p.id || mapProgramToCanonicalId(p.name),
+            name: p.name,
+            category: p.category || mapProgramToCategory(p.name),
+            description: p.description || '',
+            confidence: p.confidence || 0,
+            estimatedAmount: p.estimatedAmount || null,
+            processingTime: p.processingTime || null,
+            downloadUrl: p.downloadUrl || null,
+            requiredDocuments: p.requiredDocuments || [],
+            nextSteps: p.nextSteps || [],
+            missingData: p.missingData || [],
+            eligibilityStatus: p.eligibilityStatus || 'eligible'
         })).filter(p => p.eligibilityStatus !== 'ineligible');
 
         try {
@@ -154,21 +127,23 @@ export default function Antraege() {
             
             // Transform API response to expected format
             if (data?.analysis?.eligiblePrograms) {
-                const transformedPrograms = data.analysis.eligiblePrograms.map(program => ({
-                    id: mapProgramToCanonicalId(program.programName),
-                    name: program.programName,
-                    category: mapProgramToCategory(program.programName),
-                    description: program.reasoning,
-                    confidence: program.eligibilityScore,
-                    estimatedAmount: `~${program.estimatedAmount}€`,
-                    processingTime: '1-3 Monate',
-                    downloadUrl: program.officialLink,
-                    requiredDocuments: program.requiredDocuments || [],
-                    nextSteps: program.nextSteps || []
+                const apiPrograms = data.analysis.eligiblePrograms.map(p => ({
+                    id: mapProgramToCanonicalId(p.name),
+                    name: p.name,
+                    category: mapProgramToCategory(p.name),
+                    description: p.description || '',
+                    confidence: p.confidence || 0,
+                    estimatedAmount: p.estimatedAmount || null,
+                    processingTime: p.processingTime || null,
+                    downloadUrl: p.downloadUrl || null,
+                    requiredDocuments: p.requiredDocuments || [],
+                    nextSteps: p.nextSteps || []
                 }));
 
-                const apiById = new Map(transformedPrograms.map(p => [p.id, p]));
-                const merged = localPrograms.map(lp => {
+                const apiById = new Map(apiPrograms.map(p => [p.id, p]));
+
+                // Merge local + API details, prefer API where present
+                const merged = transformedPrograms.map(lp => {
                     const ap = apiById.get(lp.id);
                     if (!ap) return lp;
                     return {
@@ -186,7 +161,7 @@ export default function Antraege() {
                 });
 
                 const localIds = new Set(localPrograms.map(p => p.id));
-                const apiOnly = transformedPrograms
+                const apiOnly = apiPrograms
                     .filter(p => !localIds.has(p.id))
                     .map(p => ({
                         ...p,
@@ -194,7 +169,7 @@ export default function Antraege() {
                         eligibilityStatus: 'eligible'
                     }));
                 
-                setRecommendations({ 
+                setRecommendations({
                     programs: [...merged, ...apiOnly],
                     totalBenefit: data.analysis.estimatedTotalMonthlyBenefit,
                     recommendations: data.analysis.recommendations
@@ -204,14 +179,70 @@ export default function Antraege() {
             }
         } catch (err) {
             console.error('Fehler beim Laden der Empfehlungen:', err);
-            console.log('⚠️ Edge Function nicht verfügbar. Verwende lokale Eligibility.');
+            console.warn('⚠️ Edge Function nicht verfügbar. Verwende lokale Eligibility.');
             setRecommendations({
                 programs: localPrograms
             });
         } finally {
             setLoading(false);
         }
-    };
+    }, [userProfile]);
+
+    useEffect(() => {
+        if (!profileLoading) {
+            loadRecommendations();
+        }
+    }, [profileLoading, loadRecommendations, t]); // Reload when language changes
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('last_started_antrag');
+            if (!raw) {
+                setResume(null);
+                return;
+            }
+            const parsed = JSON.parse(raw);
+            if (!parsed?.programId && !parsed?.applicationId) {
+                setResume(null);
+                return;
+            }
+            setResume(parsed);
+        } catch {
+            setResume(null);
+        }
+    }, []);
+
+    useEffect(() => {
+        track('funnel.viewed_antraege', AREA.APPLICATION, {}, SEVERITY.LOW);
+    }, []);
+
+    useEffect(() => {
+        const loadDrafts = async () => {
+            if (!userProfile?.id) {
+                setMyDrafts([]);
+                return;
+            }
+
+            try {
+                const { data, error: dbError } = await supabase
+                    .from('applications')
+                    .select('id,type,status,title,updated_at,created_at,filename')
+                    .eq('user_id', userProfile.id)
+                    .neq('type', 'abrechnung')
+                    .in('status', ['draft', 'ready', 'submitted', 'processing', 'in_bearbeitung'])
+                    .order('updated_at', { ascending: false })
+                    .limit(6);
+
+                if (dbError) throw dbError;
+                setMyDrafts(data || []);
+            } catch (e) {
+                console.warn('Could not load drafts:', e);
+                setMyDrafts([]);
+            }
+        };
+
+        loadDrafts();
+    }, [userProfile?.id]);
 
     const filteredPrograms = recommendations?.programs.filter(program => {
         const matchesCategory = selectedCategory === 'all' || program.category === selectedCategory;
@@ -252,7 +283,7 @@ export default function Antraege() {
                 </div>
 
                 {/* Resume Banner */}
-                {!loading && resume?.programId && (
+                {!loading && (resume?.applicationId || resume?.programId) && (
                     <div className="max-w-3xl mx-auto mb-10">
                         <SpotlightCard className="p-6 md:p-7 border-emerald-500/20" spotlightColor="rgba(16, 185, 129, 0.16)">
                             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -270,8 +301,12 @@ export default function Antraege() {
                                 <div className="flex gap-3">
                                     <Button
                                         onClick={() => {
-                                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId }, SEVERITY.MEDIUM);
-                                            navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId, application_id: resume.applicationId }, SEVERITY.MEDIUM);
+                                            if (resume.applicationId) {
+                                                navigate(`/PdfAutofill?application=${encodeURIComponent(resume.applicationId)}`);
+                                            } else {
+                                                navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                                            }
                                         }}
                                         className="bg-emerald-600 hover:bg-emerald-500 text-white"
                                     >
@@ -295,6 +330,56 @@ export default function Antraege() {
                                 </div>
                             </div>
                         </SpotlightCard>
+                    </div>
+                )}
+
+                {/* Drafts Pipeline */}
+                {!loading && myDrafts.length > 0 && (
+                    <div className="max-w-6xl mx-auto mb-12">
+                        <div className="flex items-end justify-between mb-4">
+                            <div>
+                                <h2 className="text-2xl md:text-3xl font-bold text-white">Deine Entwürfe</h2>
+                                <p className="text-slate-400 text-sm mt-1">Mach da weiter, wo du aufgehört hast</p>
+                            </div>
+                            <Badge className="bg-white/5 text-slate-200 border border-white/10">SOTA 2025</Badge>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {myDrafts.map((d) => (
+                                <SpotlightCard
+                                    key={d.id}
+                                    className="p-5 border-white/10"
+                                    spotlightColor="rgba(16, 185, 129, 0.12)"
+                                >
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="text-white font-semibold">
+                                                {d.title || `Antrag: ${d.type}`}
+                                            </div>
+                                            <div className="text-xs text-slate-400 mt-1">
+                                                {d.filename ? `Datei: ${d.filename}` : 'PDF-Entwurf'}
+                                            </div>
+                                        </div>
+                                        <Badge
+                                            variant="outline"
+                                            className="border-emerald-500/30 text-emerald-300 bg-transparent"
+                                        >
+                                            {d.status}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="pt-4">
+                                        <Button
+                                            onClick={() => navigate(`/PdfAutofill?application=${encodeURIComponent(d.id)}`)}
+                                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+                                        >
+                                            Fortsetzen
+                                            <ArrowRight className="ml-2 w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </SpotlightCard>
+                            ))}
+                        </div>
                     </div>
                 )}
 

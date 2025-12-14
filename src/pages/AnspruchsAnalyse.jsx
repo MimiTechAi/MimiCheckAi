@@ -101,7 +101,7 @@ export default function AnspruchsAnalyse() {
       console.error('Analyse-Fehler:', err);
 
       // **FALLBACK DEMO-ANALYSE**
-      console.log('⚠️ Edge Function nicht verfügbar. Verwende Demo-Analyse.');
+      console.warn('⚠️ Edge Function nicht verfügbar. Verwende Demo-Analyse.');
       const fallbackPrograms = t('anspruchsAnalyse.fallback.programs', { returnObjects: true });
       const fallbackRecommendations = t('anspruchsAnalyse.fallback.recommendations', { returnObjects: true });
 
@@ -290,12 +290,16 @@ export default function AnspruchsAnalyse() {
                         Anträge starten
                       </MagneticButton>
 
-                      {resume?.programId && (
+                      {(resume?.applicationId || resume?.programId) && (
                         <Button
                           variant="outline"
                           onClick={() => {
-                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId }, SEVERITY.MEDIUM);
-                            navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                            track('funnel.resumed_antrag', AREA.APPLICATION, { program_id: resume.programId, application_id: resume.applicationId }, SEVERITY.MEDIUM);
+                            if (resume.applicationId) {
+                              navigate(`/PdfAutofill?application=${encodeURIComponent(resume.applicationId)}`);
+                            } else {
+                              navigate(`/PdfAutofill?type=${encodeURIComponent(resume.programId)}`);
+                            }
                           }}
                           className="backdrop-blur-xl bg-white/5 hover:bg-white/10 border-white/10 text-white"
                         >
