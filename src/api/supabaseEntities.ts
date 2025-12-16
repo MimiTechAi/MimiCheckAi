@@ -74,15 +74,15 @@ function handleError(error: unknown, operation: string): never {
   throw new Error(message);
 }
 
-function sanitizeUserProfileUpdates(updates: Record<string, any>): Record<string, any> {
-  const input: Record<string, any> = updates || {};
+function sanitizeUserProfileUpdates(updates: Record<string, unknown>): Record<string, unknown> {
+  const input: Record<string, unknown> = updates || {};
 
   // Flatten legacy nested payloads (best-effort)
-  const legacyLebenssituation = input.lebenssituation || {};
-  const wohnadresse = legacyLebenssituation.wohnadresse || {};
-  const bankverbindung = legacyLebenssituation.bankverbindung || {};
+  const legacyLebenssituation = (input.lebenssituation && typeof input.lebenssituation === 'object') ? (input.lebenssituation as Record<string, unknown>) : {};
+  const wohnadresse = (legacyLebenssituation.wohnadresse && typeof legacyLebenssituation.wohnadresse === 'object') ? (legacyLebenssituation.wohnadresse as Record<string, unknown>) : {};
+  const bankverbindung = (legacyLebenssituation.bankverbindung && typeof legacyLebenssituation.bankverbindung === 'object') ? (legacyLebenssituation.bankverbindung as Record<string, unknown>) : {};
 
-  const merged: Record<string, any> = {
+  const merged: Record<string, unknown> = {
     ...input,
     // Legacy mappings
     plz: input.plz ?? wohnadresse.plz,
@@ -141,7 +141,7 @@ function sanitizeUserProfileUpdates(updates: Record<string, any>): Record<string
   const jsonFields = new Set(['weitere_einkuenfte', 'kinder', 'vermoegen_details']);
   const dateFields = new Set(['geburtsdatum', 'einzugsdatum']);
 
-  const sanitized: Record<string, any> = {};
+  const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(merged)) {
     if (!allowed.has(key)) continue;
 
@@ -339,7 +339,7 @@ export const UserProfile: UserProfileEntity = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const safeUpdates = sanitizeUserProfileUpdates(updates as Record<string, any>);
+      const safeUpdates = sanitizeUserProfileUpdates(updates as Record<string, unknown>);
 
       const { data, error } = await supabase
         .from('users')
@@ -405,11 +405,26 @@ export const Abrechnung: AbrechnungEntity = {
       if (error) throw error;
       
       // Map fields for backward compatibility
-      return (data || []).map((item: any) => ({
-        ...item,
-        filename: item.title, // Alias for Dashboard display
-        created_date: item.created_at // Legacy field name
-      }));
+      return (data || []).flatMap((item: unknown) => {
+        if (!item || typeof item !== 'object') return [];
+        const record = item as unknown as AbrechnungType & Record<string, unknown>;
+        const title = record.title;
+        const createdAt = record.created_at;
+
+        const filename = typeof title === 'string'
+          ? title
+          : (title === null || title === undefined ? title : String(title));
+
+        const created_date = typeof createdAt === 'string'
+          ? createdAt
+          : (createdAt === null || createdAt === undefined ? createdAt : String(createdAt));
+
+        return [{
+          ...record,
+          filename,
+          created_date
+        } as unknown as AbrechnungType];
+      });
     } catch (error) {
       console.error('List abrechnungen failed:', error);
       // Return empty array instead of throwing - graceful degradation
@@ -429,7 +444,7 @@ export const Abrechnung: AbrechnungEntity = {
         .select('*')
         .eq('id', id)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data ? { ...data, filename: data.title, created_date: data.created_at } : null;
@@ -693,10 +708,10 @@ export const Antrag: AntragEntity = {
         .select('*')
         .eq('id', id)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data || null;
     } catch (error) {
       handleError(error, 'Get antrag');
     }
