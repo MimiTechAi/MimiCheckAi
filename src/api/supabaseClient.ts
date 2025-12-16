@@ -1,8 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { deriveSupabaseStorageKey } from './supabaseStorageKey';
 
 // SECURITY: API-Keys müssen aus Umgebungsvariablen kommen, KEINE Fallbacks!
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+export { deriveSupabaseStorageKey };
 
 // Validierung der Umgebungsvariablen - KEINE Key-Fragmente loggen!
 const missingVars: string[] = [];
@@ -34,15 +37,14 @@ if (import.meta.env.DEV) {
 
 // KRITISCH: Storage Key muss dem Supabase-Standard entsprechen
 // Format: sb-<project-ref>-auth-token
-// Für Project yjjauvmjyhlxcoumwqlj: sb-yjjauvmjyhlxcoumwqlj-auth-token
-const STORAGE_KEY = 'sb-yjjauvmjyhlxcoumwqlj-auth-token';
+export const SUPABASE_STORAGE_KEY = deriveSupabaseStorageKey(supabaseUrl);
 
 export const supabase: SupabaseClient = createClient(supabaseUrl || '', supabaseAnon || '', {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: STORAGE_KEY,
+    ...(SUPABASE_STORAGE_KEY ? { storageKey: SUPABASE_STORAGE_KEY } : {}),
     storage: window.localStorage,
     flowType: 'pkce', // SOTA 2025: PKCE ist Standard für OAuth
   },

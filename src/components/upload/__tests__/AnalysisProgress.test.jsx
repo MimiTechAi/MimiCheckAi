@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import AnalysisProgress from '../AnalysisProgress.jsx';
 
@@ -18,14 +19,14 @@ function widthPerc(el) {
 describe('AnalysisProgress', () => {
   it('shows fractional progress for upload step based on uploadProgress', () => {
     render(<AnalysisProgress steps={steps} currentStep={1} fileName="test.pdf" uploadProgress={50} />);
-    const fill = screen.getByTestId('overall-progress-fill');
+    const fill = screen.getAllByTestId('overall-progress-fill')[0];
     // step 1/5 with 50% fractional => 10%
     expect(Math.round(widthPerc(fill))).toBe(10);
   });
 
   it('ignores uploadProgress after step 1 and advances per step', () => {
     render(<AnalysisProgress steps={steps} currentStep={2} fileName="test.pdf" uploadProgress={90} />);
-    const fill = screen.getByTestId('overall-progress-fill');
+    const fill = screen.getAllByTestId('overall-progress-fill')[0];
     // step 2/5 => 20%
     expect(Math.round(widthPerc(fill))).toBe(20);
   });

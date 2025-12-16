@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { supabase } from '@/api/supabaseClient';
+import { supabase, SUPABASE_STORAGE_KEY } from '@/api/supabaseClient';
 import PremiumLoader from '@/components/ui/PremiumLoader';
 
 export default function AuthBridge() {
@@ -16,7 +16,7 @@ export default function AuthBridge() {
       return;
     }
 
-    const STORAGE_KEY = 'sb-yjjauvmjyhlxcoumwqlj-auth-token';
+    const STORAGE_KEY = SUPABASE_STORAGE_KEY;
     
     (async () => {
       try {
@@ -29,10 +29,12 @@ export default function AuthBridge() {
           expires_at: Math.floor(Date.now() / 1000) + 3600
         };
         
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
-        } catch (storageError) {
-          console.warn('localStorage write failed:', storageError);
+        if (STORAGE_KEY) {
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionData));
+          } catch (storageError) {
+            console.warn('localStorage write failed:', storageError);
+          }
         }
         
         // Step 2: Set via Supabase API
@@ -51,7 +53,7 @@ export default function AuthBridge() {
         // Step 4: Verify
         const { data: verifyData } = await supabase.auth.getSession();
         const hasSession = !!verifyData?.session;
-        const hasLocalStorage = !!localStorage.getItem(STORAGE_KEY);
+        const hasLocalStorage = STORAGE_KEY ? !!localStorage.getItem(STORAGE_KEY) : false;
         
         if (!hasSession && !hasLocalStorage) {
           throw new Error('Session could not be established');

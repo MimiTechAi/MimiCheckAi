@@ -10,16 +10,17 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import React from 'react';
 import { render, screen, within } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import Layout from '../pages/Layout';
 
 // Helper to render component with router
 const renderWithRouter = (component: React.ReactElement) => {
   return render(
-    <BrowserRouter>
+    <MemoryRouter initialEntries={['/']}>
       {component}
-    </BrowserRouter>
+    </MemoryRouter>
   );
 };
 
@@ -35,7 +36,7 @@ const setViewport = (width: number, height: number) => {
     configurable: true,
     value: height,
   });
-  window.dispatchEvent(new Event('resize'));
+  window.dispatchEvent?.(new Event('resize'));
 };
 
 describe('Footer Legal Links Accessibility - Core App', () => {

@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { buildAuthBridgeRedirectUrl } from "./authBridgeRedirect";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,10 +35,12 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // REDIRECT: Auth-Bridge zu Port 8005 weiterleiten!
-  app.get('/auth-bridge', (req, res) => {
-    const queryString = new URLSearchParams(req.query as any).toString();
-    const redirectUrl = `http://localhost:8005/auth-bridge?${queryString}`;
-    console.log('🚀 REDIRECT /auth-bridge -> Port 8005:', redirectUrl.substring(0, 100) + '...');
+  app.get("/auth-bridge", (req, res) => {
+    const redirectUrl = buildAuthBridgeRedirectUrl({
+      nodeEnv: process.env.NODE_ENV,
+      appUrlEnv: process.env.VITE_APP_URL,
+      query: req.query as unknown as Record<string, unknown>,
+    });
     res.redirect(302, redirectUrl);
   });
 

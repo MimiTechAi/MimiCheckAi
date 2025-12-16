@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { User } from "@/api/entities";
 import { supabase } from "@/api/supabaseClient";
+import { SUPABASE_STORAGE_KEY } from "@/api/supabaseClient";
 import { createPageUrl } from "@/utils";
 import { useTranslation } from 'react-i18next';
 import {
@@ -39,19 +40,22 @@ export default function Layout({ children }) {
     const { t, i18n } = useTranslation();
 
     useEffect(() => {
+        let cancelled = false;
+
         // Versuche User-Profil zu laden
         const loadUser = async () => {
             try {
                 // Erst versuchen das Profil zu laden
                 const profile = await User.me();
                 if (profile) {
-                    setUser(profile);
+                    if (!cancelled) setUser(profile);
                     return;
                 }
 
                 // Fallback: Auth-User direkt verwenden
                 const { data: { user: authUser } } = await supabase.auth.getUser();
                 if (authUser) {
+                    if (cancelled) return;
                     setUser({
                         email: authUser.email,
                         full_name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Benutzer'
@@ -63,6 +67,7 @@ export default function Layout({ children }) {
                 try {
                     const { data: { user: authUser } } = await supabase.auth.getUser();
                     if (authUser) {
+                        if (cancelled) return;
                         setUser({
                             email: authUser.email,
                             full_name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Benutzer'
@@ -76,6 +81,7 @@ export default function Layout({ children }) {
 
         // Auth State Listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (cancelled) return;
             if (event === 'SIGNED_OUT') {
                 setUser(null);
             } else if (session?.user) {
@@ -83,14 +89,17 @@ export default function Layout({ children }) {
             }
         });
 
-        return () => subscription?.unsubscribe();
+        return () => {
+            cancelled = true;
+            subscription?.unsubscribe();
+        };
     }, []);
 
     const handleLogout = useCallback(async () => {
         try {
             await supabase.auth.signOut();
             // Clear localStorage
-            localStorage.removeItem('sb-yjjauvmjyhlxcoumwqlj-auth-token');
+            if (SUPABASE_STORAGE_KEY) localStorage.removeItem(SUPABASE_STORAGE_KEY);
         } catch (error) {
             console.warn('Logout error:', error);
         }

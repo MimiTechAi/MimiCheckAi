@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
+import { FramerPageShell } from "@/components/framer";
 
 function InnerRouter() {
   const [location] = useLocation();
@@ -112,12 +113,11 @@ function PagePlaceholder({
   description?: string;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-      <div className="text-center px-4">
-        <h1 className="text-4xl font-bold mb-4 text-white">{title}</h1>
-        <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          {description ?? "Diese Seite wird in Kürze verfügbar sein."}
-        </p>
+    <FramerPageShell
+      title={title}
+      description={description ?? "Diese Seite wird in Kürze verfügbar sein."}
+    >
+      <div className="flex flex-col items-center text-center">
         <a
           href="/"
           className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-500 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
@@ -125,7 +125,7 @@ function PagePlaceholder({
           Zurück zur Startseite
         </a>
       </div>
-    </div>
+    </FramerPageShell>
   );
 }
 

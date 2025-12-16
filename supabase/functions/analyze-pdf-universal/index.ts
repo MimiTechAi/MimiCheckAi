@@ -4,6 +4,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+}
+
+interface AnalyzePdfRequest {
+    pdfUrl?: string
+    pdfText?: string
+    formType?: string
 }
 
 serve(async (req) => {
@@ -12,69 +20,90 @@ serve(async (req) => {
     }
 
     try {
-        const { pdfText, pdfUrl } = await req.json()
+        const { pdfText, pdfUrl, formType = 'buergergeld' }: AnalyzePdfRequest = await req.json()
 
         if (!pdfText && !pdfUrl) {
-            throw new Error('PDF text or URL is required')
+            return new Response(
+                JSON.stringify({ error: 'pdfUrl or pdfText is required' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            )
         }
 
-        // Use Anthropic Claude 3.5 Sonnet for superior document understanding
-        const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')
-        if (!ANTHROPIC_API_KEY) {
-            throw new Error('Anthropic API Key not configured')
+        const claudeApiKey = Deno.env.get('CLAUDE_API_KEY') ?? Deno.env.get('ANTHROPIC_API_KEY')
+        if (!claudeApiKey) {
+            return new Response(
+                JSON.stringify({ error: 'CLAUDE_API_KEY (oder ANTHROPIC_API_KEY) nicht konfiguriert' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            )
         }
 
-        const prompt = `
-      Du bist ein Experte für deutsche Bürokratie-Formulare.
-      Analysiere den folgenden Text aus einem PDF-Formular.
-      
-      Identifiziere alle ausfüllbaren Felder und deren Kontext.
-      Erstelle ein JSON-Schema, das beschreibt, welche Daten benötigt werden.
-      
-      PDF Inhalt (Auszug):
-      ${pdfText ? pdfText.substring(0, 4000) : 'PDF URL provided: ' + pdfUrl}
-      
-      Gib NUR valides JSON zurück:
-      {
-        "documentType": "string (z.B. Wohngeldantrag)",
-        "fields": [
-          {
-            "id": "string (technische ID oder Label)",
-            "label": "string (was steht im Formular)",
-            "type": "text|date|checkbox|number",
-            "required": boolean,
-            "context": "string (Erklärung)"
-          }
-        ],
-        "complexity": "low|medium|high"
-      }
-    `
+        const prompt = `Analysiere dieses ${formType}-Formular PDF und gib mir eine JSON-Struktur zurück mit:
+          
+{
+  "hasFormFields": boolean,
+  "fieldCount": number,
+  "fields": [
+    {
+      "fieldName": string,
+      "fieldType": "text" | "date" | "number" | "checkbox" | "select",
+      "required": boolean,
+      "description": string
+    }
+  ],
+  "suggestions": [
+    {
+      "fieldName": string,
+      "expectedDataType": string,
+      "hint": string
+    }
+  ]
+}
+
+PDF Input:
+${pdfText ? pdfText.substring(0, 4000) : 'PDF URL: ' + pdfUrl}
+
+Antworte NUR mit validem JSON, ohne zusätzlichen Text.`
 
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
-                'x-api-key': ANTHROPIC_API_KEY,
+                'x-api-key': claudeApiKey,
                 'anthropic-version': '2023-06-01',
                 'content-type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'claude-3-5-sonnet-20240620',
+                model: 'claude-3-5-sonnet-20241022',
                 max_tokens: 4096,
                 messages: [{ role: 'user', content: prompt }],
             }),
         })
 
-        const aiData = await response.json()
-
-        if (aiData.error) {
-            throw new Error(`Anthropic Error: ${aiData.error.message}`)
+        if (!response.ok) {
+            const errorText = await response.text()
+            return new Response(
+                JSON.stringify({ error: `Claude API Fehler: ${errorText}` }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            )
         }
 
-        const analysis = JSON.parse(aiData.content[0].text)
+        const aiData = await response.json()
+        const content = aiData?.content?.[0]?.text
+
+        let analysisResult: any
+        try {
+            analysisResult = JSON.parse(String(content ?? '').replace(/```json|```/g, '').trim())
+        } catch {
+            analysisResult = {
+                hasFormFields: false,
+                fieldCount: 0,
+                warning: 'PDF konnte nicht analysiert werden',
+                rawResponse: content
+            }
+        }
 
         return new Response(
-            JSON.stringify({ analysis }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(analysisResult),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
 
     } catch (error) {

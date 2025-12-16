@@ -96,7 +96,7 @@ export default defineConfig({
       '.github',
     ],
     watch: false,
-    isolate: false,
+    isolate: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

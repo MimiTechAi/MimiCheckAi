@@ -5,12 +5,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import React from 'react';
+import type { Session } from '@supabase/supabase-js';
 
 // Mock Supabase
 vi.mock('@/api/supabaseClient', () => ({
+  SUPABASE_STORAGE_KEY: 'sb-test-auth-token',
   supabase: {
     auth: {
       getSession: vi.fn(),
@@ -26,6 +28,28 @@ vi.mock('@/api/supabaseClient', () => ({
 import { supabase } from '@/api/supabaseClient';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 
+type GetSessionReturn = Awaited<ReturnType<(typeof supabase.auth)['getSession']>>;
+
+function makeSession(): Session {
+  return {
+    access_token: 'test-access',
+    refresh_token: 'test-refresh',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    token_type: 'bearer',
+    user: {
+      id: 'test-user',
+      aud: 'authenticated',
+      role: 'authenticated',
+      email: 'test@example.com',
+      app_metadata: {},
+      user_metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  } as unknown as Session;
+}
+
 // Test-Komponente
 const TestComponent = () => <div data-testid="protected-content">Protected Content</div>;
 const AuthPage = () => <div data-testid="auth-page">Auth Page</div>;
@@ -37,15 +61,16 @@ const renderWithRouter = (
 ) => {
   // Mock Session basierend auf Auth-Status
   if (isAuthenticated) {
+    const session = makeSession();
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
-      data: { session: { user: { id: 'test-user', email: 'test@example.com' } } },
+      data: { session },
       error: null,
-    } as any);
+    } as unknown as GetSessionReturn);
   } else {
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: null },
       error: null,
-    } as any);
+    } as unknown as GetSessionReturn);
   }
 
   return render(
@@ -80,19 +105,16 @@ describe('Protected Route Properties', () => {
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { session: null },
       error: null,
-    } as any);
+    } as unknown as GetSessionReturn);
 
     renderWithRouter(<TestComponent />, {
       route,
       isAuthenticated: false,
     });
 
-    // Warte kurz auf Session-Check
-    await waitFor(() => {
-      // Protected Content sollte NICHT sichtbar sein wenn nicht authentifiziert
-      const hasProtected = screen.queryByTestId('protected-content');
-      expect(hasProtected).toBeNull();
-    }, { timeout: 2000 });
+    // Sobald ready=true und keine Session vorhanden ist, muss auf /auth gerendert werden
+    expect(await screen.findByTestId('auth-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('protected-content')).toBeNull();
   });
 
   it('should show protected content when authenticated', async () => {
@@ -101,15 +123,13 @@ describe('Protected Route Properties', () => {
       isAuthenticated: true,
     });
 
-    await waitFor(() => {
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument();
-    }, { timeout: 2000 });
+    expect(await screen.findByTestId('protected-content')).toBeInTheDocument();
   });
 
   it('should show loading state while checking authentication', () => {
     // Verzögere die Session-Prüfung
     vi.mocked(supabase.auth.getSession).mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({ data: { session: null }, error: null } as any), 1000))
+      () => new Promise((resolve) => setTimeout(() => resolve({ data: { session: null }, error: null } as unknown as GetSessionReturn), 1000))
     );
 
     renderWithRouter(<TestComponent />, {
@@ -123,22 +143,19 @@ describe('Protected Route Properties', () => {
 });
 
 describe('Auth Page Properties', () => {
-  it('should not show DEV bypass button in production', async () => {
+  it('should redirect internally to /profilseite after login (no cross-domain redirect)', async () => {
     const { readFileSync } = await import('fs');
-    
+
     const authContent = readFileSync('src/pages/Auth.jsx', 'utf-8');
-    
-    // Prüfe dass DEV_MODE nur bei localhost UND DEV aktiv ist
-    expect(authContent).toContain('import.meta.env.DEV');
-    expect(authContent).toContain("window.location.hostname === 'localhost'");
+
+    expect(authContent).toContain("window.location.href = '/profilseite'");
   });
 
-  it('should use environment variable for redirect URL', async () => {
+  it('should not depend on VITE_APP_URL for redirects (core auth is internal)', async () => {
     const { readFileSync } = await import('fs');
-    
+
     const authContent = readFileSync('src/pages/Auth.jsx', 'utf-8');
-    
-    // Prüfe dass VITE_APP_URL verwendet wird
-    expect(authContent).toContain('VITE_APP_URL');
+
+    expect(authContent).not.toContain('VITE_APP_URL');
   });
 });

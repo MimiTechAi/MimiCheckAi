@@ -10,6 +10,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import {
     Upload,
     Download,
     User as UserIcon,
@@ -21,7 +29,8 @@ import {
     Info,
     XCircle,
     Brain,
-    Zap
+    Zap,
+    Crown
 } from 'lucide-react';
 import LoadingState from '@/components/ui/LoadingState';
 import ErrorState from '@/components/ui/ErrorState';
@@ -45,6 +54,8 @@ export default function PdfAutofill() {
     const [stats, setStats] = useState(null);
     const [pdfAnalysis, setPdfAnalysis] = useState(null);
     const [processingStage, setProcessingStage] = useState('');
+
+    const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
     const [draftId, setDraftId] = useState(applicationId);
     const autosaveTimer = useRef(null);
@@ -73,7 +84,7 @@ export default function PdfAutofill() {
                     .select('*')
                     .eq('id', applicationId)
                     .eq('user_id', user.id)
-                    .single();
+                    .maybeSingle();
                 if (dbError) throw dbError;
                 if (!data) return;
 
@@ -221,10 +232,11 @@ export default function PdfAutofill() {
 
             setProcessingStage('KI analysiert das Formular...');
 
-            // **UNIVERSELLE PDF-Analyse** - funktioniert für ALLE Anträge
-            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-pdf-universal', {
+            // **PDF-Analyse**
+            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-pdf-claude', {
                 body: {
                     pdfUrl: file_url,
+                    formType: formType || 'buergergeld',
                     userProfile: {
                         vorname: user.vorname,
                         nachname: user.nachname,
@@ -279,10 +291,11 @@ export default function PdfAutofill() {
         try {
             setProcessingStage('🤖 KI bereitet die Daten vor...');
 
-            // **UNIVERSELLE KI-AUSFÜLLUNG** - funktioniert für ALLE Anträge
-            const { data: fillData, error: fillError } = await supabase.functions.invoke('fill-pdf-universal', {
+            // **KI-AUSFÜLLUNG**
+            const { data: fillData, error: fillError } = await supabase.functions.invoke('fill-pdf-claude', {
                 body: {
                     pdfUrl: uploadedFileUrl,
+                    formType: formType || 'buergergeld',
                     userProfile: {
                         vorname: user.vorname,
                         nachname: user.nachname,
@@ -295,7 +308,14 @@ export default function PdfAutofill() {
                 }
             });
 
-            if (fillError) throw fillError;
+            if (fillError) {
+                if (fillError.status === 402 || String(fillError.message || '').includes('PAYWALL')) {
+                    setShowUpgradeDialog(true);
+                    setError(null);
+                    return;
+                }
+                throw fillError;
+            }
 
             setProcessingStage('📝 Felder werden ausgefüllt...');
 
@@ -403,6 +423,13 @@ export default function PdfAutofill() {
 
             setShowSuccess(true);
             setProcessingStage('✅ Fertig!');
+
+            if (user?.subscription_tier === 'free') {
+                setUser({
+                    ...user,
+                    ai_autofill_free_used_at: user.ai_autofill_free_used_at || new Date().toISOString(),
+                });
+            }
         } catch (error) {
             console.error('Fehler beim Ausfüllen:', error);
             setError(error.message || 'PDF konnte nicht ausgefüllt werden. Bitte versuchen Sie es erneut.');
@@ -410,6 +437,30 @@ export default function PdfAutofill() {
             setIsProcessing(false);
             setTimeout(() => setProcessingStage(''), 2000);
         }
+    };
+
+    const canUsePremiumAutofill = (() => {
+        if (!user) return false;
+        const tier = user.subscription_tier;
+        const status = user.subscription_status;
+        const hasPaidTier = typeof tier === 'string' && tier !== 'free';
+        if (!hasPaidTier) return false;
+        if (typeof status !== 'string') return true;
+        return status === 'active' || status === 'trialing';
+    })();
+
+    const canUseFreeAutofillTrial = (() => {
+        if (!user) return false;
+        if (user.subscription_tier !== 'free') return false;
+        return !user.ai_autofill_free_used_at;
+    })();
+
+    const handleFillPdfClick = () => {
+        if (!canUsePremiumAutofill && !canUseFreeAutofillTrial) {
+            setShowUpgradeDialog(true);
+            return;
+        }
+        void handleFillPdf();
     };
 
     const handleDownload = () => {
@@ -434,6 +485,64 @@ export default function PdfAutofill() {
                 isVisible={showSuccess}
                 onClose={() => setShowSuccess(false)}
             />
+
+            <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+                <DialogContent className="max-w-lg border-none shadow-2xl glass-morphism">
+                    <DialogHeader>
+                        <div className="flex justify-center mb-6">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                                <Crown className="w-8 h-8 text-white" />
+                            </div>
+                        </div>
+                        <DialogTitle className="text-2xl font-bold text-center text-slate-800 dark:text-white">
+                            Premium erforderlich
+                        </DialogTitle>
+                        <DialogDescription className="text-center text-slate-600 dark:text-slate-300 pt-2">
+                            Die KI-Autofüllung ist Teil von <strong>Staatshilfen+</strong>. Mit Premium bekommst du deutlich mehr Prüfungen,
+                            PDF-Exports und schnellere Ergebnisse.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-4 space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                        <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 mt-0.5 text-emerald-500 flex-shrink-0" />
+                            <div>
+                                <div className="font-semibold">KI-gestützte Antragsassistenz</div>
+                                <div className="text-slate-600 dark:text-slate-400">Formulare automatisch ausfüllen und fehlende Angaben erkennen.</div>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 mt-0.5 text-emerald-500 flex-shrink-0" />
+                            <div>
+                                <div className="font-semibold">Mehr Usage & Exporte</div>
+                                <div className="text-slate-600 dark:text-slate-400">PDF-Reports, Musterbriefe und höhere Limits pro Monat.</div>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <CheckCircle className="w-5 h-5 mt-0.5 text-emerald-500 flex-shrink-0" />
+                            <div>
+                                <div className="font-semibold">Priorisierte KI</div>
+                                <div className="text-slate-600 dark:text-slate-400">Schnellere Bearbeitung und bessere Ergebnisqualität.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                        <Button variant="outline" onClick={() => setShowUpgradeDialog(false)}>
+                            Später
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setShowUpgradeDialog(false);
+                                navigate(`${createPageUrl('Pricing')}?source=pdf_autofill`);
+                            }}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg"
+                        >
+                            Preise & Abo ansehen
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -638,7 +747,7 @@ export default function PdfAutofill() {
                         {error && <ErrorState message={error} />}
 
                         <Button
-                            onClick={handleFillPdf}
+                            onClick={handleFillPdfClick}
                             disabled={!uploadedFileUrl || isProcessing || isAnalyzing || (pdfAnalysis && !pdfAnalysis.hasFormFields)}
                             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                             size="lg"

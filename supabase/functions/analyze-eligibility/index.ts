@@ -3,6 +3,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Vary': 'Origin',
 }
 
 // Fallback data when AI is not available
@@ -99,11 +101,26 @@ serve(async (req) => {
   }
 
   try {
-    const { userProfile } = await req.json()
+    let body: any = {}
+    try {
+      body = await req.json()
+    } catch {
+      body = {}
+    }
 
-    // 1. Validate Input
+    const userProfile = body?.userProfile ?? body?.profile ?? body?.user_profile ?? null
+
+    // If profile is missing, don't hard-fail (prevents noisy production errors)
     if (!userProfile) {
-      throw new Error('User profile is required')
+      const fallbackResult = getFallbackAnalysis({})
+      return new Response(
+        JSON.stringify({
+          analysis: fallbackResult,
+          source: 'fallback',
+          warning: 'userProfile missing in request body'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      )
     }
 
     // 2. Try AI Analysis (Using OpenAI GPT-4o)
@@ -115,7 +132,7 @@ serve(async (req) => {
       const fallbackResult = getFallbackAnalysis(userProfile)
       return new Response(
         JSON.stringify({ analysis: fallbackResult, source: 'fallback' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
 
@@ -175,7 +192,7 @@ serve(async (req) => {
         const fallbackResult = getFallbackAnalysis(userProfile)
         return new Response(
           JSON.stringify({ analysis: fallbackResult, source: 'fallback' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         )
       }
 
@@ -189,7 +206,7 @@ serve(async (req) => {
       // 3. Return Result
       return new Response(
         JSON.stringify({ analysis: analysisResult, source: 'ai' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     } catch (aiError) {
       console.error('AI Analysis failed:', aiError)
@@ -197,7 +214,7 @@ serve(async (req) => {
       const fallbackResult = getFallbackAnalysis(userProfile)
       return new Response(
         JSON.stringify({ analysis: fallbackResult, source: 'fallback' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       )
     }
 
@@ -206,7 +223,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     )

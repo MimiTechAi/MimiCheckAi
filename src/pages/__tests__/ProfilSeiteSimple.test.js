@@ -9,19 +9,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-// Mock localStorage
-const localStorageMock = (() => {
-  let store = {};
-  return {
-    getItem: vi.fn((key) => store[key] || null),
-    setItem: vi.fn((key, value) => { store[key] = value; }),
-    removeItem: vi.fn((key) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
-    get store() { return store; }
-  };
-})();
-
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+const localStorageMock = window.localStorage;
 
 // Test-Hilfsfunktionen (simulieren die Logik aus ProfilSeiteSimple.jsx)
 const STORAGE_KEY = 'mimicheck-profil';
@@ -45,7 +33,7 @@ function loadProfilFromLocalStorage() {
   if (localData) {
     try {
       return JSON.parse(localData);
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -55,12 +43,14 @@ function loadProfilFromLocalStorage() {
 describe('ProfilSeite Speicherung', () => {
   
   beforeEach(() => {
-    localStorageMock.clear();
     vi.clearAllMocks();
+    localStorageMock.clear();
+    localStorageMock.removeItem(STORAGE_KEY);
   });
 
   afterEach(() => {
     localStorageMock.clear();
+    localStorageMock.removeItem(STORAGE_KEY);
   });
 
   describe('saveProfilToLocalStorage', () => {
@@ -80,7 +70,8 @@ describe('ProfilSeite Speicherung', () => {
         expect.any(String)
       );
 
-      const saved = JSON.parse(localStorageMock.store[STORAGE_KEY]);
+      const savedRaw = localStorage.getItem(STORAGE_KEY);
+      const saved = JSON.parse(savedRaw);
       expect(saved.vorname).toBe('Max');
       expect(saved.nachname).toBe('Mustermann');
       expect(saved.geburtsdatum).toBe('1990-01-15');
@@ -143,7 +134,7 @@ describe('ProfilSeite Speicherung', () => {
         nachname: 'Mustermann',
         dsgvo_einwilligung: true
       };
-      localStorageMock.store[STORAGE_KEY] = JSON.stringify(testData);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(testData));
 
       const loaded = loadProfilFromLocalStorage();
 
@@ -158,7 +149,7 @@ describe('ProfilSeite Speicherung', () => {
     });
 
     it('sollte null zurückgeben bei ungültigem JSON', () => {
-      localStorageMock.store[STORAGE_KEY] = 'invalid json{{{';
+      localStorage.setItem(STORAGE_KEY, 'invalid json{{{');
 
       const loaded = loadProfilFromLocalStorage();
       expect(loaded).toBeNull();
