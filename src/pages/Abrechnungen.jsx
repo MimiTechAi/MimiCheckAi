@@ -17,13 +17,11 @@ import {
     Plus,
     Trash2,
     RefreshCcw,
-    Search,
     Filter,
     Euro,
     Receipt,
     FileCheck,
-    Building,
-    User
+    Building
 } from "lucide-react";
 import {
     AlertDialog,
@@ -57,7 +55,7 @@ export default function Abrechnungen() {
     const [sortBy, setSortBy] = useState('created_date');
     const [sortOrder, setSortOrder] = useState('desc');
 
-    const { t } = useTranslation();
+    useTranslation();
 
     const loadAbrechnungen = async (showRefreshLoader = false) => {
         if (showRefreshLoader) {
@@ -293,6 +291,7 @@ export default function Abrechnungen() {
                         <div className="flex flex-col gap-2">
                             <label className="text-xs font-medium text-slate-400 uppercase tracking-wider">Reihenfolge</label>
                             <select
+                                data-testid="sort-order"
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value)}
                                 className="w-full px-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none"

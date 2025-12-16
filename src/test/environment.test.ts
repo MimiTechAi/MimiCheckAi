@@ -81,7 +81,7 @@ describe('Supabase Client Configuration', () => {
   it('should use environment variables without fallbacks', async () => {
     const { readFileSync } = await import('fs');
     
-    const supabaseClientContent = readFileSync('src/api/supabaseClient.js', 'utf-8');
+    const supabaseClientContent = readFileSync('src/api/supabaseClient.ts', 'utf-8');
     
     // Prüfe dass keine hardcodierten Fallback-URLs existieren
     expect(supabaseClientContent).not.toMatch(/\|\|\s*['"]https:\/\/[^'"]+\.supabase\.co['"]/);
@@ -93,7 +93,7 @@ describe('Supabase Client Configuration', () => {
   it('should throw error in production when config is missing', async () => {
     const { readFileSync } = await import('fs');
     
-    const supabaseClientContent = readFileSync('src/api/supabaseClient.js', 'utf-8');
+    const supabaseClientContent = readFileSync('src/api/supabaseClient.ts', 'utf-8');
     
     // Prüfe dass in Production ein Fehler geworfen wird
     expect(supabaseClientContent).toContain('import.meta.env.PROD');

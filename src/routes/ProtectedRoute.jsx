@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { supabase } from '@/api/supabaseClient';
+import { supabase, SUPABASE_STORAGE_KEY } from '@/api/supabaseClient';
 
 // Storage Key muss mit supabaseClient.js übereinstimmen
-const STORAGE_KEY = 'sb-yjjauvmjyhlxcoumwqlj-auth-token';
+const STORAGE_KEY = SUPABASE_STORAGE_KEY;
 
 export default function ProtectedRoute({ children }) {
   // 🔧 DEV MODE: Bypass Auth für lokale Entwicklung
@@ -28,7 +28,7 @@ export default function ProtectedRoute({ children }) {
       
       try {
         // METHODE 1: Prüfe localStorage direkt (schneller)
-        const storedSession = localStorage.getItem(STORAGE_KEY);
+        const storedSession = STORAGE_KEY ? localStorage.getItem(STORAGE_KEY) : null;
         if (storedSession) {
           try {
             const parsed = JSON.parse(storedSession);
@@ -36,7 +36,8 @@ export default function ProtectedRoute({ children }) {
               console.log('✅ ProtectedRoute: Session in localStorage gefunden');
               
               // Versuche Session über Supabase zu laden
-              const { data, error } = await supabase.auth.getSession();
+              const sessionResult = await supabase.auth.getSession();
+              const data = sessionResult?.data;
               
               if (data?.session) {
                 console.log('✅ ProtectedRoute: Supabase Session bestätigt:', {
@@ -55,10 +56,11 @@ export default function ProtectedRoute({ children }) {
               // Versuche Session zu setzen
               if (parsed.access_token && parsed.refresh_token) {
                 console.log('🔄 ProtectedRoute: Versuche Session aus localStorage wiederherzustellen...');
-                const { data: restoredData } = await supabase.auth.setSession({
+                const restoredResult = await supabase.auth.setSession({
                   access_token: parsed.access_token,
-                  refresh_token: parsed.refresh_token
+                  refresh_token: parsed.refresh_token,
                 });
+                const restoredData = restoredResult?.data;
                 
                 if (restoredData?.session) {
                   console.log('✅ ProtectedRoute: Session wiederhergestellt!');
@@ -76,7 +78,9 @@ export default function ProtectedRoute({ children }) {
         }
         
         // METHODE 2: Direkt Supabase fragen
-        const { data, error } = await supabase.auth.getSession();
+        const directResult = await supabase.auth.getSession();
+        const data = directResult?.data;
+        const error = directResult?.error;
         
         if (error) {
           console.error('❌ ProtectedRoute: getSession error:', error);
@@ -125,7 +129,7 @@ export default function ProtectedRoute({ children }) {
     checkWithRetry();
     
     // Listen for auth state changes
-    const { data: { subscription } = { subscription: null } } = supabase.auth.onAuthStateChange((event, s) => {
+    const authStateResult = supabase.auth.onAuthStateChange((event, s) => {
       console.log('🔔 ProtectedRoute: Auth state changed:', event);
       if (mounted) {
         setSession(s);
@@ -135,6 +139,7 @@ export default function ProtectedRoute({ children }) {
         }
       }
     });
+    const subscription = authStateResult?.data?.subscription;
     
     return () => {
       mounted = false;

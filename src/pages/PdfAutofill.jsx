@@ -221,10 +221,11 @@ export default function PdfAutofill() {
 
             setProcessingStage('KI analysiert das Formular...');
 
-            // **UNIVERSELLE PDF-Analyse** - funktioniert für ALLE Anträge
-            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-pdf-universal', {
+            // **PDF-Analyse**
+            const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-pdf-claude', {
                 body: {
                     pdfUrl: file_url,
+                    formType: formType || 'buergergeld',
                     userProfile: {
                         vorname: user.vorname,
                         nachname: user.nachname,
@@ -279,10 +280,11 @@ export default function PdfAutofill() {
         try {
             setProcessingStage('🤖 KI bereitet die Daten vor...');
 
-            // **UNIVERSELLE KI-AUSFÜLLUNG** - funktioniert für ALLE Anträge
-            const { data: fillData, error: fillError } = await supabase.functions.invoke('fill-pdf-universal', {
+            // **KI-AUSFÜLLUNG**
+            const { data: fillData, error: fillError } = await supabase.functions.invoke('fill-pdf-claude', {
                 body: {
                     pdfUrl: uploadedFileUrl,
+                    formType: formType || 'buergergeld',
                     userProfile: {
                         vorname: user.vorname,
                         nachname: user.nachname,
