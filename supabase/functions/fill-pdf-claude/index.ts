@@ -4,6 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Vary': 'Origin',
 }
 
 interface FillPdfRequest {
@@ -26,15 +28,28 @@ serve(async (req) => {
       throw new Error('CLAUDE_API_KEY nicht konfiguriert')
     }
 
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
     // Supabase Client für Auth
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      supabaseUrl,
+      supabaseAnonKey,
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
+    )
+
+    if (!supabaseServiceRoleKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY nicht konfiguriert')
+    }
+
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      supabaseServiceRoleKey
     )
 
     // User authentifizieren
@@ -44,6 +59,47 @@ serve(async (req) => {
 
     if (!user) {
       throw new Error('Nicht authentifiziert')
+    }
+
+    const { data: dbUser, error: dbUserError } = await supabaseAdmin
+      .from('users')
+      .select('id, subscription_tier, subscription_status, ai_autofill_free_used_at')
+      .eq('auth_id', user.id)
+      .maybeSingle()
+
+    if (dbUserError) {
+      throw new Error(dbUserError.message)
+    }
+
+    const tier = dbUser?.subscription_tier
+    const status = dbUser?.subscription_status
+    const freeUsedAt = dbUser?.ai_autofill_free_used_at
+    const hasPaidTier = typeof tier === 'string' && tier !== 'free'
+    const isPaidActive = hasPaidTier && (status === 'active' || status === 'trialing' || typeof status !== 'string')
+
+    if (!isPaidActive) {
+      if (freeUsedAt) {
+        return new Response(
+          JSON.stringify({
+            error: 'PAYWALL_REQUIRED',
+            message: 'Free usage exhausted'
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 402,
+          }
+        )
+      }
+
+      const { error: claimError } = await supabaseAdmin
+        .from('users')
+        .update({ ai_autofill_free_used_at: new Date().toISOString() })
+        .eq('auth_id', user.id)
+        .is('ai_autofill_free_used_at', null)
+
+      if (claimError) {
+        throw new Error(claimError.message)
+      }
     }
 
     console.log('Fülle PDF für User:', user.id, 'FormType:', formType)

@@ -89,3 +89,6 @@ export {
   type FooterLinkGroup,
   type TrustBadge,
 } from "./FramerFooter";
+
+// Page Shell
+export { default as FramerPageShell } from "./FramerPageShell";

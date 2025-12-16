@@ -308,7 +308,14 @@ export default function PdfAutofill() {
                 }
             });
 
-            if (fillError) throw fillError;
+            if (fillError) {
+                if (fillError.status === 402 || String(fillError.message || '').includes('PAYWALL')) {
+                    setShowUpgradeDialog(true);
+                    setError(null);
+                    return;
+                }
+                throw fillError;
+            }
 
             setProcessingStage('📝 Felder werden ausgefüllt...');
 
@@ -416,6 +423,13 @@ export default function PdfAutofill() {
 
             setShowSuccess(true);
             setProcessingStage('✅ Fertig!');
+
+            if (user?.subscription_tier === 'free') {
+                setUser({
+                    ...user,
+                    ai_autofill_free_used_at: user.ai_autofill_free_used_at || new Date().toISOString(),
+                });
+            }
         } catch (error) {
             console.error('Fehler beim Ausfüllen:', error);
             setError(error.message || 'PDF konnte nicht ausgefüllt werden. Bitte versuchen Sie es erneut.');
@@ -435,8 +449,14 @@ export default function PdfAutofill() {
         return status === 'active' || status === 'trialing';
     })();
 
+    const canUseFreeAutofillTrial = (() => {
+        if (!user) return false;
+        if (user.subscription_tier !== 'free') return false;
+        return !user.ai_autofill_free_used_at;
+    })();
+
     const handleFillPdfClick = () => {
-        if (!canUsePremiumAutofill) {
+        if (!canUsePremiumAutofill && !canUseFreeAutofillTrial) {
             setShowUpgradeDialog(true);
             return;
         }
